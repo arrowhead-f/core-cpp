@@ -1,1 +1,10 @@
-.vs/ 
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/JWT_test_demo/v16
+/x64/Debug
+/JWT_test_demo.vcxproj.user
+/JWT_test_demo.vcxproj.filters
+/JWT_test_demo.vcxproj
+/JWT_test_demo.sln

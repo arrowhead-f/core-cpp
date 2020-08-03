@@ -1,0 +1,6 @@
+[submodule "cpp-jwt"]
+	path = cpp-jwt
+	url = https://github.com/arun11299/cpp-jwt.git
+[submodule "json"]
+	path = json
+	url = https://github.com/nlohmann/json
