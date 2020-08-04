@@ -1,18 +1,23 @@
 #include <cstring>
 #include <iostream>
 
+#include "utils/pgetopt.h"
+#include "utils/traits.h"
+
 #include "db/DB.h"
 #include "db/MariaDB.h"
 
 int main(int argc, char *argv[]) {
 
-    if(!std::strcmp(argv[0], "TestModule")) {
-        std::cout << "~~~ TestModule ~~~\n";
-        return 0;
-    }
+    //if(!std::strcmp(argv[0], "TestModule")) {
+    //    std::cout << "~~~ TestModule ~~~\n";
+    //    return 0;
+    //}
 
     // create a pool of database connection
     db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "capi" };
+
+    Module<ModuleType::MODULE>::Type x { /* add the pool, store by reference */ };
 
     {
         // first we need to get a database from the pool

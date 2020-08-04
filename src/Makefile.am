@@ -7,4 +7,4 @@ AM_LDFLAGS = $(shell mariadb_config --libs)
 #AM_CXXFLAGS = $(INTI_CFLAGS)
 #ArrowheadSrv_LDADD = $(INTI_LIBS)
 
-arrowheads_SOURCES = main.cpp db/MariaDB.cpp
+arrowheads_SOURCES = main.cpp db/MariaDB.cpp utils/pgetopt.cpp
