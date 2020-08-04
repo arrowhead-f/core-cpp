@@ -4,11 +4,27 @@
 #include "db/DB.h"
 #include "db/MariaDB.h"
 
+#include "modules/ServiceRegistry/ServiceRegistry.hpp"
+
 int main(int argc, char *argv[]) {
 
     if(!std::strcmp(argv[0], "TestModule")) {
         std::cout << "~~~ TestModule ~~~\n";
         return 0;
+    }
+
+    // create ServiceRegistry
+    ServiceRegistry oServiceRegistry;
+    uint16_t uPort = 16223;
+    bool bHTTPS = false;
+
+    if(oServiceRegistry.startHTTPServer(uPort, bHTTPS))
+    {
+        printf("ServiceRegistry started successfully!\n");
+    }
+    else
+    {
+        printf("Error: Could not start ServiceRegistry!\n");
     }
 
     // create a pool of database connection
@@ -45,6 +61,9 @@ int main(int argc, char *argv[]) {
             } while (row->next());
         }
     }
+
+    while(1)
+        sleep(1000);
 
     return 0;
 }
