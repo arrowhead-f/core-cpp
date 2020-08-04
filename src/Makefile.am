@@ -1,6 +1,6 @@
 bin_PROGRAMS = arrowheads
 
-AM_CPPFLAGS = -I$(top_srcdir)/common -I$(top_srcdir)/inc
+AM_CPPFLAGS = -I$(top_srcdir)/inc
 AM_LDFLAGS = $(shell mariadb_config --libs)
 
 
