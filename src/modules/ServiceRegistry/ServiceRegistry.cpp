@@ -52,14 +52,81 @@ void ServiceRegistry::printParsedURL()
         printf("%d - %d\n", i, viSubPath[i]);
 }
 
-bool ServiceRegistry::startHTTPServer(uint16_t _uPort, bool _bUseHTTPS)
+bool ServiceRegistry::startHTTPServer(uint16_t _uPort, bool _bUseHTTPS, db::DatabasePool<db::MariaDB> *_pPool)
 {
+    pDBPool = _pPool;
     return !MakeServer(_uPort, _bUseHTTPS);
 }
 
 void ServiceRegistry::setKeyPath(string _sPubCertPath, string _sPrivKeyPath, string _sCaCertPath, string _sPasswdForKey)
 {
     setKeys(_sPubCertPath, _sPrivKeyPath, _sCaCertPath, _sPasswdForKey);
+}
+
+////////////////////////////////////////
+// DB
+///////////////////////////////////////
+
+bool ServiceRegistry::dbContentExists(string _sSelect, string _sFrom, string _sWhere, string _sWhat)
+{
+    auto db = db::DatabaseConnection<db::DatabasePool<db::MariaDB>::DatabaseType>{ *pDBPool };
+    string sQuery = "SELECT ";
+    sQuery += _sSelect + " FROM " + _sFrom + " WHERE " + _sWhere + " = '" + _sWhat + "';";
+    printf("Query: %s\n", sQuery.c_str());
+    string sResponse;
+    db.fetch(sQuery.c_str(), sResponse);
+    printf("sReponse: %s\n", sResponse.c_str());
+    return sResponse.size() != 0;
+}
+
+bool ServiceRegistry::dbContentExists(string _sSelect, string _sFrom, string _sWhere, string _sWhat, string &_sResponse)
+{
+    auto db = db::DatabaseConnection<db::DatabasePool<db::MariaDB>::DatabaseType>{ *pDBPool };
+    string sQuery = "SELECT ";
+    sQuery += _sSelect + " FROM " + _sFrom + " WHERE " + _sWhere + " = '" + _sWhat + "';";
+    printf("Query: %s\n", sQuery.c_str());
+    db.fetch(sQuery.c_str(), _sResponse);
+    printf("_sReponse: %s\n", _sResponse.c_str());
+    return _sResponse.size() != 0;
+}
+
+void ServiceRegistry::dbSaveContent(string _sTableName, string _sColumn, string _sValue, bool bMore)
+{
+    auto db = db::DatabaseConnection<db::DatabasePool<db::MariaDB>::DatabaseType>{ *pDBPool };
+    string sQuery = "INSERT INTO ";
+    if(!bMore)
+        sQuery += _sTableName + " (" + _sColumn + ") " + "VALUES ('" + _sValue + "');";
+    else
+        sQuery += _sTableName + " (" + _sColumn + ") " + "VALUES (" + _sValue + ");";
+    printf("Query: %s\n", sQuery.c_str());
+    db.query(sQuery.c_str());
+}
+
+void ServiceRegistry::checkAndInsertValue(string _sReturnColumn, string _sTable, string _sCheckColumn, string _sCheckValue, string &_rRetValue)
+{
+    if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
+    {
+        dbSaveContent(_sTable, _sCheckColumn, _sCheckValue, false);
+        //todo: get ID as db.query() response!
+        dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
+    }
+}
+
+void ServiceRegistry::checkAndInsertValues(
+    string _sReturnColumn,
+    string _sTable,
+    string _sCheckColumn,
+    string _sCheckValue,
+    string _sInsertColumn,
+    string _sInsertValue,
+    string &_rRetValue)
+{
+    if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
+    {
+        dbSaveContent(_sTable, _sInsertColumn, _sInsertValue, true);
+        //todo: get ID as db.query() response!
+        dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
+    }
 }
 
 ////////////////////////////////////////
@@ -145,7 +212,6 @@ string ServiceRegistry::processQuery(const char *_szPayload)
     return oServiceQueryList.createServiceQueryList();
 }
 
-
 string ServiceRegistry::processRegister(const char *_szPayload)
 {
     bool bSuccessfullyParsed = false;
@@ -157,18 +223,80 @@ string ServiceRegistry::processRegister(const char *_szPayload)
     if(!oServiceRegistryEntry.parseRegistryEntry())
         return "Error: Invalid ServiceRegistryEntry!";
 
-//todo: DatabaseQuery
-    //string sDBResponse = db.fetch(query);
-    //INSERT ...
-
+//
 //Service definition exists? if No -> save service Definition into DBase
+//TABLE: service_definition
+//
+    string sServiceDefinitionID;
+    checkAndInsertValue("id", "service_definition", "service_definition", oServiceRegistryEntry.sServiceDefinition, sServiceDefinitionID);
+    printf("sServiceDefinitionID: %s\n", sServiceDefinitionID.c_str());
 
-//Requester system exists? if No -> save system into DBase
+//
+//Provider/Requester system exists? if No -> save system into DBase
+//TABLE: system_
+//
+    string sProviderSystemID;
+    string sColumns = "system_name, address, port";
+    string sValues = "'" + oServiceRegistryEntry.sProviderSystem_SystemName + "', '" +
+                     oServiceRegistryEntry.sProviderSystem_Address    + "', " +
+                     oServiceRegistryEntry.sProviderSystem_Port;
 
+    if(oServiceRegistryEntry.sProviderSystem_AuthInfo.size())
+    {
+        sColumns += ", authentication_info";
+        sValues += ", '" + oServiceRegistryEntry.sProviderSystem_AuthInfo + "'";
+    }
+
+    checkAndInsertValues(
+        "id",
+        "system_",
+        "system_name",
+        oServiceRegistryEntry.sProviderSystem_SystemName,
+        sColumns,
+        sValues,
+        sProviderSystemID);
+
+    printf("sProviderSystemID: %s\n", sProviderSystemID.c_str());
+
+//
 //Interface exists? if No -> save interface into DBase
+//TABLE: service_interface
+//
+    vector<string> vInterfaceIDs;
 
+    for(int i = 0; i < oServiceRegistryEntry.vInterfaces.size(); ++i)
+    {
+        string sID;
+        checkAndInsertValue("id", "service_interface", "interface_name", oServiceRegistryEntry.vInterfaces[i], sID);
+        printf("IntName: %s, ID: %s\n", oServiceRegistryEntry.vInterfaces[i].c_str(), sID.c_str());
+        vInterfaceIDs.push_back(sID);
+    }
+
+//
 //Save service registry entry into DBase
+//TABLE: service_registry
+//
+/*
+    string sServiceRegistryEntryID;
+    sColumns = "service_id, system_id, service_uri, end_of_validity, secure, metadata, version";
+    sValues = sServiceDefinitionID +
+              sProviderSystemID +
+              oServiceRegistryEntry.sServiceUri +
+              oServiceRegistryEntry.sEndOfValidity +
+              oServiceRegistryEntry.sSecure +
+              oServiceRegistryEntry.sMetaData +
+              oServiceRegistryEntry.sVersion;
 
+    checkAndInsertValues(
+        "id",
+        "service_registry",
+        "service_uri",
+        oServiceRegistryEntry.sServiceUri,
+        sColumns,
+        sValues,
+        sServiceRegistryEntryID
+    );
+*/
 //todo: create json response from database response
     oServiceRegistryEntry.fillResponse(); //todo: implement
 

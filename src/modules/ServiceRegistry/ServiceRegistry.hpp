@@ -8,6 +8,9 @@
 #include "../../json/ServiceQueryList.hpp"
 #include "../../json/ServiceRegistryEntry.hpp"
 
+#include "../../db/DB.h"
+#include "../../db/MariaDB.h"
+
 using namespace std;
 
 #define ECHO                 0
@@ -28,12 +31,20 @@ class ServiceRegistry : MhttpdHandler
 private:
     vector<string> vsSubPath;
     vector<int> viSubPath;
+    db::DatabasePool<db::MariaDB> *pDBPool;
 
 public:
-    bool startHTTPServer(uint16_t _uPort, bool _bUseHTTPS);
+    bool startHTTPServer(uint16_t _uPort, bool _bUseHTTPS, db::DatabasePool<db::MariaDB> *_pPool);
     void setKeyPath(string _sPubCertPath, string _sPrivKeyPath, string _sCaCertPath, string _sPasswdForKey);
     void parseURL(const char *_szURL);
     void printParsedURL();
+
+//DB
+    bool dbContentExists(string _sSelect, string _sFrom, string _sWhere, string _sWhat);
+    bool dbContentExists(string _sSelect, string _sFrom, string _sWhere, string _sWhat, string &_sResponse);
+    void dbSaveContent(string _sTableName, string _sColumn, string _sValue, bool bMore);
+    void checkAndInsertValue(string _sReturnColumn, string _sTable, string _sCheckColumn, string _sCheckValue, string &_rRetValue);
+    void checkAndInsertValues(string _sReturnColumn, string _sTable, string _sCheckColumn, string _sCheckValue, string _sInsertColumn, string _sInsertValue, string &_rRetValue);
 
 //LOGIC
     string processQuery(const char *_szPayload);

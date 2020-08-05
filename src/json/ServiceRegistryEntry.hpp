@@ -19,17 +19,18 @@ public:
     }
 
 //Input
-    string sServiceDefinition_input;
-    string sProviderSystem_SystemName_input;
-    string sProviderSystem_Address_input;
-    string sProviderSystem_Port_input;
-    string sProviderSystem_AuthInfo_input;
-    string sServiceUri_input;
-    string sEndOfValidity_input;
-    string sSecure_input;
-    map<string, string> sMetadata_input;
-    string sVersion_input;
-    vector<string> vInterfaces_input;
+    string sServiceDefinition;
+    string sProviderSystem_SystemName;
+    string sProviderSystem_Address;
+    string sProviderSystem_Port;
+    string sProviderSystem_AuthInfo;
+    string sServiceUri;
+    string sEndOfValidity;
+    string sSecure;
+    string sMetaData;
+    map<string, string> vMetaData;
+    string sVersion;
+    vector<string> vInterfaces;
 
 //Output
     servQueryData sQData;

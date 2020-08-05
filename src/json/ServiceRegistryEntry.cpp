@@ -43,7 +43,7 @@ void ServiceRegistryEntry::parseMeta(json_object *jobj) {
             case json_type_double:
             case json_type_int:
             case json_type_string:
-                sMetadata_input.insert( pair<string,string>(string(key), string(json_object_get_string(val))) );
+                vMetaData.insert( pair<string,string>(string(key), string(json_object_get_string(val))) );
                 break;
             case json_type_object:
                 json_object_object_get_ex(jobj, key, &jobj);
@@ -55,33 +55,35 @@ void ServiceRegistryEntry::parseMeta(json_object *jobj) {
 
 bool ServiceRegistryEntry::parseRegistryEntry()
 {
-    if( !getValue(mainObject, "serviceDefinition", sServiceDefinition_input) )
+    if( !getValue(mainObject, "serviceDefinition", sServiceDefinition) )
         return false;
 
     json_object *obj;
     if(!json_object_object_get_ex(mainObject, "providerSystem", &obj))
         return false;
 
-    if( !getValue(obj, "systemName", sProviderSystem_SystemName_input) )
+    if( !getValue(obj, "systemName", sProviderSystem_SystemName) )
         return false;
 
-    if( !getValue(obj, "address", sProviderSystem_Address_input) )
+    if( !getValue(obj, "address", sProviderSystem_Address) )
         return false;
 
-    if( !getValue(obj, "port", sProviderSystem_Port_input) )
+    if( !getValue(obj, "port", sProviderSystem_Port) )
         return false;
 
-    getValue(obj, "authenticationInfo", sProviderSystem_AuthInfo_input);
+    getValue(obj, "authenticationInfo", sProviderSystem_AuthInfo);
 
-    if( !getValue(mainObject, "serviceUri", sServiceUri_input) )
+    if( !getValue(mainObject, "serviceUri", sServiceUri) )
         return false;
 
-    getValue(mainObject, "endOfValidity", sEndOfValidity_input);
-    getValue(mainObject, "secure", sSecure_input);
-    getValue(mainObject, "version", sVersion_input);
+    getValue(mainObject, "endOfValidity", sEndOfValidity);
+    getValue(mainObject, "secure", sSecure);
+    getValue(mainObject, "version", sVersion);
 
     if( json_object_object_get_ex(mainObject, "metadata", &obj))
         parseMeta(obj);
+
+    sMetaData = string( json_object_get_string(obj) );
 
     struct json_object *jArrayElement;
     if( json_object_object_get_ex(mainObject, "interfaces", &obj))
@@ -90,7 +92,7 @@ bool ServiceRegistryEntry::parseRegistryEntry()
         {
             jArrayElement = json_object_array_get_idx(obj, i);
             if(jArrayElement == NULL) break;
-            vInterfaces_input.push_back( string( json_object_get_string(jArrayElement) ) );
+            vInterfaces.push_back( string( json_object_get_string(jArrayElement) ) );
         }
     }
 
