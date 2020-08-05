@@ -7,6 +7,22 @@
 #include "db/DB.h"
 #include "db/MariaDB.h"
 
+// delete them
+class DummyRegistry {
+    public:
+        void print() const {
+            std::cout << "DummyRegistry\n";
+        }
+};
+
+class ServiceRegistry {
+    public:
+        void print() const {
+            std::cout << "ServiceRegistry\n";
+        }
+};
+
+
 int main(int argc, char *argv[]) {
 
     //if(!std::strcmp(argv[0], "TestModule")) {
@@ -18,6 +34,8 @@ int main(int argc, char *argv[]) {
     db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "capi" };
 
     Module<ModuleType::MODULE>::Type x { /* add the pool, store by reference */ };
+
+    x.print();
 
     {
         // first we need to get a database from the pool

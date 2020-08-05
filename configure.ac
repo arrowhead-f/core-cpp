@@ -1,7 +1,7 @@
 AC_INIT([arrowheads], 1.0)
 AC_CONFIG_MACRO_DIRS([m4])
 
-CONFIGURE_MODULE()
+#CONFIGURE_MODULE()
 
 AM_INIT_AUTOMAKE([subdir-objects])
 

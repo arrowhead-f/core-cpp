@@ -1,11 +1,11 @@
 #ifndef _TRAITS_H_
 #define _TRAITS_H_
 
-struct Dummy {
-};
-
+class DummyRegistry;
+class ServiceRegistry;
 
 enum class ModuleType : unsigned {
+    DummyRegistry,
     ServiceRegistry
 };
 
@@ -14,8 +14,12 @@ template<ModuleType T>struct Module{
     using Type = void;
 };
 
+template<>struct Module<ModuleType::DummyRegistry>{
+    using Type = DummyRegistry;
+};
+
 template<>struct Module<ModuleType::ServiceRegistry>{
-    using Type = Dummy; //ServiceRegistryClass;
+    using Type = ServiceRegistry;
 };
 
 #endif  /* _TRAITS_H_ */
