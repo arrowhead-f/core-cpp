@@ -1,0 +1,16 @@
+//
+// Created by marton on 6. 08. 20.
+//
+
+#ifndef CORE_CPP_TOKENGENERATIONPROVIDERDTO_H
+#define CORE_CPP_TOKENGENERATIONPROVIDERDTO_H
+
+
+
+class TokenGenerationProviderDTO {
+
+};
+
+
+
+#endif //CORE_CPP_TOKENGENERATIONPROVIDERDTO_H
