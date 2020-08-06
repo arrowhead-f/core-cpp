@@ -1,8 +1,10 @@
 #ifndef CORE_CPP_SYSTEMREQUESTDTO_H
 #define CORE_CPP_SYSTEMREQUESTDTO_H
 
+/// STD libs
 #include <string>
 #include <iostream>
+#include <sstream>
 
 
 using lgint = long int;
@@ -13,9 +15,9 @@ using MyInt = int;
  * Used to ease the generation of hash from address, port and systemName
  */
 struct hashHelper {
-    string address;
+    std::string address;
     MyInt port;
-    string systemName;
+    std::string systemName;
 };
 
 
@@ -26,29 +28,29 @@ class SystemRequestDTO {
 private:
     static const lgint serialVersionUID = 3919207845374510215L;     ///< long int storing the serial version uid
 
-    string systemName;                ///< string storing the name of the system
-    string address;                   ///< string storing the address
-    MyInt port;                       ///< integer storing the port
-    string authenticationInfo;        ///< string storing authentication info
+    std::string systemName;                ///< string storing the name of the system
+    std::string address;                   ///< string storing the address
+    MyInt port;                            ///< integer storing the port
+    std::string authenticationInfo;        ///< string storing authentication info
 
 
 public:
     /// Default constructor
     SystemRequestDTO() = default;
     /// Constructor with parameters
-    SystemRequestDTO(const string systemName, const string address, const MyInt port, const string authenticationInfo): systemName{systemName}, address{address}, port{port}, authenticationInfo{authenticationInfo}{}
+    SystemRequestDTO(const std::string systemName, const std::string address, const MyInt port, const std::string authenticationInfo) : systemName{ systemName }, address{ address }, port{ port }, authenticationInfo{ authenticationInfo }{}
 
 
     /*!
      * Getter function returning systemName
      * @return systemName
      */
-    string getSystemName() const { return systemName; }
+    std::string getSystemName() const { return systemName; }
     /*!
      * Getter function returning address
      * @return address
      */
-    string getAddress() const { return address; }
+    std::string getAddress() const { return address; }
     /*!
      * Getter function returning port
      * @return port
@@ -58,19 +60,19 @@ public:
      * Getter function returning authenticationInfo
      * @return authenticationInfo
      */
-    string getAuthenticationInfo() const { return authenticationInfo; }
+    std::string getAuthenticationInfo() const { return authenticationInfo; }
 
 
     /*!
      * Setter function setting systemName
      * @param[in] systemName
      */
-    void setSystemName(const string systemName) { this->systemName = systemName; }
+    void setSystemName(const std::string systemName) { this->systemName = systemName; }
     /*!
      * Setter function setting address
      * @param[in] address
      */
-    void setAddress(const string address) { this->address = address; }
+    void setAddress(const std::string address) { this->address = address; }
     /*!
      * Setter function setting port
      * @param[in] port
@@ -80,14 +82,14 @@ public:
      * Setter function setting authenticationInfo
      * @param[in] authenticationInfo
      */
-    void setAuthenticationInfo(const string authenticationInfo) { this->authenticationInfo = authenticationInfo; }
+    void setAuthenticationInfo(const std::string authenticationInfo) { this->authenticationInfo = authenticationInfo; }
 
     /*!
      * Generates hash code from address, port and systemName
      * @return hash generated from address, port and systemName
      */
     size_t hashCode() {
-        return std::hash<hashHelper> hash{address, port, systemName};
+        return std::hash<hashHelper> hash{ address, port, systemName };
     }
 
     /*!
@@ -95,7 +97,7 @@ public:
      * @param obj
      * @return Returns a boolean value showing if the two objects are equal
      */
-    bool SystemRequestDTO::operator== (const SystemRequestDTO& obj) {
+    bool operator== (const SystemRequestDTO& obj) {
         ///If the object is compared with itself
         if (this == obj)
             return true;
@@ -107,7 +109,7 @@ public:
      * Returns a string containing the data of the object
      * @return buffer
      */
-    string toString() {
+    std::string toString() {
         std::ostringstream  buffer;
         buffer << "SystemRequestDTO[systemName='" << systemName << "', " << "address='" << address << "', " << "port='" << port << "', " << "authenticationInfo='" << authenticationInfo << "']";
         return buffer.str();
