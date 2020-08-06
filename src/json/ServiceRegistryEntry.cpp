@@ -103,11 +103,11 @@ void ServiceRegistryEntry::fillResponse()
 {
     //todo: fill response from database answer
     //fake content - todo: fill from db response
-    sQData.sId = "0";
-    sQData.sServiceDefinition_id = "12";
-    sQData.sServiceDefinition_serviceDefinition = "exampleService";
-    sQData.sServiceDefinition_createdAt = "2020-07-01T14-00";
-    sQData.sServiceDefinition_updatedAt  = "2020-07-01T14-10";
+    //sQData.sId = "0";
+    //sQData.sServiceDefinition_id = "12";
+    //sQData.sServiceDefinition_serviceDefinition = "exampleService";
+    //sQData.sServiceDefinition_createdAt = "2020-07-01T14-00";
+    //sQData.sServiceDefinition_updatedAt  = "2020-07-01T14-10";
     sQData.sProvider_id = "5";
     sQData.sProvider_systemName = "exampleSystem";
     sQData.sProvider_address = "192.168.21.5";

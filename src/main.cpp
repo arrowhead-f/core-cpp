@@ -14,8 +14,7 @@ int main(int argc, char *argv[]) {
     }
 
     // create a pool of database connection
-    //db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "service_registry", "ZzNNpxrbZGVvfJ8", "arrowhead" };
-    db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "sga", "arrowhead" };
+    db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "service_registry", "ZzNNpxrbZGVvfJ8", "arrowhead" };
     printf("DB connected successfully to 127.0.0.1 (service_registry, arrowhead)\n");
 
     // create ServiceRegistry

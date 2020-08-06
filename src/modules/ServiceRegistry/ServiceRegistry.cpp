@@ -276,15 +276,14 @@ string ServiceRegistry::processRegister(const char *_szPayload)
 //Save service registry entry into DBase
 //TABLE: service_registry
 //
-/*
     string sServiceRegistryEntryID;
     sColumns = "service_id, system_id, service_uri, end_of_validity, secure, metadata, version";
-    sValues = sServiceDefinitionID +
-              sProviderSystemID +
-              oServiceRegistryEntry.sServiceUri +
-              oServiceRegistryEntry.sEndOfValidity +
-              oServiceRegistryEntry.sSecure +
-              oServiceRegistryEntry.sMetaData +
+    sValues = sServiceDefinitionID + ", " +
+              sProviderSystemID + ", " +
+              "'" + oServiceRegistryEntry.sServiceUri + "', "+
+              "'" + oServiceRegistryEntry.sEndOfValidity + "', " +
+              "'" + oServiceRegistryEntry.sSecure     + "', "+
+              "'" + oServiceRegistryEntry.sMetaData   + "', " +
               oServiceRegistryEntry.sVersion;
 
     checkAndInsertValues(
@@ -296,8 +295,46 @@ string ServiceRegistry::processRegister(const char *_szPayload)
         sValues,
         sServiceRegistryEntryID
     );
-*/
+
+    printf("ServiceRegistry ID: %s\n\n\n", sServiceRegistryEntryID.c_str());
+
 //todo: create json response from database response
+    auto db = db::DatabaseConnection<db::DatabasePool<db::MariaDB>::DatabaseType>{ *pDBPool };
+    oServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
+
+    //std::string sQuery = "SELECT * FROM service_definition where id = " + sServiceDefinitionID + ";";
+    //printf("Query: %s\n", sQuery.c_str());
+    string resp;
+    db.fetch("SELECT * FROM service_definition where id = 11;", resp);
+    printf("resp: %s\n", resp.c_str());
+
+/*
+    if(auto row = db.fetch("SELECT * FROM service_definition where id = 11;")) {
+        printf("visszaadott\n");
+        int id;
+        row->get(0, id);
+        printf("id: %d\n", id);
+        double d;
+        row->get(0, d);
+        printf("d: %f\n", d);
+        string s;
+        row->get(1, s);
+        printf("s: %s\n", s.c_str());
+    }
+    else{
+        printf("nem adott vissza semmit \n");
+    }
+*/
+
+    //auto row = db.fetch(sQuery.c_str());
+    //int iValue;
+    //row->get(1, iValue);
+    //printf("%d\n", iValue);
+    //oServiceRegistryEntry.sQData.sServiceDefinition_id = std::to_string(iValue);
+    //row->get(1, oServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
+    //row->get(2, oServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
+    //row->get(3, oServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
+
     oServiceRegistryEntry.fillResponse(); //todo: implement
 
     return oServiceRegistryEntry.createRegistryEntry();
