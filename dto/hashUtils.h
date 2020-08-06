@@ -9,7 +9,7 @@
 /// Base forward decl
 inline void hash_combine(std::size_t& seed) { }
 
-/// Variadic template
+/// Template function to calculate and combine hash codes
 template <typename T, typename... Rest>
 inline void hash_combine(std::size_t& seed, const T& v, Rest... rest) {
     std::hash<T> hasher;
