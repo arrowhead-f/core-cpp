@@ -5,6 +5,10 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <cstddef>
+
+/// Header includes
+#include "hashUtils.h"
 
 
 using lgint = long int;
@@ -88,8 +92,11 @@ public:
      * Generates hash code from address, port and systemName
      * @return hash generated from address, port and systemName
      */
-    size_t hashCode() {
-        return std::hash<hashHelper> hash{ address, port, systemName };
+    std::size_t hashCode() {
+        hashHelper hashTemp{ address, port, systemName };
+        std::size_t hash = 0;
+        hash_combine(hash, hashTemp.address, hashTemp.port, hashTemp.systemName);
+        return hash;
     }
 
     /*!
@@ -99,7 +106,7 @@ public:
      */
     bool operator== (const SystemRequestDTO& obj) {
         ///If the object is compared with itself
-        if (this == obj)
+        if (this == &obj)
             return true;
 
         return this->address == obj.getAddress() && this->systemName == obj.getSystemName() && this->port == obj.getPort();
