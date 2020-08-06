@@ -20,7 +20,7 @@ private:
     static const lgint serialVersionUID = -8058322682102502369L;
 
     SystemRequestDTO provider;                   ///< See SystemRequestDTO.h
-    std::vector<std::string> serviceInterfaces;       ///< Vector of strings containing service interfaces
+    std::vector<std::string> serviceInterfaces;  ///< Vector of strings containing service interfaces
     MyInt tokenDuration = -1;                    ///< Token duration in seconds
 
 public:
@@ -28,7 +28,7 @@ public:
     TokenGenerationProviderDTO() = default;
     ///Constructor with parameters
     TokenGenerationProviderDTO(const SystemRequestDTO& provider, const MyInt tokenDuration, const vector<std::string>& serviceInterfaces) {
-        assert(serviceInterfaces.empty());
+        assert(serviceInterfaces.empty());          ///< Asserts if serviceInterface is empty
         this->provider = provider;
         this->tokenDuration = tokenDuration;
         this->serviceInterfaces = serviceInterfaces;
