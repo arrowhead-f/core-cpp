@@ -111,9 +111,9 @@ class CloudRequestDTO {
 
 
         /*!
-        * Generates hash code from address, port and systemName
+        * Generates hash code from cloudOperator and name
         * For hash_combine see hashUtils.h
-        * @return hash generated from address, port and systemName
+        * @return hash generated from cloudOperator and name
         */
         std::size_t hashCode() {
             hashHelperCloud hashTemp{ cloudOperator, name};
