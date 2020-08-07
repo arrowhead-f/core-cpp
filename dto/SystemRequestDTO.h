@@ -11,7 +11,7 @@
 #include "hashUtils.h"
 
 
-using lgint = long int;
+using lgint = long long int;
 using MyInt = int;
 
 /*!
@@ -90,6 +90,7 @@ class SystemRequestDTO {
 
         /*!
         * Generates hash code from address, port and systemName
+         * For hash_combine see hashUtils.h
         * @return hash generated from address, port and systemName
         */
         std::size_t hashCode() {

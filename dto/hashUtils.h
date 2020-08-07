@@ -1,4 +1,3 @@
-
 #ifndef CORE_CPP_HASHUTILS_H
 #define CORE_CPP_HASHUTILS_H
 

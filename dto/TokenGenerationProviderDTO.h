@@ -10,7 +10,7 @@
 /// Header includes
 #include "SystemRequestDTO.h"
 
-using lgint = long int;
+using lgint = long long int;
 using MyInt = int;
 
 
@@ -27,7 +27,7 @@ public:
     /// Default constructor
     TokenGenerationProviderDTO() = default;
     ///Constructor with parameters
-    TokenGenerationProviderDTO(const SystemRequestDTO& provider, const MyInt tokenDuration, const vector<std::string>& serviceInterfaces) {
+    TokenGenerationProviderDTO(const SystemRequestDTO& provider, const MyInt tokenDuration, const std::vector<std::string>& serviceInterfaces) {
         assert(serviceInterfaces.empty());          ///< Asserts if serviceInterface is empty
         this->provider = provider;
         this->tokenDuration = tokenDuration;
