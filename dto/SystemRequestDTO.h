@@ -11,14 +11,14 @@
 #include "hashUtils.h"
 
 
-using lgint = long long int;
+using llint = long long int;
 using MyInt = int;
 
 /*!
  * \struct
  * Used to ease the generation of hash from address, port and systemName
  */
-struct hashHelper {
+struct hashHelperSys {
     std::string address;
     MyInt port;
     std::string systemName;
@@ -30,7 +30,7 @@ class SystemRequestDTO {
 
 
     private:
-        static const lgint serialVersionUID = 3919207845374510215L;     ///< long int storing the serial version uid
+        static const llint serialVersionUID = 3919207845374510215L;     ///< long int storing the serial version uid
 
         std::string systemName;                ///< string storing the name of the system
         std::string address;                   ///< string storing the address
@@ -90,11 +90,11 @@ class SystemRequestDTO {
 
         /*!
         * Generates hash code from address, port and systemName
-         * For hash_combine see hashUtils.h
+        * For hash_combine see hashUtils.h
         * @return hash generated from address, port and systemName
         */
         std::size_t hashCode() {
-            hashHelper hashTemp{ address, port, systemName };
+            hashHelperSys hashTemp{ address, port, systemName };
             std::size_t hash = 0;
             hash_combine(hash, hashTemp.address, hashTemp.port, hashTemp.systemName);
             return hash;
