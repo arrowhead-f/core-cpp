@@ -121,7 +121,20 @@ class CloudRequestDTO {
             hash_combine(hash, hashTemp.cloudOperator, hashTemp.name);
 
             return hash;
-    }
+        }
+
+        /*!
+        * Overload of == operator
+        * @param obj
+        * @return Returns a boolean value showing if the two objects are equal
+        */
+        bool operator== (const CloudRequestDTO& obj) {
+            ///If the object is compared with itself
+            if (this == &obj)
+                return true;
+
+            return this->name == obj.getName() && this->cloudOperator == obj.getCloudOperator();
+        }
 };
 
 
