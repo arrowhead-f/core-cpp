@@ -7,6 +7,13 @@
 #include <cassert>
 #include <vector>
 
+/// Header includes
+#include "hashUtils.h"
+
+struct hashHelperCloud{
+    std::string cloudOperator;
+    std::string  name;
+};
 
 using llint = long long int;
 using MyInt = int;
@@ -102,6 +109,19 @@ class CloudRequestDTO {
         */
         void setGatewayRelayIds(const std::vector<llint> gatewayRelayIds) { this->gatewayRelayIds = gatewayRelayIds; }
 
+
+        /*!
+        * Generates hash code from address, port and systemName
+        * For hash_combine see hashUtils.h
+        * @return hash generated from address, port and systemName
+        */
+        std::size_t hashCode() {
+            hashHelperCloud hashTemp{ cloudOperator, name};
+            std::size_t hash = 0;
+            hash_combine(hash, hashTemp.cloudOperator, hashTemp.name);
+
+            return hash;
+    }
 };
 
 
