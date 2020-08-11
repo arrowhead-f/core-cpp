@@ -8,17 +8,36 @@
 class TimeHelper {
 public:
 
-    ///Calculates time offset in minutes from now
+   ///Calculates offset in the past
+   /*!
+    *
+    * @param offsetMinutes
+    */
+    long offsetInThePast(float offsetMinutes)
+    {
+        return offsetFromNow(-offsetMinutes);
+    }
+
+    ///Calculates offset in the future
     /*!
      *
      * @param offsetMinutes
-     * @return numericDate
+     */
+    long offsetInTheFuture(float offsetMinutes)
+    {
+        return offsetFromNow(offsetMinutes);
+    }
+
+    ///Calculates offset from now
+    /*!
+     *
+     * @param offsetMinutes
      */
     long offsetFromNow(float offsetMinutes)
     {
         time_t numericDate = time(0);
         float secondsOffset = offsetMinutes *60;
-        numericDate -= (long)secondsOffset;
+        numericDate += (long)secondsOffset;
         return numericDate;
     }
 };

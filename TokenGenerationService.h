@@ -9,6 +9,7 @@
 #include "dto/CloudRequestDTO.h"
 #include "Utils/base64.h"
 #include "cpp-jwt/include/jwt/jwt.hpp"
+#include "Utils/TimeHelper.h"
 
 
 ///STD Libs
@@ -49,7 +50,11 @@ class TokenGenerationService {
 
     private:
 
-        ///Randomly generates JwtId (16 bits) then base64 encodes it
+        ///Randomly generates JwtId
+        /*!
+         * First randomly generates a short which is then casted to a 16 bit bitset which is then made into a string which gets base64 encoded
+         * @return base64 encoded JwtId
+         */
         std::string generateJwtId(){
             std::random_device rd;
             auto seed_data = std::array<int, std::mt19937::state_size> {};
@@ -73,6 +78,9 @@ class TokenGenerationService {
             payload.add_claim("jti", generateJwtId());                              ///sets the generated JWT ID
             payload.add_claim("iss", CommonConstants.CORE_SYSTEM_AUTHORIZATION);    ///sets the issuer (CORE_SYSTEM_AUTHORIZATION = "Authorization")
             payload.add_claim("iat", time(0));                                ///sets issued at claim to current time
+            payload.add_claim("nbf", TimeHelper::offsetInThePast(1));               ///sets not before to one minute in the past
+            if (duration != 0)
+                payload.add_claim("exp", TimeHelper::offsetInTheFuture((float)duration/CommonConstatns.CONVERSION_SECOND_TO_MINUTE);    ///If duration is not 0 sets the expiration time based on it
         }
 
 
