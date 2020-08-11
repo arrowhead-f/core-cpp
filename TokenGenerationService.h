@@ -10,6 +10,7 @@
 #include "Utils/base64.h"
 #include "cpp-jwt/include/jwt/jwt.hpp"
 #include "Utils/TimeHelper.h"
+#include "Utils/GeneralUtils.h"
 
 
 ///STD Libs
@@ -70,7 +71,7 @@ class TokenGenerationService {
         };
 
         ///Generates a token payload
-        jwt::jwt_payload generateTokenPayload(const std::string consumerInfo, const std::string service, const std::string intf, const int duration) {
+        jwt::jwt_payload generateTokenPayload(const std::string consumerInfo, std::string service, const std::string intf, const int duration) {
 
             //TODO: logger
 
@@ -81,6 +82,11 @@ class TokenGenerationService {
             payload.add_claim("nbf", TimeHelper::offsetInThePast(1));               ///sets not before to one minute in the past
             if (duration != 0)
                 payload.add_claim("exp", TimeHelper::offsetInTheFuture((float)duration/CommonConstatns.CONVERSION_SECOND_TO_MINUTE);    ///If duration is not 0 sets the expiration time based on it
+            payload.add_claim(CommonConstants.JWT_CLAIM_CONSUMER_ID, consumerInfo); ///sets the consumer id ("cid")
+            payload.add_claim(CommonConstants.JWT_CLAIM_SERVICE_ID, GeneralUtils::toLower(service));    ///sets the service id ("sid")
+            payload.add_claim(CommonConstants.JWT_CLAIM_INTERFACE_ID, intf);        ///sets the interface id ("iid")
+
+            return payload;
         }
 
 
