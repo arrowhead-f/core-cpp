@@ -8,6 +8,7 @@
 #include "dto/TokenGenerationRequestDTO.h"
 #include "dto/CloudRequestDTO.h"
 #include "Utils/base64.h"
+#include "cpp-jwt/include/jwt/jwt.hpp"
 
 
 ///STD Libs
@@ -21,6 +22,9 @@
 #include <random>
 #include <bitset>
 #include <array>
+#include <ctime>
+
+using namespace jwt::params;
 
 class TokenGenerationService {
 
@@ -41,11 +45,11 @@ class TokenGenerationService {
         //TODO: Implement ServiceInterfaceNameVerifier
 
         std::string ownCloudName;
-        std::string ownCloudOperator
+        std::string ownCloudOperator;
 
-    public:
+    private:
 
-        ///Randomly generates JwtId
+        ///Randomly generates JwtId (16 bits) then base64 encodes it
         std::string generateJwtId(){
             std::random_device rd;
             auto seed_data = std::array<int, std::mt19937::state_size> {};
@@ -59,6 +63,19 @@ class TokenGenerationService {
 
             return Base64::Encode(n);
         };
+
+        ///Generates a token payload
+        jwt::jwt_payload generateTokenPayload(const std::string consumerInfo, const std::string service, const std::string intf, const int duration) {
+
+            //TODO: logger
+
+            jwt::jwt_payload payload = new jwt::jwt_payload();
+            payload.add_claim("jti", generateJwtId());                              ///sets the generated JWT ID
+            payload.add_claim("iss", CommonConstants.CORE_SYSTEM_AUTHORIZATION);    ///sets the issuer (CORE_SYSTEM_AUTHORIZATION = "Authorization")
+            payload.add_claim("iat", time(0));                                ///sets issued at claim to current time
+        }
+
+
 
 };
 
