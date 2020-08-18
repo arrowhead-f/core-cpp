@@ -62,8 +62,8 @@ class TokenGenerationService {
             std::generate(std::begin(seed_data), std::end(seed_data), std::ref(rd));
             std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
             std::mt19937 generator(seq);
-            std::uniform_int_distribution<short> dis(std::numeric_limits<short>::min(),
-                                                     std::numeric_limits<short>::max());
+            std::uniform_int_distribution<short> dis(std::numeric_limits<short>::min(), std::numeric_limits<short>::max());
+
 
             std::string n = (std::bitset<16>(dis(generator)).to_string());
 
