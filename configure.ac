@@ -1,5 +1,6 @@
 AC_INIT([arrowheads], 1.0)
 AC_CONFIG_MACRO_DIRS([m4])
+AC_CONFIG_HEADERS([config.h])
 
 #CONFIGURE_MODULE()
 
@@ -8,10 +9,30 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_PROG_CXX([clang++ g++])
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 
-AC_DEFINE(UNIX)
+AC_DEFINE([UNIX], [], [Unix/Linux])
+
+#ARROWHEAD_CXXFLAGS="-Wall -Wextra"
+#AC_SUBST([ARROWHEAD_CXXFLAGS])
+
+#ARROWHEAD_CPPFLAGS="-DUNIX"
+#AC_SUBST([ARROWHEAD_CPPFLAGS])
+
+AC_CHECK_HEADER([syslog.h])
+AC_CHECK_FUNCS([openlog syslog closelog])
+#CONFIGURE_LOGGER()
 
 AC_CHECK_HEADER([getopt.h])
 AC_CHECK_FUNCS([getopt])
+
+AC_CHECK_HEADER([unistd.h])
+AC_CHECK_FUNCS([pipe read write])
+
+AC_CHECK_HEADER([signal.h])
+AC_CHECK_FUNCS([sigaction])
+
+
+AC_CHECK_HEADER([microhttpd.h])
+AC_CHECK_FUNCS([MHD_start_daemon MHD_stop_daemon])
 
 #WITH_MYSQL()
 #MYSQL_NEED_FORK([mariadb])

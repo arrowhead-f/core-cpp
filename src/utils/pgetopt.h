@@ -101,13 +101,13 @@ extern int    popterr;  /* The pgetopt() function returns a question mark (?)
                          * setting popterr to zero.  Otherwise, it returns the 
                          * option character that was detected. */
 
-int pgetopt(int argc, char *argv[], char *optstring);
+int pgetopt(int argc, char *argv[], const char *optstring);
 
 #else
 
 #include <getopt.h>
 
-inline int pgetopt(int argc, char *argv[], char *optstring) {
+inline int pgetopt(int argc, char *argv[], const char *optstring) {
     return getopt(argc, argv, optstring);
 }
 

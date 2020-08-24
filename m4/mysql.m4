@@ -48,7 +48,10 @@ dnl with the exception of WITH_MYSQL_SRC()
 dnl
 dnl WITH_MYSQL()
 dnl
-AC_DEFUN([WITH_MYSQL], [
+AC_DEFUN([WITH_MYSQL], [ 
+
+  MYSQL_CONFIG_ALTERNATIVES="mysql_config mariadb_config"
+
   AC_MSG_CHECKING(for mysql_config executable)
   # try to find the mysql_config script,
   # --with-mysql will either accept its path directly
@@ -87,10 +90,8 @@ AC_DEFUN([WITH_MYSQL], [
     then      
       MYSQL_PREFIX=`dirname \`dirname $MYSQL_CONFIG\``
     else
-      AC_MSG_CHECKING("$MYSQL_CONFIG_ALTERNATIVES")
       for _MC in $MYSQL_CONFIG_ALTERNATIVES
       do 
-        AC_MSG_CHECKING(">>$_MC")
         if test -x $withval/bin/$_MC -a -f $withval/bin/$_MC
         then 
           MYSQL_CONFIG=$withval/bin/$_MC

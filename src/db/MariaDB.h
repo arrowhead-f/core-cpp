@@ -286,8 +286,11 @@ namespace db {
                 }
 
                 if (!mysql_stmt_execute(stmt)) {
-                    //mysql_stmt_store_result(stmt);
-                    return std::make_unique<MariaDB::Row>(stmt, true);
+                    auto *p = new MariaDB::Row(stmt, true);
+
+                    // only return the row, if there's (at least) one in the result set
+                    if(static_cast<bool>(*p))
+                        return std::unique_ptr<db::Row>{ p };
                 }
 
                 return {};

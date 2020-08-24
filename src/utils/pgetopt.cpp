@@ -134,7 +134,7 @@ int   popterr = 1;       /* non-zero if a question mark should be returned
 /* handle possible future character set concerns by putting this in a macro */
 #define _next_char(string)  (char)(*(string+1))
 
-int pgetopt(int argc, char *argv[], char *optstring) {
+int pgetopt(int argc, char *argv[], const char *optstring) {
     static char *IndexPosition = NULL; /* place inside current argv string */
     char *ArgString = NULL;        /* where to start from next */
     char *OptString;               /* the string in our program */

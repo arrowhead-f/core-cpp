@@ -1,21 +1,24 @@
-#ifndef _LOG_H_
-#define _LOG_H_
+#ifndef _ARROWHEAD_LOG_H_
+#define _ARROWHEAD_LOG_H_
 
 #include <syslog.h>
 
 #define LOG_SEVERITY LOG_WARNING
 
+enum class LogLevel : int {
+    LOG_EMERG, LOG_ALERT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG
+};
+
 class NullLog {
     public:
         template<typename T>void print(const T &t) {
+            // do nothing
         }
 };
 
 class Log {
 
     private:
-
-        static constexpr int severity = LOG_SEVERITY;
 
         //LOG_EMERG      system is unusable
         //LOG_ALERT      action must be taken immediately
@@ -26,9 +29,17 @@ class Log {
         //LOG_INFO       informational message
         //LOG_DEBUG
 
+        int level = LOG_WARNING;
+
         Log() noexcept {
             openlog("arrowheads", LOG_ODELAY, LOG_USER);
-            setlogmask(severity);
+            setlogmask(LOG_SEVERITY);
+        }
+
+        Log& setLogLevel(int level) {
+            static Log logger;
+            logger.level = level;
+            return logger;
         }
 
     public:
@@ -40,10 +51,11 @@ class Log {
         Log(const Log&) = delete;
         Log& operator=(const Log&) = delete;
 
-        static Log& get(int severity) {
-            static Log log { LOG_WARNING };
+            static Log log { severity };
+            static NullLog nlog;
 
-            if constexpr (severity > LOG_SEVERITY)
+        template<int S>static Log& get() {
+            if constexpr (S >= LOG_SEVERITY)
                 return log;
             else
                 return NullLog{};
@@ -67,9 +79,14 @@ class Log {
 
 };
 
-template<typename T>Log& operator<<(Log &l, const T &t) {
+template<typename T>inline Log& operator<<(Log &l, const T &t) {
     l.__print(t);
     return l;
 }
 
-#endif  /* _LOG_H_ */
+template<typename T>inline NullLog& operator<<(NullLog &l, const T &t) {
+    l.__print(t);
+    return l;
+}
+
+#endif  /* _ARROWHEAD_LOG_H_ */

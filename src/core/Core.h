@@ -1,0 +1,32 @@
+#ifndef _ARROWHEAD_CORE_H_
+#define _ARROWHEAD_CORE_H_
+
+#include <string>
+
+#include "db/DB.h"
+
+template<typename DBPool>class Core {
+    private:
+
+        DBPool &dbPool;  ///< The database pool to be used.
+
+    protected:
+
+        auto& database() {
+            return db::DatabaseConnection<typename DBPool::DatabaseType>{ dbPool };
+        };
+
+    public:
+
+        Core(DBPool &dbPool) : dbPool{ dbPool } { }
+
+        // HTTP callbacks
+        virtual int GETCallback   (const char *url, std::string &response) = 0;
+        virtual int DELETECallback(const char *url, std::string &response, const char *addr, const char *port, const char *servdef, const char *sysname) = 0;
+        virtual int POSTCallback  (const char *url, std::string &response, const char *payload) = 0;
+        virtual int PUTCallback   (const char *url, std::string &response, const char *payload) = 0;
+        virtual int PATCHCallback (const char *url, std::string &response, const char *payload) = 0;
+
+};  // class Core
+
+#endif  /*_ARROWHEAD_CORE_H_*/

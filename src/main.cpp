@@ -1,73 +1,154 @@
 #include <cstring>
 #include <iostream>
+#include <cstdlib>
 
+/* utility functions */
 #include "utils/pgetopt.h"
 #include "utils/traits.h"
 
+/* the database adapter */
 #include "db/DB.h"
 #include "db/MariaDB.h"
 
-// delete them
-class DummyRegistry {
-    public:
-        void print() const {
-            std::cout << "DummyRegistry\n";
-        }
-};
+/* core system elements */
+#include "core/ServiceRegistry/ServiceRegistry.h"
 
-class ServiceRegistry {
-    public:
-        void print() const {
-            std::cout << "ServiceRegistry\n";
-        }
-};
+/* http daemons*/
+#include "net/mhttp/MHTTPHandler.h"
 
+/* this should be the last header included */
+#ifdef HAVE_CONFIG_H
+  #include "../config.h"
+#endif
+
+#if defined UNIX && defined HAVE_SIGACTION
+  // maybe add static asserts with proper erro messages
+
+  #include <signal.h>
+  #include <unistd.h>
+
+  int pipefd[2];
+
+  /// Sigaction signal handler
+  static void signal_hdl(int, siginfo_t*, void*);
+#endif
+
+/// Print help message to the standard output.
+void print_hlp();
 
 int main(int argc, char *argv[]) {
 
-    //if(!std::strcmp(argv[0], "TestModule")) {
-    //    std::cout << "~~~ TestModule ~~~\n";
-    //    return 0;
-    //}
+    // parse command line arguments
+    int ch = 0;
+    optarg = nullptr;
+
+    std::string cfile;  // the name of the config file
+    int port = 16223;   // the port used with the core element
+
+    while((ch = pgetopt (argc, argv, "hc:p:")) != -1) {
+        switch (ch) {
+            case 'h':
+                print_hlp();
+                break;
+            case 'c':
+                cfile = std::string{ optarg };
+                break;
+            case 'p':
+                port = std::stoi(optarg);
+                break;
+            case '?':
+                /* some error messaging */
+                return 1;
+            default:
+                return 2;
+        }
+    }
 
     // create a pool of database connection
     db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "capi" };
 
-    Module<ModuleType::MODULE>::Type x { /* add the pool, store by reference */ };
+    // create core system element
+    CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type coreElement { pool };
 
-    x.print();
+    // create networking
+    auto http = MHTTPHandler<CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type>{ static_cast<std::size_t>(port), coreElement };
 
+    if(!http.start()) {
+        // error starting the server
+        return 1;
+    }
+
+    #if defined UNIX && defined HAVE_SIGACTION
     {
-        // first we need to get a database from the pool
-        // until this db is present, we can use it...
-        auto db = db::DatabaseConnection<db::DatabasePool<db::MariaDB>::DatabaseType>{ pool };
+        // rationale:
+        //   * a signal is caught
+        //   * a message is sent through the pipe
+        //   * the receive message forces the program to stop
 
-        std::string result;
-        auto rc = db.fetch("SELECT first_name, status, priority FROM employees;", result);
-
-        if (!rc) {
-            std::cout << "Null value read.\n";
+        // create the pipe
+        if(pipe(pipefd) == -1) {
+            // error
+            // stop the http
+            http.stop();
+            return 1;
         }
 
-        std::cout << "The returned value is: " << result << "\n";
+        // install the signal handlers
+        struct sigaction act;
+        std::memset(&act, 0, sizeof(act));
+        act.sa_sigaction = signal_hdl;
+        act.sa_flags = SA_SIGINFO;
 
-        //db.query("INSERT INTO employees (first_name, last_name, status, priority) VALUES ('Alma', 'Korte', 3, 110)");
+        if(sigaction(SIGTERM, &act, nullptr) < 0) {
+            // cannot install signal handler error
+            return 1;
+        }
 
-        if(auto row = db.fetch("SELECT first_name, status, priority FROM employees;")) {
+        if(sigaction(SIGINT, &act, nullptr) < 0) {
+            // cannot install signal handler error
+            return 1;
+        }
 
-            do{
+        char buf;         // buffer for the data read through the pipe
+        ssize_t ret = 0;  // the return value of teh reading from the pipe
 
-                std::string name;
-                int status;
+        // signals may interrupt this system call
+        while ((ret = read(pipefd[0], &buf, 1)) == -1 && errno == EINTR)
+            continue;
 
-                row->get(0, name);
-                row->get(1, status);
+        // stop the server
+        http.stop();
 
-                std::cout << "status: " << status << ", first_name: " << name << "\n";
+        // close pipe
+        close(pipefd[0]);
+        close(pipefd[1]);
 
-            } while (row->next());
+        // emit error message and exit
+        switch(ret) {
+            case 1:
+                    // normal termination
+                    return 0;
+            default:
+                    // emit error message
+                    return 1;
         }
     }
+    #endif
 
     return 0;
 }
+
+void print_hlp() {
+    std::cout << "dododo-dadada\n";
+}
+
+#if defined UNIX && defined HAVE_SIGACTION
+  void signal_hdl(int sig, siginfo_t*, void*) {
+      switch(sig) {
+           case SIGTERM:
+           case SIGINT:
+               write(pipefd[1], "1", 1);
+               break;
+      }
+  }
+#endif

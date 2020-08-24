@@ -206,7 +206,7 @@ namespace db {
             virtual void query(const char*) = 0;
 
             /// Returns the ith placeholder for statement
-            virtual std::string placeholder(unsigned ith) const {
+            virtual std::string placeholder(unsigned) const {
                 return "?";
             }
 

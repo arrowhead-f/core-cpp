@@ -1,25 +1,23 @@
-#ifndef _TRAITS_H_
-#define _TRAITS_H_
+#ifndef _ARROWHEAD_TRAITS_H_
+#define _ARROWHEAD_TRAITS_H_
 
-class DummyRegistry;
-class ServiceRegistry;
+#include "core/Elements.h"
 
-enum class ModuleType : unsigned {
+enum class CoreElementType : unsigned {
     DummyRegistry,
     ServiceRegistry
 };
 
-template<ModuleType T>struct Module{
-    //static_assert(sizeof(T) == 0, "Undefined module.");
-    using Type = void;
+template<CoreElementType, typename DBPool>struct CoreElement {
+    static_assert(sizeof(DBPool) == 0, "Undefined Core System Element.");
 };
 
-template<>struct Module<ModuleType::DummyRegistry>{
-    using Type = DummyRegistry;
+template<typename DBPool>struct CoreElement<CoreElementType::DummyRegistry, DBPool> {
+    using Type = DummyRegistry<DBPool>;
 };
 
-template<>struct Module<ModuleType::ServiceRegistry>{
-    using Type = ServiceRegistry;
+template<typename DBPool>struct CoreElement<CoreElementType::ServiceRegistry, DBPool> {
+    using Type = ServiceRegistry<DBPool>;
 };
 
-#endif  /* _TRAITS_H_ */
+#endif  /* _ARROWHEAD_TRAITS_H_ */
