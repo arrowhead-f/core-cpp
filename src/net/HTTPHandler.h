@@ -2,6 +2,7 @@
 #define _ARROWHEAD_HTTPHANDLER_H_
 
 #include <string>
+#include <map>
 
 struct HTTPHandlerBase {
 
@@ -20,7 +21,7 @@ struct HTTPHandlerBase {
         return true;
     }
 
-    //static std::map<std::string, std::string> parseOptions(const char*);
+    static std::map<std::string, std::string> parseOptions(const char*);
 
 
     //virtual void setOptions(const std::string &opt) = 0;

@@ -5,7 +5,7 @@ bin_PROGRAMS = service_registry
 AM_CPPFLAGS = -I$(top_srcdir)/inc
 #${ARROWHEAD_CPPFLAGS} 
 #AM_CXXFLAGS = ${ARROWHEAD_CXXFLAGS}
-AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd
+AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd -lcurl
 
 #AM_CXXFLAGS = $(INTI_CFLAGS)
 #ArrowheadSrv_LDADD = $(INTI_LIBS)
@@ -13,7 +13,9 @@ AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd
 sources = main.cpp                    \
           db/MariaDB.cpp              \
           utils/pgetopt.cpp           \
-          net/mhttp/MHTTPHandler.cpp
+          net/HTTPHandler.cpp         \
+          net/mhttp/MHTTPHandler.cpp  \
+          net/request/ReqBuilderWCurl.cpp
 
 service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry
 service_registry_SOURCES = $(sources)

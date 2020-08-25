@@ -13,7 +13,9 @@
 /* core system elements */
 #include "core/ServiceRegistry/ServiceRegistry.h"
 
-/* http daemons*/
+/* connections*/
+#include "net/KeyProvider.h"
+#include "net/ReqBuilder.h"
 #include "net/mhttp/MHTTPHandler.h"
 
 /* this should be the last header included */
@@ -67,8 +69,18 @@ int main(int argc, char *argv[]) {
     // create a pool of database connection
     db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "capi" };
 
+    //  create the key provider
+    KeyProvider keyProvider{ "../keys/tempsensor.testcloud1.publicCert.pem",
+                             "PEM",
+                             "../keys/tempsensor.testcloud1.private.key",
+                             "PEM",
+                             "12345",
+                             "../keys/tempsensor.testcloud1.caCert.pem" };
+
+    ReqBuilder reqBuilder{ keyProvider };
+
     // create core system element
-    CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type coreElement { pool };
+    CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type coreElement { pool, reqBuilder };
 
     // create networking
     auto http = MHTTPHandler<CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type>{ static_cast<std::size_t>(port), coreElement };

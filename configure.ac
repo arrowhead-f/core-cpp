@@ -17,6 +17,8 @@ AC_DEFINE([UNIX], [], [Unix/Linux])
 #ARROWHEAD_CPPFLAGS="-DUNIX"
 #AC_SUBST([ARROWHEAD_CPPFLAGS])
 
+AC_HEADER_STDC
+
 AC_CHECK_HEADER([syslog.h])
 AC_CHECK_FUNCS([openlog syslog closelog])
 #CONFIGURE_LOGGER()
@@ -31,8 +33,12 @@ AC_CHECK_HEADER([signal.h])
 AC_CHECK_FUNCS([sigaction])
 
 
-AC_CHECK_HEADER([microhttpd.h])
+AC_CHECK_HEADERS([microhttpd.h])
 AC_CHECK_FUNCS([MHD_start_daemon MHD_stop_daemon])
+
+AC_CHECK_HEADERS([curl/curl.h])
+#AC_CHECK_FUNCS([MHD_start_daemon MHD_stop_daemon])
+
 
 #WITH_MYSQL()
 #MYSQL_NEED_FORK([mariadb])

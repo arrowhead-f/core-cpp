@@ -1,7 +1,7 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Define to 1 if you have the `closelog' function. */
-#undef HAVE_CLOSELOG
+/* Define to 1 if you have the <curl/curl.h> header file. */
+#undef HAVE_CURL_CURL_H
 
 /* define if the compiler supports basic C++17 syntax */
 #undef HAVE_CXX17
@@ -15,14 +15,14 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define to 1 if you have the `MHD_start_daemon' function. */
-#undef HAVE_MHD_START_DAEMON
+/* Define to 1 if you have the <microhttpd.h> header file. */
+#undef HAVE_MICROHTTPD_H
 
-/* Define to 1 if you have the `MHD_stop_daemon' function. */
-#undef HAVE_MHD_STOP_DAEMON
+/* Define to 1 if you have the `pipe' function. */
+#undef HAVE_PIPE
 
-/* Define to 1 if you have the `openlog' function. */
-#undef HAVE_OPENLOG
+/* Define to 1 if you have the `read' function. */
+#undef HAVE_READ
 
 /* Define to 1 if you have the `sigaction' function. */
 #undef HAVE_SIGACTION
@@ -39,9 +39,6 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if you have the `syslog' function. */
-#undef HAVE_SYSLOG
-
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
 
@@ -50,6 +47,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `write' function. */
+#undef HAVE_WRITE
 
 /* Name of package */
 #undef PACKAGE

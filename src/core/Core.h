@@ -4,11 +4,13 @@
 #include <string>
 
 #include "db/DB.h"
+#include "net/ReqBuilder.h"
 
 template<typename DBPool>class Core {
     private:
 
-        DBPool &dbPool;  ///< The database pool to be used.
+        DBPool &dbPool;          ///< The database pool to be used.
+        ReqBuilder &reqBuilder;  ///< Used to build and send requests.
 
     protected:
 
@@ -18,7 +20,7 @@ template<typename DBPool>class Core {
 
     public:
 
-        Core(DBPool &dbPool) : dbPool{ dbPool } { }
+        Core(DBPool &dbPool, ReqBuilder &reqBuilder) : dbPool{ dbPool }, reqBuilder{ reqBuilder } { }
 
         // HTTP callbacks
         virtual int GETCallback   (const char *url, std::string &response) = 0;
