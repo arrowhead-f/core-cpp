@@ -3,7 +3,9 @@
 #include <cstdlib>
 
 /* utility functions */
+#include "utils/log.h"
 #include "utils/pgetopt.h"
+#include "utils/parsers.h"
 #include "utils/traits.h"
 
 /* the database adapter */
@@ -20,7 +22,7 @@
 
 /* this should be the last header included */
 #ifdef HAVE_CONFIG_H
-  #include "../config.h"
+  #include "config.h"
 #endif
 
 #if defined UNIX && defined HAVE_SIGACTION
@@ -40,20 +42,27 @@ void print_hlp();
 
 int main(int argc, char *argv[]) {
 
+    //(notice{} << "STARTED").log();
+
     // parse command line arguments
     int ch = 0;
     optarg = nullptr;
 
-    std::string cfile;  // the name of the config file
-    int port = 16223;   // the port used with the core element
+    std::string dconf;    // the configuration string for the database
+    std::string cfile;    // the name of the config file
+    int port = 16223;     // the port used with the core element
 
-    while((ch = pgetopt (argc, argv, "hc:p:")) != -1) {
+    while((ch = pgetopt (argc, argv, "hc:p:d:")) != -1) {
+        std::cout << (char)ch << "\n";
         switch (ch) {
             case 'h':
                 print_hlp();
                 break;
             case 'c':
                 cfile = std::string{ optarg };
+                break;
+            case 'd':
+                dconf = std::string{ optarg };
                 break;
             case 'p':
                 port = std::stoi(optarg);
@@ -67,6 +76,10 @@ int main(int argc, char *argv[]) {
     }
 
     // create a pool of database connection
+    // -d "host=localhost port=5432 dbname=mydb user=root password=root"
+    //auto dconfmap = parser::parseOptions(dconf.c_str());
+    //db::DatabasePool<db::MariaDB> pool{ dconfmap["host"].c_str(), dconfmap["user"].c_str(), dconfmap["password"].c_str(), dconfmap["dbname"].c_str() };
+
     db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "capi" };
 
     //  create the key provider

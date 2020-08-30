@@ -118,6 +118,10 @@
  * No other errors are defined.
  *****************************************************************************/
 
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
 #ifndef UNIX
 
 #include "pgetopt.h"

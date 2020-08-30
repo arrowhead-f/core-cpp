@@ -2,7 +2,7 @@ bin_PROGRAMS = service_registry
 
 #bin_PROGRAMS = dummy_registry service_registry
 
-AM_CPPFLAGS = -I$(top_srcdir)/inc
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/inc
 #${ARROWHEAD_CPPFLAGS} 
 #AM_CXXFLAGS = ${ARROWHEAD_CXXFLAGS}
 AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd -lcurl

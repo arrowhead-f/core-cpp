@@ -88,6 +88,10 @@
 #ifndef _PGETOPT_H_
 #define _PGETOPT_H_
 
+#ifdef HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
 #ifndef UNIX
 
 extern char * poptarg;  /* carries the optional argument when a command line
