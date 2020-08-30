@@ -21,9 +21,6 @@ struct HTTPHandlerBase {
         return true;
     }
 
-    static std::map<std::string, std::string> parseOptions(const char*);
-
-
     //virtual void setOptions(const std::string &opt) = 0;
     //virtual void setOptions(std::string &&opt)      = 0;
 

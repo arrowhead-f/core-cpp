@@ -10,11 +10,11 @@ AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd -lcurl
 #AM_CXXFLAGS = $(INTI_CFLAGS)
 #ArrowheadSrv_LDADD = $(INTI_LIBS)
 
-sources = main.cpp                    \
-          db/MariaDB.cpp              \
-          utils/pgetopt.cpp           \
-          net/HTTPHandler.cpp         \
-          net/mhttp/MHTTPHandler.cpp  \
+sources = main.cpp                         \
+          db/MariaDB.cpp                   \
+          utils/pgetopt.cpp                \
+          utils/parsers.cpp                \
+          net/mhttp/MHTTPHandler.cpp       \
           net/request/ReqBuilderWCurl.cpp
 
 service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry

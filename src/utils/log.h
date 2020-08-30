@@ -3,90 +3,151 @@
 
 #include <syslog.h>
 
-#define LOG_SEVERITY LOG_WARNING
+#include <utility>
+#include <tuple>
+#include <cstdio>
+#include <sstream>
 
-enum class LogLevel : int {
-    LOG_EMERG, LOG_ALERT, LOG_CRIT, LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO, LOG_DEBUG
-};
+#ifndef __cpp_lib_apply
+  #include <functional>
+#endif
 
-class NullLog {
-    public:
-        template<typename T>void print(const T &t) {
-            // do nothing
-        }
-};
+namespace {
 
-class Log {
-
-    private:
-
-        //LOG_EMERG      system is unusable
-        //LOG_ALERT      action must be taken immediately
-        //LOG_CRIT       critical conditions
-        //LOG_ERR        error conditions
-        //LOG_WARNING    warning conditions
-        //LOG_NOTICE     normal, but significant, condition
-        //LOG_INFO       informational message
-        //LOG_DEBUG
-
-        int level = LOG_WARNING;
-
-        Log() noexcept {
-            openlog("arrowheads", LOG_ODELAY, LOG_USER);
-            setlogmask(LOG_SEVERITY);
+    #ifndef __cpp_lib_apply
+    namespace detail {
+        template <class F, class Tuple, std::size_t... I>
+        constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<I...>) {
+            // This implementation is valid since C++20 (via P1065R2)
+            // In C++17, a constexpr counterpart of std::invoke is actually needed here
+            return std::invoke(std::forward<F>(f), std::get<I>(std::forward<Tuple>(t))...);
         }
 
-        Log& setLogLevel(int level) {
-            static Log logger;
-            logger.level = level;
-            return logger;
+        template <class F, class Tuple>
+        constexpr decltype(auto) apply(F&& f, Tuple&& t) {
+            return detail::apply_impl(
+                std::forward<F>(f), std::forward<Tuple>(t),
+                std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
         }
+    }
+    #endif
 
-    public:
+    template<int...I> using is = std::integer_sequence<int, I...>;
+    template<int N>   using make_is = std::make_integer_sequence<int, N>;
 
-        ~Log() {
-            closelog();
-        }
+    constexpr auto size(const char* s) { int i = 0; while (*s != 0) { ++i; ++s; } return i; }
 
-        Log(const Log&) = delete;
-        Log& operator=(const Log&) = delete;
+    template<const char*, typename, const char*, typename>
+    struct concat_impl;
 
-            static Log log { severity };
-            static NullLog nlog;
+    template<const char* S1, int... I1, const char* S2, int... I2>
+    struct concat_impl<S1, is<I1...>, S2, is<I2...>> {
+        static constexpr const char value[] { S1[I1]..., S2[I2]..., 0 };
+    };
 
-        template<int S>static Log& get() {
-            if constexpr (S >= LOG_SEVERITY)
-                return log;
-            else
-                return NullLog{};
-        }
+    template<const char* S1>constexpr auto concat() {
+        return S1;
+    };
 
-        //void syslog(int priority, const char *format, ...);
+    template<const char* S1, const char* S2, const char* ...S>
+    constexpr auto concat() {
+        //if constexpr (sizeof...(S) > 0)
+            return concat<concat_impl<S1, make_is<size(S1)>, S2, make_is<size(S2)>>::value, S...>();
+        //else
+        //    return concat_impl<S1, make_is<size(S1)>, S2, make_is<size(S2)>>::value;
+    };
 
-        template<typename T>void print(const T &t){
-            std::ostringstream os;
-            os << t;
-            syslog(LOG_ERR, os.str().c_str());
-        }
+    template<typename>struct format {
+        static constexpr char fmt[] = "%s";
+    };
 
-        template<>void print<int>(const T &t){
-            syslog(LOG_ERR, "%d", t);
-        }
+    template<>struct format<char> {
+        static constexpr char fmt[] = "%c";
+    };
 
-        template<>void print<double>(const T &t){
-            syslog(LOG_ERR, "%f", t);
-        }
+    template<>struct format<int> {
+        static constexpr char fmt[] = "%d";
+    };
 
-};
+    template<>struct format<long> {
+        static constexpr char fmt[] = "%dl";
+    };
 
-template<typename T>inline Log& operator<<(Log &l, const T &t) {
-    l.__print(t);
-    return l;
+    template<>struct format<long long> {
+        static constexpr char fmt[] = "%dll";
+    };
+
+    template<>struct format<unsigned int> {
+        static constexpr char fmt[] = "%u";
+    };
+
+    template<>struct format<unsigned long> {
+        static constexpr char fmt[] = "%ul";
+    };
+
+    template<>struct format<unsigned long long> {
+        static constexpr char fmt[] = "%dll";
+    };
+
+    template<>struct format<double> {
+        static constexpr char fmt[] = "%f";
+    };
+
+    template<typename T>constexpr inline auto fix(const T &t) {
+        return t;
+    }
+
+    template<>inline auto fix<std::string>(const std::string& t) {
+        return t.c_str();
+    }
 }
 
-template<typename T>inline NullLog& operator<<(NullLog &l, const T &t) {
-    l.__print(t);
-    return l;
+template<unsigned, typename...>struct log_stream_op;
+
+template<unsigned S>struct log_stream_op<S> {
+    const std::tuple<> args;
+    constexpr log_stream_op() = default;
+};
+
+
+using error   = log_stream_op<LOG_ERR>;
+using warning = log_stream_op<LOG_WARNING>;
+using notice  = log_stream_op<LOG_NOTICE>;
+using info    = log_stream_op<LOG_INFO>;
+using debug   = log_stream_op<LOG_DEBUG>;
+using trace   = log_stream_op<LOG_DEBUG>;
+
+
+template<unsigned S, typename... Args>struct log_stream_op {
+    const std::tuple<Args...> args;
+
+    constexpr log_stream_op(std::tuple<Args...>&& args) : args{ std::move(args) } {}
+
+    constexpr void log() const {
+        #ifdef __cpp_lib_apply
+          std::apply([this](auto&&... args) { std::printf(concat<format<Args>::fmt...>(), fix<Args>(args)...); }, args);
+        #else
+          detail::apply([this](auto&&... args) { std::printf(concat<format<Args>::fmt...>(), fix<Args>(args)...); }, args);
+        #endif
+    }
+};
+
+
+template<unsigned S, typename... A, typename B>inline auto operator<<(log_stream_op<S, A...> &&a, const B &b) -> typename std::enable_if<!std::is_same<typename std::decay<B>::type, char*>::value  && !std::is_integral<B>::value && !std::is_floating_point<B>::value, log_stream_op<S, A..., std::string>>::type {
+    std::ostringstream os;
+    os << b;
+    std::string s = os.str();
+    return log_stream_op<S, A..., std::string>{std::tuple_cat(a.args, std::tie(s)) };
+}
+
+
+template<unsigned S, typename... A>inline auto operator<<(log_stream_op<S, A...> &&a, const std::string &b) {
+    return log_stream_op<S, A..., std::string>{std::tuple_cat(a.args, std::tie(b)) };
+}
+
+
+template<unsigned S, typename... A, typename B>constexpr inline auto operator<<(log_stream_op<S, A...>&& a, const B b) -> typename std::enable_if<std::is_same<typename std::decay<B>::type, char*>::value || std::is_integral<B>::value || std::is_floating_point<B>::value, log_stream_op<S, A..., B>>::type {
+    return log_stream_op<S, A..., B>{std::tuple_cat(a.args, std::tie(b)) };
 }
 
 #endif  /* _ARROWHEAD_LOG_H_ */
