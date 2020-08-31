@@ -51,6 +51,29 @@ class TokenGenerationService {
 
     private:
 
+        std::string generateSignedJWT(const std::string consumerInfo, const std::string service, const std::string intf, const int duration){
+
+            //TODO: logger
+
+            jwt::jwt_payload payload = generateTokenPayload(consumerInfo, service, intf, duration);
+
+            /*TODO: if(!arrowheadContext.containsKey(CommonConstants.SERVER_PRIVATE_KEY)){
+              throw new ArrowheadException("Server's private key is not found.");
+          }*/
+
+            //TODO: get key from arrowheadContext
+
+            jwt::jwt_signature jws = new jwt::jwt_signature(privateKey);
+
+            jwt::jwt_header header = new jwt::jwt_header(CommonConstants.JWS_SIGN_ALG);
+
+            jws.encode(header, payload);
+
+            return jws;
+
+
+        }
+
         ///Randomly generates JwtId
         /*!
          * First randomly generates a short which is then casted to a 16 bit bitset which is then made into a string which gets base64 encoded
