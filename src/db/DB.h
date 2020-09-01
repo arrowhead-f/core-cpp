@@ -241,9 +241,20 @@ namespace db {
             DatabaseConnection(const DatabaseConnection&) = delete;
             DatabaseConnection& operator=(const DatabaseConnection&) = delete;
 
+            #ifndef __cpp_guaranteed_copy_elision
+              DatabaseConnection(DatabaseConnection &&other) : idx{ other.idx }, db{ other.db }, deleter{ other.deleter } {
+                  other.deleter = 0;
+              }
+              DatabaseConnection& operator=(DatabaseConnection&&) = delete;
+            #else
+              DatabaseConnection(DatabaseConnection&&) = delete;
+              DatabaseConnection& operator=(DatabaseConnection&&) = delete;
+            #endif
+
             /// Dtor. Handles back the database (connection) to the pool.
             ~DatabaseConnection() {
-                deleter(idx);
+                if(deleter)
+                    deleter(idx);
             }
 
             const Database* database() const {

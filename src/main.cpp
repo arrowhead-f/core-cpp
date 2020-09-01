@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 /* utility functions */
-#include "utils/log.h"
+//#include "utils/log.h"
 #include "utils/pgetopt.h"
 #include "utils/parsers.h"
 #include "utils/traits.h"
