@@ -8,19 +8,34 @@
 #include <cstdio>
 #include <sstream>
 
-#ifndef __cpp_lib_apply
+#if defined __cpp_lib_apply || defined __cpp_lib_invoke
   #include <functional>
 #endif
 
 namespace {
 
+    #ifndef __cpp_lib_invoke
+    namespace detail {
+        /// See Making Pointers to Members Callable, http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0312r1.html
+        template<typename F, typename... Args>
+        auto invoke(F f, Args&&... args) -> decltype(std::ref(f)(std::forward<Args>(args)...)) {
+            return std::ref(f)(std::forward<Args>(args)...);
+        }
+    }
+    #endif
+
     #ifndef __cpp_lib_apply
     namespace detail {
         template <class F, class Tuple, std::size_t... I>
         constexpr decltype(auto) apply_impl(F&& f, Tuple&& t, std::index_sequence<I...>) {
-            // This implementation is valid since C++20 (via P1065R2)
-            // In C++17, a constexpr counterpart of std::invoke is actually needed here
-            return std::invoke(std::forward<F>(f), std::get<I>(std::forward<Tuple>(t))...);
+
+            #ifndef  __cpp_lib_invoke
+              return detail::invoke(std::forward<F>(f), std::get<I>(std::forward<Tuple>(t))...);
+            #else
+              // This implementation is valid since C++20 (via P1065R2)
+              // In C++17, a constexpr counterpart of std::invoke is actually needed here
+              return std::invoke(std::forward<F>(f), std::get<I>(std::forward<Tuple>(t))...);
+            #endif
         }
 
         template <class F, class Tuple>

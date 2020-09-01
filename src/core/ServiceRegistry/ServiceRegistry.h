@@ -3,6 +3,8 @@
 
 #include "core/Core.h"
 
+#include <cstring>
+
 #include "../../json/ServiceQueryForm.hpp"
 #include "../../json/ServiceQueryList.hpp"
 #include "../../json/ServiceRegistryEntry.hpp"
