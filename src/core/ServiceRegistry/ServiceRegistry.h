@@ -34,6 +34,7 @@ template<typename DBPool>class ServiceRegistry final : public Core<DBPool> {
         }
 
         int PATCHCallback (const char *url, std::string &response, const char *payload) {
+            auto db = Core<DBPool>::database();
             std::cout << "patch\n";
             return 0;
         }

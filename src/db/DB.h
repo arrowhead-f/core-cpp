@@ -238,6 +238,9 @@ namespace db {
                 std::tie(idx, db) = pool.lock();
             }
 
+            DatabaseConnection(const DatabaseConnection&) = delete;
+            DatabaseConnection& operator=(const DatabaseConnection&) = delete;
+
             /// Dtor. Handles back the database (connection) to the pool.
             ~DatabaseConnection() {
                 deleter(idx);

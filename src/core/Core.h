@@ -14,7 +14,7 @@ template<typename DBPool>class Core {
 
     protected:
 
-        auto& database() {
+        auto database() {
             return db::DatabaseConnection<typename DBPool::DatabaseType>{ dbPool };
         };
 
