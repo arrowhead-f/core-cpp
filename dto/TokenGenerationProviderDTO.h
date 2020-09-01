@@ -10,14 +10,14 @@
 /// Header includes
 #include "SystemRequestDTO.h"
 
-using lgint = long long int;
+using llint = long long int;
 using MyInt = int;
 
 
 class TokenGenerationProviderDTO {
 
 private:
-    static const lgint serialVersionUID = -8058322682102502369L;
+    static const llint serialVersionUID = -8058322682102502369L;
 
     SystemRequestDTO provider;                   ///< See SystemRequestDTO.h
     std::vector<std::string> serviceInterfaces;  ///< Vector of strings containing service interfaces
