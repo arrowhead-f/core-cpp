@@ -143,8 +143,8 @@ int MHD_ReqCallback(void *cls, MHD_Connection *connection, const char *url, cons
             case METHOD_PUT:
             case METHOD_PATCH:
             {
-                //MHD_replace_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
-                MHD_set_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
+                MHD_replace_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
+                //MHD_set_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
 
                 if (*con_cls == NULL)
                 {
