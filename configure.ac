@@ -2,10 +2,10 @@ AC_INIT([arrowheads], 1.0)
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
 
-#CONFIGURE_MODULE()
-
 AM_INIT_AUTOMAKE([subdir-objects])
 
+AC_PROG_CC
+AC_LANG([C++])
 AC_PROG_CXX([clang++ g++])
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 
@@ -19,18 +19,33 @@ AC_DEFINE([UNIX], [], [Unix/Linux])
 
 AC_HEADER_STDC
 
-AC_CHECK_HEADER([syslog.h])
-AC_CHECK_FUNCS([openlog syslog closelog])
-#CONFIGURE_LOGGER()
+dnl
+dnl Configure the logger
+dnl
+CONFIGURE_LOGGING
 
+
+dnl
+dnl Configure command line parameter parser
+dnl
 AC_CHECK_HEADER([getopt.h])
 AC_CHECK_FUNCS([getopt])
+
+
+dnl
+dnl Check signals and pipes to handle termination
+dnl
 
 AC_CHECK_HEADER([unistd.h])
 AC_CHECK_FUNCS([pipe read write])
 
 AC_CHECK_HEADER([signal.h])
 AC_CHECK_FUNCS([sigaction])
+
+
+dnl
+dnl
+dnl
 
 
 AC_CHECK_HEADERS([microhttpd.h])
