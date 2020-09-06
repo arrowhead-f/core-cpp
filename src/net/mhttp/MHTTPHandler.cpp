@@ -72,8 +72,35 @@ inline int iterate_post(void *coninfo_cls,
     return MHD_YES;
 }
 
-const char szContentType[] = "application/x-www-form-urlencoded";
 
+
+namespace {
+
+    constexpr char *szContentType = "application/x-www-form-urlencoded";
+
+    /// Replace a particular header value. If multiple values match the kind, return any one of them.
+    /// \param connection connection to get values from
+    /// \param kind       what kind of value are we looking for
+    /// \param key        the header to look for, NULL to lookup 'trailing' value without a key
+    /// \param newVal     the new value of the key
+    /// \return           false if no such item was found
+/*
+    bool MHD_ReplaceConnVal(MHD_Connection *connection, MHD_ValueKind kind, const char *key, char *newVal) {
+        MHD_HTTP_Header *pos;
+
+        if (!connection)
+            return false;
+
+        for (pos = connection->headers_received; nullptr != pos; pos = pos->next) {
+            if ((0 != (pos->kind & kind)) &&  ( (key == pos->header) || ( (nullptr != pos->header) && (nullptr != key) && (MHD_str_equal_caseless_(key, pos->header))))) {
+                pos->value = newVal;
+                return true;
+            }
+        }
+        return false;
+    }
+*/
+}
 
 
 
@@ -143,8 +170,7 @@ int MHD_ReqCallback(void *cls, MHD_Connection *connection, const char *url, cons
             case METHOD_PUT:
             case METHOD_PATCH:
             {
-                MHD_replace_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
-                //MHD_set_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
+                //MHD_ReplaceConnVal(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, szContentType);
 
                 if (*con_cls == NULL)
                 {

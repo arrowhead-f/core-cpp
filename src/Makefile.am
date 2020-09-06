@@ -2,7 +2,7 @@ bin_PROGRAMS = service_registry
 
 #bin_PROGRAMS = dummy_registry service_registry
 
-AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/inc
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/inc -I$(top_srcdir)/src
 #${ARROWHEAD_CPPFLAGS}
 #AM_CXXFLAGS = ${ARROWHEAD_CXXFLAGS}
 AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd -lcurl -ljson-c
@@ -20,7 +20,7 @@ sources = main.cpp                         \
           json/ServiceQueryList.cpp        \
           json/ServiceRegistryEntry.cpp
 
-service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry
+service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry -I$(top_srcdir) -I$(top_srcdir)/inc -I$(top_srcdir)/src
 service_registry_SOURCES = $(sources)
 
 #dummy_registry_CPPFLAGS = -DCOREELEMENT=DummyRegistry

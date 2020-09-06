@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 /* utility functions */
-//#include "utils/log.h"
+#include "utils/logger.h"
 #include "utils/pgetopt.h"
 #include "utils/parsers.h"
 #include "utils/traits.h"
@@ -42,7 +42,14 @@ void print_hlp();
 
 int main(int argc, char *argv[]) {
 
-    //(notice{} << "STARTED").log();
+    // initialize looger
+    #define _____xstr(s) _____str(s)
+    #define _____str(s) #s
+      logger::init(LOG_DEBUG, _____xstr(COREELEMENT), "logfile");
+    #undef _____xstr
+    #undef _____str
+
+    (info{} << "STARTED").log();
 
     // parse command line arguments
     int ch = 0;

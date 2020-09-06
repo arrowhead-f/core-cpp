@@ -41,6 +41,18 @@ AC_DEFUN([CONFIGURE_LOGGING], [
                         [AC_DEFINE([USE_DEVLOG], [], [Log to screen])]
                     )
                     ;;
+          spdlog)
+                    AC_MSG_RESULT([yes])
+                    AC_DEFINE([USE_SPDLOG], [], [Use spdlog for logging])
+                    ;;
+          scrlog)
+                    AC_MSG_RESULT([yes])
+                    AC_DEFINE([USE_SCRLOG], [], [Use scrlog for logging])
+                    ;;
+          nillog)
+                    AC_MSG_RESULT([yes])
+                    AC_DEFINE([USE_NILLOG], [], [Use nillog for logging])
+                    ;;
           *)
                     AC_MSG_RESULT([no])
                     AC_MSG_ERROR([Unknown logger.])
@@ -49,6 +61,6 @@ AC_DEFUN([CONFIGURE_LOGGING], [
     ],
     [
       AC_MSG_RESULT([yes])
-      # configure default logger
+      AC_DEFINE([USE_SCRLOG], [], [Use scrlog for logging])
     ])
 ])
