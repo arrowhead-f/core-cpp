@@ -51,6 +51,26 @@ class TokenGenerationService {
 
     private:
 
+        std::string generateConsumerInfo(const SystemRequestDTO consumer, const CloudRequestDTO consumerCloud){
+            //TODO: logger
+
+            std::stringstream sstr;
+            sstr << consumer.getSystemName()
+            if(consumerCloud != nullptr){
+                sstr << DOT << GeneralUtils::trim(consumerCloud.getName()) << DOT << GeneralUtils::trim(consumerCloud.getCloudOperator());
+            }
+            else{
+                if(ownCloudName.empty()){
+                    initOwnCloudInfo() ///Not yet implemented
+                }
+                sstr << DOT << ownCloudName << DOT << ownCloudOperator;
+            }
+
+            return GeneralUtils::toLower(sstr.str());
+        }
+
+
+
         std::string generateSignedJWT(const std::string consumerInfo, const std::string service, const std::string intf, const int duration){
 
             //TODO: logger
@@ -67,11 +87,10 @@ class TokenGenerationService {
 
             jwt::jwt_header header = new jwt::jwt_header(CommonConstants.JWS_SIGN_ALG);
 
-            jws.encode(header, payload);
+            std::error_code ec{};
+            jws.encode(header, payload, ec);
 
             return jws;
-
-
         }
 
         ///Randomly generates JwtId
@@ -111,6 +130,13 @@ class TokenGenerationService {
 
             return payload;
         }
+
+       /*TODO: std::string encryptSignedJWT(const std:: string signedJWT, const PublicKey providerKey){
+            TODO: logger
+
+
+
+        }*/
 
 
 
