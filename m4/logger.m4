@@ -18,29 +18,29 @@ AC_DEFUN([CONFIGURE_LOGGING], [
                         [AC_DEFINE([USE_SYSLOG], [], [Use syslog for logging])]
                     )
                     ;;
-          devlog)
-                    AC_MSG_RESULT([yes])
-                    AC_CHECK_HEADER([cstdio], [
-                                                 AC_MSG_CHECKING(for std::printf...)
-                                                 AC_CACHE_VAL(ac_cv_std_printf,
-                                                     AC_TRY_RUN([
-                                                         #include <cstdio>
-                                                         int main() { int x = std::printf(""); return 0; }],
-                                                     ac_cv_std_printf=yes,
-                                                     ac_cv_std_printf=no,
-                                                     ac_cv_std_printf=no))
-                                                 AC_MSG_RESULT($ac_cv_std_printf)
-                                                 if test "x$ac_cv_std_printf" = "xyes"; then
-                                                     use_devlog=yes
-                                                 else
-                                                     use_devlog=no
-                                                 fi
-                                               ])
-                    AS_IF([test "x$use_devlog" = "xno"],
-                        [AC_MSG_ERROR([devlog requested but not found])],
-                        [AC_DEFINE([USE_DEVLOG], [], [Log to screen])]
-                    )
-                    ;;
+#          devlog)
+#                    AC_MSG_RESULT([yes])
+#                    AC_CHECK_HEADER([cstdio], [
+#                                                 AC_MSG_CHECKING(for std::printf...)
+#                                                 AC_CACHE_VAL(ac_cv_std_printf,
+#                                                     AC_TRY_RUN([
+#                                                         #include <cstdio>
+#                                                         int main() { int x = std::printf(""); return 0; }],
+#                                                     ac_cv_std_printf=yes,
+#                                                     ac_cv_std_printf=no,
+#                                                     ac_cv_std_printf=no))
+#                                                 AC_MSG_RESULT($ac_cv_std_printf)
+#                                                 if test "x$ac_cv_std_printf" = "xyes"; then
+#                                                     use_devlog=yes
+#                                                 else
+#                                                     use_devlog=no
+#                                                 fi
+#                                               ])
+#                    AS_IF([test "x$use_devlog" = "xno"],
+#                        [AC_MSG_ERROR([devlog requested but not found])],
+#                        [AC_DEFINE([USE_DEVLOG], [], [Log to screen])]
+#                    )
+#                    ;;
           spdlog)
                     AC_MSG_RESULT([yes])
                     AC_DEFINE([USE_SPDLOG], [], [Use spdlog for logging])

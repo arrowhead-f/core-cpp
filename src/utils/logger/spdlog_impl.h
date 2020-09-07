@@ -27,51 +27,37 @@ namespace logger {
 
     namespace detail {
 
-        /// Helper class to create the format string compile time.
-        template<typename>struct format {
-            static constexpr char fmt[] = "{}";
-        };
-
-        /// This function should be use to convert the parameter of the logger function.
-        /// And, well, for spdlog nothing should be done.
-        template<typename T>constexpr inline auto fix(const T &t) {
-            return t;
-        }
 
         template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_ERR, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->error(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              daily_logger->error(std::forward<Args>(args)...);
             #else
-              spdlog::error(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              spdlog::error(std::forward<Args>(args)...);
             #endif
-            //spdlog::error(std::forward<Args>(args)...);
         }
 
         template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_WARNING, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->warn(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              daily_logger->warn(std::forward<Args>(args)...);
             #else
-              spdlog::warn(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              spdlog::warn(std::forward<Args>(args)...);
             #endif
-            //spdlog::warn(std::forward<Args>(args)...);
         }
 
         template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_INFO, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->error(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              daily_logger->info(std::forward<Args>(args)...);
             #else
-              spdlog::info(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              spdlog::info(std::forward<Args>(args)...);
             #endif
-            //spdlog::info(std::forward<Args>(args)...);
         }
 
         template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_DEBUG, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->error(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              daily_logger->debug(std::forward<Args>(args)...);
             #else
-              spdlog::debug(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...);
+              spdlog::debug(std::forward<Args>(args)...);
             #endif
-            //spdlog::debug(std::forward<Args>(args)...);
         }
 
     }  // namespace detail

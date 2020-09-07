@@ -5,7 +5,7 @@
   #include "config.h"
 #endif
 
-#if (defined USE_SYSLOG && defined DEVLOG) || (defined USE_SYSLOG && defined NILLOG) || (defined USE_SYSLOG && defined SPDLOG) || (defined USE_DEVLOG && defined NILLOG) || (defined USE_DEVLOG && defined SPDLOG) || (defined USE_SPDLOG && defined NILLOG)
+#if (defined USE_SYSLOG && defined NILLOG) || (defined USE_SYSLOG && defined SPDLOG) || (defined USE_SPDLOG && defined NILLOG)
   #error "Multiple logger defined. Define only one."
 #endif
 
@@ -18,7 +18,7 @@
 
 #include <utility>
 #include <tuple>
-#include<iostream>
+#include <iostream>
 #include <sstream>
 
 /* either for std::apply, std::invoke or std::ref */
@@ -87,7 +87,7 @@ namespace logger {
 
 
 /* include specific header */
-#if defined USE_SYSLOG || defined USE_DEVLOG
+#if defined USE_SYSLOG
   #include "logger/syslog_impl.h"
 #endif
 
@@ -115,48 +115,59 @@ namespace logger {
     template<unsigned, typename...>struct log_stream_op;
 
     template<unsigned S>struct log_stream_op<S> {
+        const char *fmt;
         const std::tuple<> args;
-        constexpr log_stream_op() = default;
+
+        constexpr log_stream_op(const char *fmt) : fmt{ fmt } {}
+
+        constexpr void log() const {
+            logger::detail::print_log<S>(fmt);
+        }
+
+        constexpr void log(const char *file, const char *line, const std::string &thread) const {
+            logger::detail::print_log<S>(fmt);
+        }
+
     };
 
     template<unsigned S, typename... Args>struct log_stream_op {
+        const char *fmt;
         const std::tuple<Args...> args;
 
-        constexpr log_stream_op(std::tuple<Args...>&& args) : args{ std::move(args) } {}
+        constexpr log_stream_op(const char *fmt, std::tuple<Args...>&& args) : fmt{ fmt }, args{ std::move(args) } {}
 
-        /* add source location */
-        /* make concat logger specific...*/
         constexpr void log() const {
-//            #ifdef __cpp_lib_apply
-//              std::apply([this](auto&&... args) { logger::detail::print_log<S>(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...); }, args);
-//            #else
-//              detail::apply([this](auto&&... args) { logger::detail::print_log<S>(logger::detail::concat<logger::detail::format<Args>::fmt...>(), logger::detail::fix<Args>(args)...); }, args);
-//            #endif
-
             #ifdef __cpp_lib_apply
-              std::apply([this](auto&&... args) { logger::detail::print_log<S>(std::forward<decltype(args)>(args)...); }, args);
+              std::apply([this](auto&&... args) { logger::detail::print_log<S>(fmt, std::forward<decltype(args)>(args)...); }, args);
             #else
-              detail::apply([this](auto&&... args) { logger::detail::print_log<S>(std::forward<decltype(args)>(args)...); }, args);
+              detail::apply([this](auto&&... args) { logger::detail::print_log<S>(fmt, std::forward<decltype(args)>(args)...); }, args);
             #endif
         }
+
+        constexpr void log(const char *file, const char *line, const std::string &thread) const {
+            #ifdef __cpp_lib_apply
+              std::apply([this](auto&&... args) { logger::detail::print_log<S>(fmt, std::forward<decltype(args)>(args)...); }, args);
+            #else
+              detail::apply([this](auto&&... args) { logger::detail::print_log<S>(fmt, std::forward<decltype(args)>(args)...); }, args);
+            #endif
+        }
+
     };
 
-
-    template<unsigned S, typename... A, typename B>inline auto operator<<(log_stream_op<S, A...> &&a, const B &b) -> typename std::enable_if<!std::is_same<typename std::decay<B>::type, char*>::value  && !std::is_integral<B>::value && !std::is_floating_point<B>::value, log_stream_op<S, A..., std::string>>::type {
+    template<unsigned S, typename... A, typename B>inline auto operator<<(log_stream_op<S, A...> &&a, const B &b) -> typename std::enable_if<!std::is_same<typename std::decay<B>::type, const char*>::value && !std::is_same<typename std::decay<B>::type, char*>::value && !std::is_integral<B>::value && !std::is_floating_point<B>::value, log_stream_op<S, A..., std::string>>::type {
         std::ostringstream os;
         os << b;
         std::string s = os.str();
-        return log_stream_op<S, A..., std::string>{ std::tuple_cat(a.args, std::tie(s)) };
+        return log_stream_op<S, A..., std::string>{ a.fmt, std::tuple_cat(a.args, std::tie(s)) };
     }
 
     template<unsigned S, typename... A>inline auto operator<<(log_stream_op<S, A...> &&a, const std::string &b) {
-        return log_stream_op<S, A..., std::string>{ std::tuple_cat(a.args, std::tie(b)) };
+        return log_stream_op<S, A..., std::string>{ a.fmt, std::tuple_cat(a.args, std::tie(b)) };
     }
 
     template<unsigned S, typename... A, typename B>constexpr inline auto operator<<(log_stream_op<S, A...>&& a, const B b) -> typename std::enable_if<std::is_same<typename std::decay<B>::type, const char*>::value || std::is_same<typename std::decay<B>::type, char*>::value || std::is_integral<B>::value || std::is_floating_point<B>::value, log_stream_op<S, A..., B>>::type {
-        return log_stream_op<S, A..., B>{ std::tuple_cat(a.args, std::tie(b)) };
+        return log_stream_op<S, A..., B>{ a.fmt, std::tuple_cat(a.args, std::tie(b)) };
     }
-
 
 }  // namespace log
 

@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     #undef _____xstr
     #undef _____str
 
-    (info{} << "STARTED").log();
+    (info{ "STARTED {} {}" } << 12 << 45.5).log();
 
     // parse command line arguments
     int ch = 0;

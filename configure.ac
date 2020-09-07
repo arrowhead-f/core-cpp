@@ -49,7 +49,7 @@ dnl
 
 
 AC_CHECK_HEADERS([microhttpd.h])
-AC_CHECK_FUNCS([MHD_start_daemon MHD_stop_daemon])
+#AC_CHECK_FUNCS([MHD_start_daemon MHD_stop_daemon])
 
 AC_CHECK_HEADERS([curl/curl.h])
 #AC_CHECK_FUNCS([MHD_start_daemon MHD_stop_daemon])

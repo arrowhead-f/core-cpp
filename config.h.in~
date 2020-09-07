@@ -18,12 +18,6 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define to 1 if you have the `MHD_start_daemon' function. */
-#undef HAVE_MHD_START_DAEMON
-
-/* Define to 1 if you have the `MHD_stop_daemon' function. */
-#undef HAVE_MHD_STOP_DAEMON
-
 /* Define to 1 if you have the <microhttpd.h> header file. */
 #undef HAVE_MICROHTTPD_H
 
@@ -102,7 +96,7 @@
 /* Use scrlog for logging */
 #undef USE_SCRLOG
 
-/* Use syslog for logging */
+/* Use spdlog for logging */
 #undef USE_SPDLOG
 
 /* Use syslog for logging */
