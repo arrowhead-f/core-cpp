@@ -1,4 +1,4 @@
-bin_PROGRAMS = service_registry
+bin_PROGRAMS = service_registry authorizer
 
 #bin_PROGRAMS = dummy_registry service_registry
 
@@ -22,6 +22,9 @@ sources = main.cpp                         \
 
 service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry -I$(top_srcdir) -I$(top_srcdir)/inc -I$(top_srcdir)/src
 service_registry_SOURCES = $(sources)
+
+authorizer_CPPFLAGS = -DCOREELEMENT=Authorizer -I$(top_srcdir) -I$(top_srcdir)/inc -I$(top_srcdir)/src
+authorizer_SOURCES = $(sources)
 
 #dummy_registry_CPPFLAGS = -DCOREELEMENT=DummyRegistry
 #dummy_registry_SOURCES = $(sources)

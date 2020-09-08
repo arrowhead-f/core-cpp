@@ -5,7 +5,8 @@
 
 enum class CoreElementType : unsigned {
     DummyRegistry,
-    ServiceRegistry
+    ServiceRegistry,
+    Authorizer
 };
 
 template<CoreElementType, typename DBPool>struct CoreElement {
@@ -18,6 +19,10 @@ template<typename DBPool>struct CoreElement<CoreElementType::DummyRegistry, DBPo
 
 template<typename DBPool>struct CoreElement<CoreElementType::ServiceRegistry, DBPool> {
     using Type = ServiceRegistry<DBPool>;
+};
+
+template<typename DBPool>struct CoreElement<CoreElementType::Authorizer, DBPool> {
+    using Type = Authorizer<DBPool>;
 };
 
 #endif  /* _ARROWHEAD_TRAITS_H_ */

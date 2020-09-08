@@ -14,6 +14,7 @@
 
 /* core system elements */
 #include "core/ServiceRegistry/ServiceRegistry.h"
+#include "core/Authorizer/Authorizer.h"
 
 /* connections*/
 #include "net/KeyProvider.h"
