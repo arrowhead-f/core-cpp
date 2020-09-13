@@ -3,9 +3,6 @@
 /* Define to 1 if you have the `closelog' function. */
 #undef HAVE_CLOSELOG
 
-/* Define to 1 if you have the <curl/curl.h> header file. */
-#undef HAVE_CURL_CURL_H
-
 /* define if the compiler supports basic C++17 syntax */
 #undef HAVE_CXX17
 
@@ -18,20 +15,14 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define to 1 if you have the <microhttpd.h> header file. */
-#undef HAVE_MICROHTTPD_H
+/* Define to 1 if you have the `MHD_start_daemon' function. */
+#undef HAVE_MHD_START_DAEMON
+
+/* Define to 1 if you have the `MHD_stop_daemon' function. */
+#undef HAVE_MHD_STOP_DAEMON
 
 /* Define to 1 if you have the `openlog' function. */
 #undef HAVE_OPENLOG
-
-/* Define to 1 if you have the `pipe' function. */
-#undef HAVE_PIPE
-
-/* Define to 1 if you have the `read' function. */
-#undef HAVE_READ
-
-/* Define to 1 if you have the `sigaction' function. */
-#undef HAVE_SIGACTION
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -56,9 +47,6 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
-
-/* Define to 1 if you have the `write' function. */
-#undef HAVE_WRITE
 
 /* Name of package */
 #undef PACKAGE
@@ -86,21 +74,6 @@
 
 /* Unix/Linux */
 #undef UNIX
-
-/* Log to screen */
-#undef USE_DEVLOG
-
-/* Use nillog for logging */
-#undef USE_NILLOG
-
-/* Use scrlog for logging */
-#undef USE_SCRLOG
-
-/* Use spdlog for logging */
-#undef USE_SPDLOG
-
-/* Use syslog for logging */
-#undef USE_SYSLOG
 
 /* Version number of package */
 #undef VERSION

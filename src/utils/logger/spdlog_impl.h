@@ -27,39 +27,45 @@ namespace logger {
 
     namespace detail {
 
-
-        template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_ERR, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_ERR, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->error(std::forward<Args>(args)...);
+              daily_logger->error(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
-              spdlog::error(std::forward<Args>(args)...);
+              spdlog::error(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #endif
         }
 
-        template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_WARNING, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_WARNING, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->warn(std::forward<Args>(args)...);
+              daily_logger->warn(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
-              spdlog::warn(std::forward<Args>(args)...);
+              spdlog::warn(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #endif
         }
 
-        template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_INFO, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_INFO, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->info(std::forward<Args>(args)...);
+              daily_logger->info(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
-              spdlog::info(std::forward<Args>(args)...);
+              spdlog::info(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #endif
         }
 
-        template<unsigned S, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_DEBUG, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_DEBUG, void>::type {
             #ifdef USE_SPDLOG
-              daily_logger->debug(std::forward<Args>(args)...);
+              daily_logger->debug(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
-              spdlog::debug(std::forward<Args>(args)...);
+              spdlog::debug(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #endif
         }
 
+        template<char ...str, typename ...Args>void print_debug(char *sfile, int sline, Args&& ...args) {
+            #ifdef USE_SPDLOG
+              daily_logger->debug(compile_time::string<str...>::chars, sfile, sline, std::forward<Args>(args)...);
+            #else
+              spdlog::debug(compile_time::string<str...>::chars, sfile, sline, std::forward<Args>(args)...);
+            #endif
+        }
     }  // namespace detail
 
 

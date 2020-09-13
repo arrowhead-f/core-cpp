@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
     #undef _____xstr
     #undef _____str
 
-    (info{ "STARTED {} {}" } << 12 << 45.5).log();
+    (info{ } << fmt("started")).log(SOURCE_LOCATION);
 
     // parse command line arguments
     int ch = 0;
@@ -167,6 +167,8 @@ int main(int argc, char *argv[]) {
         }
     }
     #endif
+
+
 
     return 0;
 }
