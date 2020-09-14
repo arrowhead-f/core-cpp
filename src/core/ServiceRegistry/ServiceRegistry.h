@@ -197,6 +197,7 @@ void checkAndInsertValues(
         return oServiceQueryList.createServiceQueryList();
     }
 
+
     std::string processRegister(const char *_szPayload)
     {
         bool bSuccessfullyParsed = false;
@@ -283,38 +284,82 @@ void checkAndInsertValues(
 
         printf("ServiceRegistry ID: %s\n\n\n", sServiceRegistryEntryID.c_str());
 
-    //todo: create json response from database response
+//todo: create json response from database response
         printf("\n\tCreate json response from database response\n");
 
         auto db = Core<DBPool>::database();
         oServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
 
         std::string sQuery = "SELECT * FROM service_definition where id = " + sServiceDefinitionID + ";";
-        printf("Query: %s\n", sQuery.c_str());
-        std::string resp;
-        db.fetch(sQuery.c_str(), resp);
-        printf("resp: %s\n", resp.c_str());
 
-        if(auto row = db.fetch(sQuery.c_str())) {
-            printf("visszaadott\n");
-            int id;
-            row->get(0, id);
-            printf("id: %d\n", id);
+        if ( auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceRegistryEntry.sQData.sServiceDefinition_id = sServiceDefinitionID;
+            row->get(1, oServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
+            row->get(2, oServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
+            row->get(3, oServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
         }
-        else{
-            printf("nem adott vissza semmit \n");
+        else
+        {
+            return "Error: Empty response from service_definition table";
         }
 
-        //auto row = db.fetch(sQuery.c_str());
-        //int iValue;
-        //row->get(1, iValue);
-        //printf("%d\n", iValue);
-        //oServiceRegistryEntry.sQData.sServiceDefinition_id = std::to_string(iValue);
-        //row->get(1, oServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
-        //row->get(2, oServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
-        //row->get(3, oServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
+        sQuery = "SELECT * FROM system_ where id = " + sProviderSystemID + ";";
 
-        oServiceRegistryEntry.fillResponse(); //todo: implement
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceRegistryEntry.sQData.sProvider_id = sProviderSystemID;
+            row->get(1, oServiceRegistryEntry.sQData.sProvider_systemName);
+            row->get(2, oServiceRegistryEntry.sQData.sProvider_address);
+            row->get(3, oServiceRegistryEntry.sQData.sProvider_port);
+            row->get(4, oServiceRegistryEntry.sQData.sProvider_authenticationInfo);
+            row->get(5, oServiceRegistryEntry.sQData.sProvider_createdAt);
+            row->get(6, oServiceRegistryEntry.sQData.sProvider_updatedAt);
+        }
+        else
+        {
+            return "Error: Empty response from system_ table";
+        }
+
+        for(uint i = 0; i < vInterfaceIDs.size(); ++i)
+        {
+            sQuery = "SELECT * FROM service_interface where id = " + vInterfaceIDs[i] + ";";
+
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                string s;
+                oServiceRegistryEntry.sQData.vInterfaces_id.push_back(vInterfaceIDs[i]);
+                row->get(1, s);
+                oServiceRegistryEntry.sQData.vInterfaces_interfaceName.push_back(s);
+                row->get(2, s);
+                oServiceRegistryEntry.sQData.vInterfaces_createdAt.push_back(s);
+                row->get(3, s);
+                oServiceRegistryEntry.sQData.vInterfaces_updatedAt.push_back(s);
+            }
+            else
+            {
+                return "Error: Empty response from service_interface table";
+            }
+        }
+
+        sQuery = "SELECT * FROM service_registry where id = " + sServiceRegistryEntryID + ";";
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            row->get(3, oServiceRegistryEntry.sQData.sServiceUri);
+            row->get(4, oServiceRegistryEntry.sQData.sEndOfValidity);
+            row->get(5, oServiceRegistryEntry.sQData.sSecure);
+            row->get(6, oServiceRegistryEntry.sQData.sMetadata);
+            row->get(7, oServiceRegistryEntry.sQData.sVersion);
+            row->get(8, oServiceRegistryEntry.sQData.sCreatedAt);
+            row->get(9, oServiceRegistryEntry.sQData.sUpdatedAt);
+        }
+        else
+        {
+            return "Error: Empty response from service_registry table";
+        }
+
+        //oServiceRegistryEntry.fillResponse();
 
         return oServiceRegistryEntry.createRegistryEntry();
     }

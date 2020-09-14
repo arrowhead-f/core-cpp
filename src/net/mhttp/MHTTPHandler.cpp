@@ -103,7 +103,6 @@ namespace {
 }
 
 
-
 void MHD_ReqComplete(void *cls, struct MHD_Connection *connection, void **con_cls, enum MHD_RequestTerminationCode toe) {
     struct connection_info_struct *con_info = (connection_info_struct *) *con_cls;
 
@@ -170,7 +169,8 @@ int MHD_ReqCallback(void *cls, MHD_Connection *connection, const char *url, cons
             case METHOD_PUT:
             case METHOD_PATCH:
             {
-                //MHD_ReplaceConnVal(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, szContentType);
+                //MHD_replace_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
+                MHD_set_connection_value(connection, MHD_HEADER_KIND, MHD_HTTP_HEADER_CONTENT_TYPE, (char *)szContentType);
 
                 if (*con_cls == NULL)
                 {
@@ -244,5 +244,3 @@ int MHD_ReqCallback(void *cls, MHD_Connection *connection, const char *url, cons
 
         return ret;
     }
-
-

@@ -22,7 +22,8 @@ typedef struct servQueryData
     std::string sServiceUri;
     std::string sEndOfValidity;
     std::string sSecure;
-    std::map<std::string,std::string> mMetadata;
+    std::map<std::string,std::string> mMetadata; //todo:
+    std::string sMetadata;
     std::string sVersion;
     std::vector<std::string> vInterfaces_id;
     std::vector<std::string> vInterfaces_interfaceName;
