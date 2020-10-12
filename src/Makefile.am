@@ -18,7 +18,8 @@ sources = main.cpp                         \
           net/request/ReqBuilderWCurl.cpp  \
           json/ServiceQueryForm.cpp        \
           json/ServiceQueryList.cpp        \
-          json/ServiceRegistryEntry.cpp
+          json/ServiceRegistryEntry.cpp    \
+          json/System.cpp
 
 service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry -I$(top_srcdir) -I$(top_srcdir)/inc -I$(top_srcdir)/src
 service_registry_SOURCES = $(sources)

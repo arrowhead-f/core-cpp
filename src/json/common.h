@@ -54,3 +54,24 @@ inline void addDouble(json_object *_jObj, std::string _key, std::string _value)
     json_object *jDouble = json_object_new_double(d);
     json_object_object_add(_jObj, _key.c_str(), jDouble);
 }
+
+inline bool containsKey(std::string _sKey)
+{
+    json_object *obj;
+    if(!json_object_object_get_ex(obj, (char *)_sKey.c_str(), &obj))
+        return false;
+    return true;
+}
+
+inline bool getValue(json_object *_pjsonObj, std::string _sKey, std::string &_srValue)
+{
+    struct json_object *jObj;
+    if(!json_object_object_get_ex(_pjsonObj, (char *)_sKey.c_str(), &jObj))
+    {
+        _srValue = "";
+        return false;
+    }
+
+    _srValue = std::string(json_object_get_string(jObj));
+    return true;
+}

@@ -11,26 +11,6 @@ bool ServiceRegistryEntry::validRegistryEntry()
     return true;
 }
 
-bool ServiceRegistryEntry::containsKey(string _sKey)
-{
-    json_object *obj;
-    if(!json_object_object_get_ex(obj, (char *)_sKey.c_str(), &obj))
-        return false;
-    return true;
-}
-
-bool ServiceRegistryEntry::getValue(json_object *_pjsonObj, string _sKey, string &_srValue)
-{
-    struct json_object *jObj;
-    if(!json_object_object_get_ex(_pjsonObj, (char *)_sKey.c_str(), &jObj))
-    {
-        _srValue = "";
-        return false;
-    }
-
-    _srValue = std::string(json_object_get_string(jObj));
-    return true;
-}
 
 //https://linuxprograms.wordpress.com/category/json-c/
 /*

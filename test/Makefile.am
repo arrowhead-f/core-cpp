@@ -18,5 +18,5 @@ test_SOURCES = main.cpp                  \
                ../src/net/request/ReqBuilderWCurl.cpp  \
                ../src/json/ServiceQueryForm.cpp        \
                ../src/json/ServiceQueryList.cpp        \
-               ../src/json/ServiceRegistryEntry.cpp
-
+               ../src/json/ServiceRegistryEntry.cpp    \
+               ../src/json/System.cpp

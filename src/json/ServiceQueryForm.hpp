@@ -5,6 +5,8 @@
 #include <map>
 #include <json-c/json.h>
 
+#include "common.h"
+
 using namespace std;
 
 class ServiceQueryForm
@@ -35,8 +37,8 @@ public:
     }
 
     bool validQueryForm();
-    bool containsKey(string _sKey);
-    bool getValue(string _sKey, string &_srValue);
+    //bool containsKey(string _sKey);
+    //bool getValue(string _sKey, string &_srValue);
     void parseMeta(json_object *jobj);
     bool parseQueryForm();
 };

@@ -9,6 +9,7 @@ bool ServiceQueryForm::validQueryForm()
     return true;
 }
 
+/*
 bool ServiceQueryForm::containsKey(string _sKey)
 {
     json_object *obj;
@@ -26,7 +27,7 @@ bool ServiceQueryForm::getValue(string _sKey, string &_srValue)
     _srValue = std::string(json_object_get_string(jObj));
     return true;
 }
-
+*/
 //Source: https://linuxprograms.wordpress.com/category/json-c/
 void ServiceQueryForm::parseMeta(json_object *jobj) {
     enum json_type type;
@@ -53,7 +54,7 @@ bool ServiceQueryForm::parseQueryForm()
 ////
 // serviceDefinitionRequirement
 ////
-    if( !getValue("serviceDefinitionRequirement", sServiceDefinition) )
+    if( !getValue(mainObject, "serviceDefinitionRequirement", sServiceDefinition) )
         return false;
 
 ////

@@ -8,6 +8,7 @@
 #include "../../json/ServiceQueryForm.hpp"
 #include "../../json/ServiceQueryList.hpp"
 #include "../../json/ServiceRegistryEntry.hpp"
+#include "../../json/System.h"
 
 #define ECHO                 0
 #define QUERY                1
@@ -87,97 +88,309 @@ public:
 // DB
 ///////////////////////////////////////
 
-bool dbContentExists(std::string _sSelect, std::string _sFrom, std::string _sWhere, std::string _sWhat)
-{
-    auto db = Core<DBPool>::database();
-    std::string sQuery = "SELECT ";
-    sQuery += _sSelect + " FROM " + _sFrom + " WHERE " + _sWhere + " = '" + _sWhat + "';";
-    printf("Query: %s\n", sQuery.c_str());
-    std::string sResponse;
-    db.fetch(sQuery.c_str(), sResponse);
-    printf("sReponse: %s\n", sResponse.c_str());
-    return sResponse.size() != 0;
-}
-
-bool dbContentExists(std::string _sSelect, std::string _sFrom,std::string _sWhere, std::string _sWhat, std::string &_sResponse)
-{
-    auto db = Core<DBPool>::database();
-    std::string sQuery = "SELECT ";
-    sQuery += _sSelect + " FROM " + _sFrom + " WHERE " + _sWhere + " = '" + _sWhat + "';";
-    printf("Query: %s\n", sQuery.c_str());
-    db.fetch(sQuery.c_str(), _sResponse);
-    printf("_sReponse: %s\n", _sResponse.c_str());
-    return _sResponse.size() != 0;
-}
-
-void dbSaveContent(std::string _sTableName, std::string _sColumn, std::string _sValue, bool bMore)
-{
-    auto db = Core<DBPool>::database();
-    std::string sQuery = "INSERT INTO ";
-    if(!bMore)
-        sQuery += _sTableName + " (" + _sColumn + ") " + "VALUES ('" + _sValue + "');";
-    else
-        sQuery += _sTableName + " (" + _sColumn + ") " + "VALUES (" + _sValue + ");";
-    printf("Query: %s\n", sQuery.c_str());
-    db.query(sQuery.c_str());
-}
-
-void checkAndInsertValue(std::string _sReturnColumn, std::string _sTable, std::string _sCheckColumn, std::string _sCheckValue, std::string &_rRetValue)
-{
-    if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
+    bool dbContentExists(std::string _sSelect, std::string _sFrom, std::string _sWhere, std::string _sWhat)
     {
-        dbSaveContent(_sTable, _sCheckColumn, _sCheckValue, false);
-        //todo: get ID as db.query() response!
-        dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
+        auto db = Core<DBPool>::database();
+        std::string sQuery = "SELECT ";
+        sQuery += _sSelect + " FROM " + _sFrom + " WHERE " + _sWhere + " = '" + _sWhat + "';";
+        printf("Query: %s\n", sQuery.c_str());
+        std::string sResponse;
+        db.fetch(sQuery.c_str(), sResponse);
+        printf("sReponse: %s\n", sResponse.c_str());
+        return sResponse.size() != 0;
     }
-}
 
-void checkAndInsertValues(
-    std::string _sReturnColumn,
-    std::string _sTable,
-    std::string _sCheckColumn,
-    std::string _sCheckValue,
-    std::string _sInsertColumn,
-    std::string _sInsertValue,
-    std::string &_rRetValue)
-{
-    if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
+    bool dbContentExists(std::string _sSelect, std::string _sFrom,std::string _sWhere, std::string _sWhat, std::string &_sResponse)
     {
-        dbSaveContent(_sTable, _sInsertColumn, _sInsertValue, true);
-        //todo: get ID as db.query() response!
-        dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
+        auto db = Core<DBPool>::database();
+        std::string sQuery = "SELECT ";
+        sQuery += _sSelect + " FROM " + _sFrom + " WHERE " + _sWhere + " = '" + _sWhat + "';";
+        printf("Query: %s\n", sQuery.c_str());
+        db.fetch(sQuery.c_str(), _sResponse);
+        printf("_sReponse: %s\n", _sResponse.c_str());
+        return _sResponse.size() != 0;
     }
-}
+
+    void dbSaveContent(std::string _sTableName, std::string _sColumn, std::string _sValue, bool bMore)
+    {
+        auto db = Core<DBPool>::database();
+        std::string sQuery = "INSERT INTO ";
+        if(!bMore)
+            sQuery += _sTableName + " (" + _sColumn + ") " + "VALUES ('" + _sValue + "');";
+        else
+            sQuery += _sTableName + " (" + _sColumn + ") " + "VALUES (" + _sValue + ");";
+        printf("Query: %s\n", sQuery.c_str());
+        db.query(sQuery.c_str());
+    }
+
+    void checkAndInsertValue(std::string _sReturnColumn, std::string _sTable, std::string _sCheckColumn, std::string _sCheckValue, std::string &_rRetValue)
+    {
+        if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
+        {
+            dbSaveContent(_sTable, _sCheckColumn, _sCheckValue, false);
+            //todo: get ID as db.query() response!
+            dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
+        }
+    }
+
+    void checkAndInsertValues(
+        std::string _sReturnColumn,
+        std::string _sTable,
+        std::string _sCheckColumn,
+        std::string _sCheckValue,
+        std::string _sInsertColumn,
+        std::string _sInsertValue,
+        std::string &_rRetValue)
+    {
+        if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
+        {
+            dbSaveContent(_sTable, _sInsertColumn, _sInsertValue, true);
+            //todo: get ID as db.query() response!
+            dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
+        }
+    }
 
 ////////////////////////////////////////
 // LOGIC
 ///////////////////////////////////////
 
+// Management functions
+
+// DELETE
+
+    std::string processMgmtDeleteId(std::string _sId)
+    {
+        std::string sQuery = "DELETE FROM service_registry WHERE id = '" + _sId + "';";
+        auto db = Core<DBPool>::database();
+        db.query(sQuery.c_str());
+        return "OK";
+    }
+
+    std::string processMgmtDeleteServicesId(std::string _sId)
+    {
+        std::string sQuery = "DELETE FROM service_definition WHERE id = '" + _sId + "';";
+        auto db = Core<DBPool>::database();
+        db.query(sQuery.c_str());
+        return "OK";
+    }
+
+    std::string processMgmtDeleteSystemsId(std::string _sId)
+    {
+        std::string sQuery = "DELETE FROM system_ WHERE id = '" + _sId + "';";
+        auto db = Core<DBPool>::database();
+        db.query(sQuery.c_str());
+        return "OK";
+    }
+
+// GET
+    std::string processMgmtGet()
+    {
+        return "todo: implement";
+    }
+
+    std::string processMgmtGetId(std::string _sId)
+    {
+        std::string sServiceRegistryEntryID = _sId;
+        std::string sServiceDefinitionID;
+        std::string sProviderSystemID;
+        std::vector<std::string> vsInterfaceIDs;
+        std::string sQuery;
+
+        ServiceRegistryEntry oServiceRegistryEntry;
+        oServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
+
+        auto db = Core<DBPool>::database();
+
+        sQuery = "SELECT * FROM service_registry where id = '" + sServiceRegistryEntryID + "';";
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            row->get(1, sServiceDefinitionID);
+            row->get(2, sProviderSystemID);
+            row->get(3, oServiceRegistryEntry.sQData.sServiceUri);
+            row->get(4, oServiceRegistryEntry.sQData.sEndOfValidity);
+            row->get(5, oServiceRegistryEntry.sQData.sSecure);
+            row->get(6, oServiceRegistryEntry.sQData.sMetadata);
+            row->get(7, oServiceRegistryEntry.sQData.sVersion);
+            row->get(8, oServiceRegistryEntry.sQData.sCreatedAt);
+            row->get(9, oServiceRegistryEntry.sQData.sUpdatedAt);
+        }
+        else
+        {
+            return "Error: Empty response from service_registry table";
+        }
+
+        sQuery = "SELECT * FROM service_definition where id = " + sServiceDefinitionID + ";";
+
+        if ( auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceRegistryEntry.sQData.sServiceDefinition_id = sServiceDefinitionID;
+            row->get(1, oServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
+            row->get(2, oServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
+            row->get(3, oServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
+        }
+        else
+        {
+            return "Error: Empty response from service_definition table";
+        }
+
+        sQuery = "SELECT * FROM system_ where id = " + sProviderSystemID + ";";
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceRegistryEntry.sQData.sProvider_id = sProviderSystemID;
+            row->get(1, oServiceRegistryEntry.sQData.sProvider_systemName);
+            row->get(2, oServiceRegistryEntry.sQData.sProvider_address);
+            row->get(3, oServiceRegistryEntry.sQData.sProvider_port);
+            row->get(4, oServiceRegistryEntry.sQData.sProvider_authenticationInfo);
+            row->get(5, oServiceRegistryEntry.sQData.sProvider_createdAt);
+            row->get(6, oServiceRegistryEntry.sQData.sProvider_updatedAt);
+        }
+        else
+        {
+            return "Error: Empty response from system_ table";
+        }
+
+        sQuery = "SELECT interface_id FROM service_registry_interface_connection WHERE service_registry_id = '" + sServiceRegistryEntryID + "';";
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            do{
+                std::string s;
+                row->get(0, s);
+                vsInterfaceIDs.push_back(s);
+            } while( row->next() );
+        }
+        else
+        {
+            return "Error: Empty response from service_registry_interface_connection table";
+        }
+
+        for(uint i = 0; i < vsInterfaceIDs.size(); ++i)
+        {
+            sQuery = "SELECT * FROM service_interface where id = " + vsInterfaceIDs[i] + ";";
+
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                string s;
+                oServiceRegistryEntry.sQData.vInterfaces_id.push_back(vsInterfaceIDs[i]);
+                row->get(1, s);
+                oServiceRegistryEntry.sQData.vInterfaces_interfaceName.push_back(s);
+                row->get(2, s);
+                oServiceRegistryEntry.sQData.vInterfaces_createdAt.push_back(s);
+                row->get(3, s);
+                oServiceRegistryEntry.sQData.vInterfaces_updatedAt.push_back(s);
+            }
+            else
+            {
+                return "Error: Empty response from service_interface table";
+            }
+        }
+
+        return oServiceRegistryEntry.createRegistryEntry();
+    }
+
+// Public and Private functions
+
     std::string processQuery(const char *_szPayload)
     {
+/*
         bool bSuccessfullyParsed = false;
         ServiceQueryForm oServiceQueryForm(_szPayload, bSuccessfullyParsed);
 
         if(!bSuccessfullyParsed)
-            return "Error: Bad Json format!";
+            return "Error: Bad JSON format!";
 
         if(!oServiceQueryForm.parseQueryForm())
             return "Error: Invalid ServiceQueryForm!";
 
-    //todo: DatabaseQuery, logikai hierarchia??
-        string dbQuery = "Select * from * where " + oServiceQueryForm.sServiceDefinition + " ";
+        std::string sQuery = "SELECT id FROM service_definition WHERE service_definition = '" + + "';";
+        std::string sServiceDefinitionID;
 
-    //Filter on interfaces
-        for(int i = 0; i < oServiceQueryForm.vInterfaceRequirements.size(); ++i)
-            dbQuery += oServiceQueryForm.vInterfaceRequirements[i] + " ";
+        auto db = Core<DBPool>::database();
+        db.fetch(sQuery.c_str(), sServiceDefinitionID);
+        if( sServiceDefinitionID.size() == '0' ) return "Warning: Unknown Service Definition";
 
-    //Filter on Security type
-        for(int i = 0; i < oServiceQueryForm.vSecurityRequirements.size(); ++i)
-            dbQuery += oServiceQueryForm.vSecurityRequirements[i] + " ";
+        printf("sServiceDefinitionID: %s\n", sServiceDefinitionID.c_str());
 
-    //Filter on Metadata
-        for (auto it = oServiceQueryForm.mMetadataRequirements.begin(); it != oServiceQueryForm.mMetadataRequirements.end(); ++it)
-            dbQuery += it->first + ":" + it->second + " ";
+        std::vector<std::string> vsInterfaceIDs;
+        for(uint i = 0; i < oServiceQueryForm.vInterfaceRequirements.size(); ++i)
+        {
+            sQuery = "SELECT id FROM service_interface WHERE interface_name = '" + oServiceQueryForm.vInterfaceRequirements[i] + "';";
+            db.fetch(sQuery.c_str(), vsInterfaceIDs[i]);
+        }
+
+        if(oServiceQueryForm.vInterfaceRequirements.size() != 0 && vsInterfaceIDs.size() == 0) return "Warning: Unknwn interface requirement(s)";
+
+        for(uint i = 0; i < vsInterfaceIDs.size(); ++i)
+            printf( "vsInterfaceIDs: %s\n", vsInterfaceIDs[i].c_str() );
+
+        std::vector<std::string> vsServiceRegistryId;
+        if(vsInterfaceIDs.size() != 0)
+        {
+            sQuery = "SELECT service_registry_id FROM service_registry_inerface_connection WHERE "
+            for(uint i = 0; i < vsInterfaceIDs.size(); ++i)
+            {
+                sQuery += "interface_id = '" + vsInterfaceIDs[i] + "'";
+                if(i != (vsInterfaceIDs.size() - 1) )
+                    sQuery += " OR ";
+                else
+                    sQuery += ";";
+            }
+
+            if( auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    std::string sID;
+                    row->get(0,sID)
+                    vsServiceRegistryId.push_back(sID);
+                } while( row->next() );
+
+                if( vsServiceRegistryId.size() == 0 ) "Warning: Empty response from service_registry_interface_connection table";
+
+                sQuery = "SELECT * FROM service_registry WHERE (";
+
+                for(uint i = 0; i < vsServiceRegistryId.size(); ++i)
+                {
+                    sQuery += "id = '" + vsServiceRegistryId[i] + "' ";
+                    if(i != (vsServiceRegistryId.size() - 1) )
+                        sQuery += "OR ";
+                    else
+                        sQuery += ") ";
+                }
+
+                //Filter on security
+                if( oServiceQueryForm.vSecurityRequirements.size() != 0) sQuery += "(";
+
+                for(uint i = 0; i < oServiceQueryForm.vSecurityRequirements.size(); ++i)
+                {
+                    sQuery += "secure = '" + oServiceQueryForm.vSecurityRequirements[i] + "' ";
+                    if(i != (vsServiceRegistryId.size() - 1) )
+                        sQuery += "OR ";
+                    else
+                        sQuery += ") ";
+                }
+
+                //Filter on Metadata
+                for (auto it = oServiceQueryForm.mMetadataRequirements.begin(); it != oServiceQueryForm.mMetadataRequirements.end(); ++it)
+                    dbQuery += it->first + ":" + it->second + " ";
+            }
+            else
+            {
+                return "Warning: Empty response from service_registry_interface_connection table";
+            }
+
+        }
+        else
+        {
+            sQuery = "SELECT * FROM service_registry WHERE service_id = '" + sServiceDefinitionID + "'";
+        }
+
+*/
+
+/*
+
+
 
     //Filter on Version
         if(oServiceQueryForm.sVersionReq.length())    dbQuery += oServiceQueryForm.sVersionReq + " ";
@@ -188,8 +401,20 @@ void checkAndInsertValues(
         if(oServiceQueryForm.sPingProviders.length()) dbQuery += oServiceQueryForm.sPingProviders + " ";
 
     //todo: DBQuery
-        printf("DBQuery: %s\n", dbQuery.c_str());
+      std::string sQuery = "SELECT * FROM service_definition where id = " + sServiceDefinitionID + ";";
 
+      if ( auto row = db.fetch(sQuery.c_str()) )
+      {
+          oServiceRegistryEntry.sQData.sServiceDefinition_id = sServiceDefinitionID;
+          row->get(1, oServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
+          row->get(2, oServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
+          row->get(3, oServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
+      }
+      else
+      {
+          return "Error: Empty response from service_definition table";
+      }
+*/
     //todo: fill response content from DB answer
 
         ServiceQueryList oServiceQueryList; //this will be the answer Json content
@@ -197,6 +422,65 @@ void checkAndInsertValues(
         return oServiceQueryList.createServiceQueryList();
     }
 
+    std::string processQuerySystem(const char *_szPayload)
+    {
+        bool bSuccessfullyParsed = false;
+
+        System oSystem(_szPayload, bSuccessfullyParsed);
+
+        if( !bSuccessfullyParsed ) return "Error: Bad JSON payload!";
+
+        if( !oSystem.validJSONPayload() ) return "Error: Invalid JSON content!";
+
+        std::string sQuery = "SELECT * FROM system_ where system_name = '" + oSystem.sSystemName +
+                             "' AND address = '" + oSystem.sAddress +
+                             "' AND port = '"    + oSystem.sPort    + "';";
+
+        auto db = Core<DBPool>::database();
+
+        if ( auto row = db.fetch(sQuery.c_str()) )
+        {
+            row->get(0, oSystem.sId);
+            //row->get(1, oSystem.sSystemName); //validJSONPayload() also fills this string
+            //row->get(2, oSystem.sAddress);    //validJSONPayload() also fills this string
+            //row->get(3, oSystem.sPort);       //validJSONPayload() also fills this string
+            row->get(4, oSystem.sAuthInfo);
+            row->get(5, oSystem.sCreatedAt);
+            row->get(6, oSystem.sUpdatedAt);
+
+            return oSystem.createSystemJSON();
+        }
+        else
+        {
+            return "Error: Empty response from system_ table";
+        }
+
+    }
+
+    std::string processQuerySystemId(std::string _sId)
+    {
+        auto db = Core<DBPool>::database();
+        std::string sQuery = "SELECT * FROM system_ where id = " + _sId + ";";
+
+        if ( auto row = db.fetch(sQuery.c_str()) )
+        {
+            System oSystem;
+
+            row->get(0, oSystem.sId);
+            row->get(1, oSystem.sSystemName);
+            row->get(2, oSystem.sAddress);
+            row->get(3, oSystem.sPort);
+            row->get(4, oSystem.sAuthInfo);
+            row->get(5, oSystem.sCreatedAt);
+            row->get(6, oSystem.sUpdatedAt);
+
+            return oSystem.createSystemJSON();
+        }
+        else
+        {
+            return "Error: Empty response from system_ table";
+        }
+    }
 
     std::string processRegister(const char *_szPayload)
     {
@@ -284,8 +568,29 @@ void checkAndInsertValues(
 
         printf("ServiceRegistry ID: %s\n\n\n", sServiceRegistryEntryID.c_str());
 
+    //
+    //Save interface connection
+    //TABLE: service_registry_interface_connection
+    //
+        for(uint i = 0; i < vInterfaceIDs.size(); ++i)
+        {
+            std::string sServiceRegistryIntfConnectionEntryID;
+
+            sColumns = "service_registry_id, interface_id";
+            sValues = sServiceRegistryEntryID + ", " + vInterfaceIDs[i];
+
+            checkAndInsertValues(
+                "id",
+                "service_registry_interface_connection",
+                "service_registry_id",
+                sServiceRegistryEntryID,
+                sColumns,
+                sValues,
+                sServiceRegistryIntfConnectionEntryID
+            );
+        }
+
 //todo: create json response from database response
-        printf("\n\tCreate json response from database response\n");
 
         auto db = Core<DBPool>::database();
         oServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
@@ -359,19 +664,65 @@ void checkAndInsertValues(
             return "Error: Empty response from service_registry table";
         }
 
-        //oServiceRegistryEntry.fillResponse();
-
         return oServiceRegistryEntry.createRegistryEntry();
     }
 
     std::string processUnregister(const char *_pszAddr, const char *_pszPort, const char *_pszServDef, const char *_pszSystemName)
     {
-    //todo: delete from database based on the arguments
+        // Removes a registered service. A provider is allowed to unregister only its own services.
+        // It means that provider system name and certificate common name must match for successful unregistration.
+        //
         if (_pszAddr == NULL || _pszPort == NULL || _pszServDef == NULL || _pszSystemName == NULL)
             return "Error: Missing parameter(s)";
 
-        return "OK - todo:implement";
+        //todo: Check provider system_name and certificate common name!
+        //if SSL enabled, check ...
+
+        auto db = Core<DBPool>::database();
+        std::string sServiceDefinitionID, sProviderSystemID, sServiceRegistryId, sResponse;
+
+        std::string sQuery = "SELECT * FROM service_definition WHERE service_definition = '" + (std::string)_pszServDef + "' ;";
+
+        printf("Query: %s\n", sQuery.c_str());
+        db.fetch(sQuery.c_str(), sServiceDefinitionID);
+        printf("Answer sServiceDefinitionID: %s\n", sServiceDefinitionID.c_str());
+
+        if(sServiceDefinitionID.size() == 0) return "ERROR: Missing information from service_definition table!";
+
+        sQuery = "SELECT * FROM system_ WHERE system_name = '" + (std::string)_pszSystemName + "' AND " +
+                  "address = '" + (std::string)_pszAddr + "' AND " +
+                  "port = '" + (std::string)_pszPort + "';";
+
+        printf("Query: %s\n", sQuery.c_str());
+        db.fetch(sQuery.c_str(), sProviderSystemID);
+        printf("Answer sProviderSystemID: %s\n", sProviderSystemID.c_str());
+
+        if(sProviderSystemID.size() == 0) return "ERROR: Missing information from system_ table!";
+
+        sQuery = "SELECT * FROM service_registry WHERE service_id = " + sServiceDefinitionID + " AND "+
+                 "system_id = " + sProviderSystemID + ";";
+
+        printf("Query: %s\n", sQuery.c_str());
+        db.fetch(sQuery.c_str(), sServiceRegistryId);
+        printf("Answer sServiceRegistryId: %s\n", sServiceRegistryId.c_str());
+
+        if(sServiceRegistryId.size() == 0) return "ERROR: Missing information from service_registry table!";
+
+        sQuery = "DELETE FROM service_registry_interface_connection WHERE service_registry_id = '" + sServiceRegistryId + "';";
+        printf("Query: %s\n", sQuery.c_str());
+        db.query(sQuery.c_str());
+
+        sQuery = "DELETE FROM service_registry WHERE service_id = " + sServiceDefinitionID + " AND "+
+                 "system_id = " + sProviderSystemID + ";";
+
+        printf("Query: %s\n", sQuery.c_str());
+
+        db.query(sQuery.c_str());
+
+        return "OK";
     }
+
+// Process HTTP Methods
 
     std::string processGETRequest()
     {
@@ -393,14 +744,24 @@ void checkAndInsertValues(
 
             case QUERY:
                 if(viSubPath[1] != SYSTEM) return "Unknown subpath";
-                if(vsSubPath.size() < 3) return "Missing ID";
-                //printf("system id: %s\n", vsSubPath[2].c_str());
-                //todo: DataBaseQuery by ID, return system
-                return "OK - todo: implement";
-                break;
+                if(vsSubPath.size() < 3) return "Missing parameter (ID)";
+                return processQuerySystemId(vsSubPath[2]);
 
             case MGMT:
-                return "OK - todo: implement";
+                if(vsSubPath.size() == 1) return processMgmtGet();
+
+                switch(viSubPath[1])
+                {
+                    case GROUPED:
+                    case SERVICEDEF:
+                    case SERVICES:
+                    case SYSTEMS:
+                        break;
+                    default:
+                        if(vsSubPath.size() != 2) break;
+                        return processMgmtGetId(vsSubPath[1]);
+                }
+
                 break;
         }
 
@@ -421,11 +782,15 @@ void checkAndInsertValues(
             case QUERY:
                 if(vsSubPath.size() == 1) // /query
                     return processQuery(_szPayload);
+                else
+                    return processQuerySystem(_szPayload);
                 break;
+
             case REGISTER:
                 if(vsSubPath.size() == 1) // /register
                     return processRegister(_szPayload);
                 break;
+
             case MGMT:
                 return "OK - todo: implement";
                 break;
@@ -468,12 +833,31 @@ void checkAndInsertValues(
         switch(viSubPath[0])
         {
             case UNREGISTER:
-                if(vsSubPath.size() == 1) // /unregister
-                    return processUnregister(_pszAddr, _pszPort, _pszServDef, _pszSystemName);
-                break;
+                return processUnregister(_pszAddr, _pszPort, _pszServDef, _pszSystemName);
 
             case MGMT:
-                return "OK - todo: implement";
+                if(vsSubPath.size() < 2)
+                    break;
+
+                switch(viSubPath[1])
+                {
+                    case SERVICES:
+                        if(vsSubPath.size() < 3)
+                            break;
+                        printf("processMgmtDeleteServicesId\n");
+                        return processMgmtDeleteServicesId(vsSubPath[2]);
+
+                    case SYSTEMS:
+                        if(vsSubPath.size() < 3)
+                            break;
+                        printf("processMgmtDeleteSystemsId\n");
+                        return processMgmtDeleteSystemsId(vsSubPath[2]);
+
+                    default:
+                        printf("default: processMgmtDeleteId\n");
+                        return processMgmtDeleteId(vsSubPath[1]);
+                }
+
                 break;
         }
 

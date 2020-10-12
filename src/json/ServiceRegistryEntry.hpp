@@ -9,6 +9,8 @@ class ServiceRegistryEntry
 public:
     json_object *mainObject;
 
+    ServiceRegistryEntry(){}
+
     ServiceRegistryEntry(const char *_sJson, bool &_brSuccess)
     {
         mainObject = json_tokener_parse(_sJson);
@@ -36,8 +38,8 @@ public:
     servQueryData sQData;
 
     void parseMeta(json_object *jobj);
-    bool containsKey(string _sKey);
-    bool getValue(json_object *_pjsonObj, string _sKey, string &_srValue);
+    //bool containsKey(string _sKey);
+    //bool getValue(json_object *_pjsonObj, string _sKey, string &_srValue);
     bool validRegistryEntry();
     bool parseRegistryEntry();
 
