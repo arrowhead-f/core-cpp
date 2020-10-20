@@ -19,7 +19,8 @@ sources = main.cpp                         \
           json/ServiceQueryForm.cpp        \
           json/ServiceQueryList.cpp        \
           json/ServiceRegistryEntry.cpp    \
-          json/System.cpp
+          json/System.cpp                  \
+          json/ServiceDefinition.cpp
 
 service_registry_CPPFLAGS = -DCOREELEMENT=ServiceRegistry -I$(top_srcdir) -I$(top_srcdir)/inc -I$(top_srcdir)/src
 service_registry_SOURCES = $(sources)

@@ -23,7 +23,7 @@ template<typename DBPool>class Core {
         Core(DBPool &dbPool, ReqBuilder &reqBuilder) : dbPool{ dbPool }, reqBuilder{ reqBuilder } { }
 
         // HTTP callbacks
-        virtual int GETCallback   (const char *url, std::string &response) = 0;
+        virtual int GETCallback   (const char *url, std::string &response, const char *page, const char *itemPerPage, const char *sortField, const char *direction) = 0;
         virtual int DELETECallback(const char *url, std::string &response, const char *addr, const char *port, const char *servdef, const char *sysname) = 0;
         virtual int POSTCallback  (const char *url, std::string &response, const char *payload) = 0;
         virtual int PUTCallback   (const char *url, std::string &response, const char *payload) = 0;

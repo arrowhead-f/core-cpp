@@ -8,7 +8,7 @@ template<typename DBPool>class Authorizer final : public Core<DBPool> {
 public:
     using Core<DBPool>::Core;
 
-    int GETCallback(const char *_szUrl, std::string &response)
+    int GETCallback(const char *_szUrl, std::string &response, const char *_pszPage, const char *_pszItemPerPage, const char *_pszSortField, const char *_pszDirection)
     {
         return 1;
     }

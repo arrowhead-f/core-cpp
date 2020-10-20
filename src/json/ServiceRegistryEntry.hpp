@@ -8,6 +8,7 @@ class ServiceRegistryEntry
 {
 public:
     json_object *mainObject;
+    json_object *jResponse;
 
     ServiceRegistryEntry(){}
 
@@ -43,8 +44,18 @@ public:
     bool validRegistryEntry();
     bool parseRegistryEntry();
 
-    void fillResponse();
+    void fillJsonResponse();
     string createRegistryEntry();
+};
+
+class ServiceRegistryEntryList
+{
+public:
+    json_object *mainObject;
+    std::vector<ServiceRegistryEntry> vServiceRegistryEntry;
+    uint uCount;
+
+    string createRegistryEntryList();
 };
 
 //Input

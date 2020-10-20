@@ -1,13 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
-#include <json-c/json.h>
-
 #include "common.h"
-
-using namespace std;
 
 class ServiceQueryForm
 {
@@ -15,14 +8,14 @@ private:
     json_object *mainObject;
 
 public:
-    string sServiceDefinition;
-    vector<string> vInterfaceRequirements;
-    vector<string> vSecurityRequirements;
-    map<string, string> mMetadataRequirements;
-    string sVersionReq;
-    string sMinVersionReq;
-    string sMaxVersionReq;
-    string sPingProviders;
+    std::string sServiceDefinition;
+    std::vector<std::string> vInterfaceRequirements;
+    std::vector<std::string> vSecurityRequirements;
+    std::map<std::string, std::string> mMetadataRequirements;
+    std::string sVersionReq;
+    std::string sMinVersionReq;
+    std::string sMaxVersionReq;
+    std::string sPingProviders;
     bool bPingProviders;
 
     ServiceQueryForm(const char *_sJson, bool &_brSuccess)

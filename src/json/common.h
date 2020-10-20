@@ -45,6 +45,11 @@ inline void addInt(json_object *_jObj, std::string _key, std::string _value)
     json_object_object_add(_jObj, _key.c_str(), jint);
 }
 
+inline void addInt(json_object *_jObj, std::string _key, uint _value)
+{
+    json_object *jint = json_object_new_int( (int) _value );
+    json_object_object_add(_jObj, _key.c_str(), jint);
+}
 
 inline void addDouble(json_object *_jObj, std::string _key, std::string _value)
 {

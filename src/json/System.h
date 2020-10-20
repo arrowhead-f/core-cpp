@@ -1,12 +1,13 @@
+#pragma once
 
 #include "common.h"
 
 class System
 {
-    private:
-        json_object *mainObject;
-
     public:
+        json_object *mainObject;
+        json_object *jResponse;
+
         std::string sId;
         std::string sSystemName;
         std::string sAddress;
@@ -27,5 +28,16 @@ class System
         }
 
         bool validJSONPayload();
-        std::string createSystemJSON();
+        void fillJsonResponse();
+        std::string createSystem();
+};
+
+class SystemList
+{
+public:
+    json_object *mainObject;
+    std::vector<System> vSystem;
+    uint uCount;
+
+    std::string createSystemList();
 };

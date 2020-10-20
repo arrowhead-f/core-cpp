@@ -19,4 +19,5 @@ test_SOURCES = main.cpp                  \
                ../src/json/ServiceQueryForm.cpp        \
                ../src/json/ServiceQueryList.cpp        \
                ../src/json/ServiceRegistryEntry.cpp    \
-               ../src/json/System.cpp
+               ../src/json/System.cpp                  \
+               ../src/json/ServiceDefinition.cpp

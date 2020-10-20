@@ -152,7 +152,12 @@ int MHD_ReqCallback(void *cls, MHD_Connection *connection, const char *url, cons
                 }
                 else
                 {
-                    callbackResponse = static_cast<HTTPHandlerBase*>(cls)->GETCallback(url, sResponse);
+                    const char *page        = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "page");
+                    const char *itemPerPage = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "item_per_page");
+                    const char *sortField   = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "sort_field");
+                    const char *direction   = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "direction");
+
+                    callbackResponse = static_cast<HTTPHandlerBase*>(cls)->GETCallback(url, sResponse, page, itemPerPage, sortField, direction);
                 }
 
                 if (callbackResponse)

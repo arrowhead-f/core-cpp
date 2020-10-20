@@ -3,24 +3,46 @@
 
 bool System::validJSONPayload()
 {
-    if( !getValue(mainObject, "system_name", sSystemName) ) return false;
+    if( !getValue(mainObject, "systemName", sSystemName) ) return false;
     if( !getValue(mainObject, "address",     sAddress   ) ) return false;
     if( !getValue(mainObject, "port",        sPort      ) ) return false;
 
     return true;
 }
 
-std::string System::createSystemJSON()
+void System::fillJsonResponse()
 {
-    json_object *jResponse = json_object_new_object();
+    jResponse = json_object_new_object();
 
     addString(jResponse, "id", sId);
-    addString(jResponse, "system_name", sSystemName);
+    addString(jResponse, "systemName", sSystemName);
     addString(jResponse, "address", sAddress);
     addString(jResponse, "port", sPort);
-    addString(jResponse, "authentication_info", sAuthInfo);
-    addString(jResponse, "created_at", sCreatedAt);
-    addString(jResponse, "updated_at", sUpdatedAt);
+    addString(jResponse, "authenticationInfo", sAuthInfo);
+    addString(jResponse, "createdAt", sCreatedAt);
+    addString(jResponse, "updatedAt", sUpdatedAt);
+}
 
+std::string System::createSystem()
+{
+    fillJsonResponse();
     return std::string( json_object_to_json_string( jResponse ) );
+}
+
+std::string SystemList::createSystemList()
+{
+    mainObject = json_object_new_object();
+    json_object *jData = json_object_new_array();
+
+    for(uint i = 0; i < vSystem.size(); ++i)
+    {
+        vSystem[i].fillJsonResponse();
+        json_object_array_add(jData, vSystem[i].jResponse);
+    }
+
+    json_object_object_add(mainObject, "data", jData);
+
+    addInt(mainObject, "count", uCount);
+
+    return std::string(json_object_to_json_string(mainObject));
 }

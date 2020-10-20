@@ -9,6 +9,7 @@
 #include "../../json/ServiceQueryList.hpp"
 #include "../../json/ServiceRegistryEntry.hpp"
 #include "../../json/System.h"
+#include "../../json/ServiceDefinition.h"
 
 #define ECHO                 0
 #define QUERY                1
@@ -182,13 +183,150 @@ public:
         return "OK";
     }
 
+// PUT
+
+    std::string processMgmtPut(const char * _szPayload)
+    {
+        return "todo";
+    }
+
+    std::string processMgmtPutServices(std::string _sId, const char* _szPayload)
+    {
+        // Input: ID and ServiceDefinition
+        bool bSuccess = false;
+        ServiceDefinition oServiceDefinition(_szPayload, bSuccess);
+        if( !bSuccess ) return "Error: Invalid JSon format!";
+
+        if( !oServiceDefinition.validJSONPayload() ) return "Error: Missing information!";
+
+        std::string sQuery = "UPDATE service_definition SET service_definition = '" +
+                             oServiceDefinition.sServiceDefinition + "' WHERE id = '" + _sId + "';";
+
+        auto db = Core<DBPool>::database();
+        db.query(sQuery.c_str());
+        return processMgmtGetServicesId(_sId);
+    }
+
+    std::string processMgmtPutSystems(std::string _sId, const char* _szPayload)
+    {
+        // Input:  System
+        bool bSuccess = false;
+        System oSystem(_szPayload, bSuccess);
+        if( !bSuccess ) return "Error: Invalid JSon format!";
+
+        if( !oSystem.validJSONPayload() ) return "Error: Missing information!";
+
+        std::string sQuery = "UPDATE system_ SET system_name = '" + oSystem.sSystemName + "', " +
+                             "address = '" + oSystem.sAddress + "', " +
+                             "port = '" + oSystem.sPort + "', ";
+
+        sQuery += getValue(oSystem.mainObject, "authenticationInfo", oSystem.sAuthInfo ) ? std::string("authentication_info = '" + oSystem.sAuthInfo + "' ") : std::string("authentication_info = 'NULL' ");
+        sQuery += " WHERE id = '" + _sId + "';";
+
+        printf("%s\n", sQuery.c_str());
+
+        auto db = Core<DBPool>::database();
+        db.query(sQuery.c_str());
+
+        return processMgmtGetSystemsId(_sId);
+    }
+
+// POST
+
+    std::string processMgmtPost(const char* _szPayload)
+    {
+        // Input:  ServiceRegistryEntry
+        // Output: ServiceRegistryEntry
+        return "todo";
+    }
+
+    std::string processMgmtPostServices(const char* _szPayload)
+    {
+        // Input:  ServiceDefinition
+        bool bSuccess = false;
+        ServiceDefinition oServiceDefinition(_szPayload, bSuccess);
+        if( !bSuccess ) return "Error: Invalid JSon format!";
+
+        if( !oServiceDefinition.validJSONPayload() ) return "Error: Missing information!";
+
+        std::string sId;
+        checkAndInsertValue("id", "service_definition", "service_definition", oServiceDefinition.sServiceDefinition, sId);
+        return processMgmtGetServicesId(sId);
+    }
+
+    std::string processMgmtPostSystems(const char* _szPayload)
+    {
+        // Input:  System
+        bool bSuccess = false;
+        System oSystem(_szPayload, bSuccess);
+        if( !bSuccess ) return "Error: Invalid JSon format!";
+
+        if( !oSystem.validJSONPayload() ) return "Error: Missing information!";
+
+        std::string sQuery = "SELECT id FROM system_ where system_name = '" + oSystem.sSystemName + "' "
+                             "AND address = '" + oSystem.sAddress + "' " +
+                             "AND port = '" + oSystem.sPort + "' ;";
+
+        std::string sId;
+        auto db = Core<DBPool>::database();
+        db.fetch(sQuery.c_str(), sId);
+
+        if( sId.size() != 0 ) //content already exists
+        {
+            return processMgmtGetSystemsId(sId);
+        }
+        //else - insert new content
+
+        dbSaveContent(  "system_",
+                        "system_name, address, port, authentication_info",
+                        "'" + oSystem.sSystemName + "', " +
+                        "'" + oSystem.sAddress + "', " +
+                        "'" + oSystem.sPort + "', " +
+                        "'" + oSystem.sAuthInfo + "'",
+                        true);
+
+        // Output: System
+        db.fetch(sQuery.c_str(), sId);
+        return processMgmtGetSystemsId(sId);
+    }
+
 // GET
+
     std::string processMgmtGet()
     {
-        return "todo: implement";
+        ServiceRegistryEntryList oServiceRegistryEntryList;
+
+        std::string sQuery = "SELECT id FROM service_registry";
+
+        auto db = Core<DBPool>::database();
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceRegistryEntryList.uCount = 0;
+            do{
+                std::string sID;
+                ServiceRegistryEntry oServRegEntry;
+                row->get(0, sID);
+                oServiceRegistryEntryList.vServiceRegistryEntry.push_back(oServRegEntry);
+                processServiceRegistryEntry(sID, oServiceRegistryEntryList.vServiceRegistryEntry[oServiceRegistryEntryList.uCount++]);
+            } while( row->next() );
+        }
+        else
+        {
+            return "Warning: Empty response from service_registry table";
+        }
+
+        return oServiceRegistryEntryList.createRegistryEntryList();
     }
 
     std::string processMgmtGetId(std::string _sId)
+    {
+        ServiceRegistryEntry oServiceRegistryEntry;
+        processServiceRegistryEntry(_sId, oServiceRegistryEntry);
+        return oServiceRegistryEntry.createRegistryEntry();
+    }
+
+    void processServiceRegistryEntry(std::string _sId, ServiceRegistryEntry &_roServiceRegistryEntry)
     {
         std::string sServiceRegistryEntryID = _sId;
         std::string sServiceDefinitionID;
@@ -196,8 +334,7 @@ public:
         std::vector<std::string> vsInterfaceIDs;
         std::string sQuery;
 
-        ServiceRegistryEntry oServiceRegistryEntry;
-        oServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
+        _roServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
 
         auto db = Core<DBPool>::database();
 
@@ -207,48 +344,48 @@ public:
         {
             row->get(1, sServiceDefinitionID);
             row->get(2, sProviderSystemID);
-            row->get(3, oServiceRegistryEntry.sQData.sServiceUri);
-            row->get(4, oServiceRegistryEntry.sQData.sEndOfValidity);
-            row->get(5, oServiceRegistryEntry.sQData.sSecure);
-            row->get(6, oServiceRegistryEntry.sQData.sMetadata);
-            row->get(7, oServiceRegistryEntry.sQData.sVersion);
-            row->get(8, oServiceRegistryEntry.sQData.sCreatedAt);
-            row->get(9, oServiceRegistryEntry.sQData.sUpdatedAt);
+            row->get(3, _roServiceRegistryEntry.sQData.sServiceUri);
+            row->get(4, _roServiceRegistryEntry.sQData.sEndOfValidity);
+            row->get(5, _roServiceRegistryEntry.sQData.sSecure);
+            row->get(6, _roServiceRegistryEntry.sQData.sMetadata);
+            row->get(7, _roServiceRegistryEntry.sQData.sVersion);
+            row->get(8, _roServiceRegistryEntry.sQData.sCreatedAt);
+            row->get(9, _roServiceRegistryEntry.sQData.sUpdatedAt);
         }
         else
         {
-            return "Error: Empty response from service_registry table";
+            return;
         }
 
         sQuery = "SELECT * FROM service_definition where id = " + sServiceDefinitionID + ";";
 
         if ( auto row = db.fetch(sQuery.c_str()) )
         {
-            oServiceRegistryEntry.sQData.sServiceDefinition_id = sServiceDefinitionID;
-            row->get(1, oServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
-            row->get(2, oServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
-            row->get(3, oServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
+            _roServiceRegistryEntry.sQData.sServiceDefinition_id = sServiceDefinitionID;
+            row->get(1, _roServiceRegistryEntry.sQData.sServiceDefinition_serviceDefinition);
+            row->get(2, _roServiceRegistryEntry.sQData.sServiceDefinition_createdAt);
+            row->get(3, _roServiceRegistryEntry.sQData.sServiceDefinition_updatedAt);
         }
         else
         {
-            return "Error: Empty response from service_definition table";
+            return;
         }
 
         sQuery = "SELECT * FROM system_ where id = " + sProviderSystemID + ";";
 
         if (auto row = db.fetch(sQuery.c_str()) )
         {
-            oServiceRegistryEntry.sQData.sProvider_id = sProviderSystemID;
-            row->get(1, oServiceRegistryEntry.sQData.sProvider_systemName);
-            row->get(2, oServiceRegistryEntry.sQData.sProvider_address);
-            row->get(3, oServiceRegistryEntry.sQData.sProvider_port);
-            row->get(4, oServiceRegistryEntry.sQData.sProvider_authenticationInfo);
-            row->get(5, oServiceRegistryEntry.sQData.sProvider_createdAt);
-            row->get(6, oServiceRegistryEntry.sQData.sProvider_updatedAt);
+            _roServiceRegistryEntry.sQData.sProvider_id = sProviderSystemID;
+            row->get(1, _roServiceRegistryEntry.sQData.sProvider_systemName);
+            row->get(2, _roServiceRegistryEntry.sQData.sProvider_address);
+            row->get(3, _roServiceRegistryEntry.sQData.sProvider_port);
+            row->get(4, _roServiceRegistryEntry.sQData.sProvider_authenticationInfo);
+            row->get(5, _roServiceRegistryEntry.sQData.sProvider_createdAt);
+            row->get(6, _roServiceRegistryEntry.sQData.sProvider_updatedAt);
         }
         else
         {
-            return "Error: Empty response from system_ table";
+            return;
         }
 
         sQuery = "SELECT interface_id FROM service_registry_interface_connection WHERE service_registry_id = '" + sServiceRegistryEntryID + "';";
@@ -263,7 +400,7 @@ public:
         }
         else
         {
-            return "Error: Empty response from service_registry_interface_connection table";
+            return;
         }
 
         for(uint i = 0; i < vsInterfaceIDs.size(); ++i)
@@ -273,21 +410,195 @@ public:
             if (auto row = db.fetch(sQuery.c_str()) )
             {
                 string s;
-                oServiceRegistryEntry.sQData.vInterfaces_id.push_back(vsInterfaceIDs[i]);
+                _roServiceRegistryEntry.sQData.vInterfaces_id.push_back(vsInterfaceIDs[i]);
                 row->get(1, s);
-                oServiceRegistryEntry.sQData.vInterfaces_interfaceName.push_back(s);
+                _roServiceRegistryEntry.sQData.vInterfaces_interfaceName.push_back(s);
                 row->get(2, s);
-                oServiceRegistryEntry.sQData.vInterfaces_createdAt.push_back(s);
+                _roServiceRegistryEntry.sQData.vInterfaces_createdAt.push_back(s);
                 row->get(3, s);
-                oServiceRegistryEntry.sQData.vInterfaces_updatedAt.push_back(s);
+                _roServiceRegistryEntry.sQData.vInterfaces_updatedAt.push_back(s);
             }
             else
             {
-                return "Error: Empty response from service_interface table";
+                return;
+            }
+        }
+    }
+
+    std::string processMgmtGetServiceDef(std::string _sServiceDefinition, const char *_pszPage, const char *_pszItemPerPage, const char *_pszSortField, const char *_pszDirection)
+    {
+        uint uPage = _pszPage == NULL ? 0 : atoi(_pszPage);
+        uint uItemPerPage = _pszItemPerPage == NULL ? 0 : atoi(_pszItemPerPage);
+
+        std::string sSortField;
+        if(_pszSortField != NULL)
+        {
+            if( !((strcmp(_pszSortField, "id") == 0) || (strcmp(_pszSortField, "createdAt") == 0) || (strcmp(_pszSortField, "updatedAt") == 0)) )
+            {
+                return "Error: Unknown sort field!";
+            }
+            else
+            {
+                if( strcmp(_pszSortField, "createdAt") == 0 )
+                    sSortField = "created_at";
+                else if( strcmp(_pszSortField, "updatedAt") == 0 )
+                    sSortField = "updated_at";
+                else
+                    sSortField = "id";
             }
         }
 
-        return oServiceRegistryEntry.createRegistryEntry();
+        std::string sDirection;
+        if(_pszDirection != NULL)
+        {
+            if( !((strcmp(_pszDirection, "ASC") == 0) || (strcmp(_pszDirection, "DESC") == 0)) )
+                return "Error: Unknown direction!";
+            else
+                sDirection = std::string(_pszDirection);
+        }
+
+        std::string sQuery = "SELECT id FROM service_definition WHERE service_definition = '" + _sServiceDefinition + "';";
+        std::string sServiceDefinitionID;
+
+        auto db = Core<DBPool>::database();
+        db.fetch(sQuery.c_str(), sServiceDefinitionID);
+
+        if(sServiceDefinitionID.size() == 0) return("Warning: Unknown Service Definition!");
+
+        ServiceRegistryEntryList oServiceRegistryEntryList;
+
+        sQuery = "SELECT id FROM service_registry WHERE service_id = '" + sServiceDefinitionID + "'";
+
+        if(_pszSortField != NULL)
+        {
+            sQuery += "ORDER BY '" + sSortField + "' ";
+
+            if(_pszDirection != NULL)
+                sQuery += sDirection;
+        }
+
+        sQuery += ";";
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceRegistryEntryList.uCount = 0;
+            uint i = 0;
+            do{
+                if( (_pszItemPerPage != NULL) && (uItemPerPage == i)) break;
+                if( i++ != uPage ) continue;
+
+                std::string sID;
+                ServiceRegistryEntry oServRegEntry;
+                row->get(0, sID);
+                oServiceRegistryEntryList.vServiceRegistryEntry.push_back(oServRegEntry);
+                processServiceRegistryEntry(sID, oServiceRegistryEntryList.vServiceRegistryEntry[oServiceRegistryEntryList.uCount++]);
+            } while( row->next() );
+        }
+        else
+        {
+            return "Warning: Empty response from service_registry table";
+        }
+
+        return oServiceRegistryEntryList.createRegistryEntryList();
+    }
+
+    std::string processMgmtGetServices()
+    {
+        ServiceDefinitionList oServiceDefinitionList;
+
+        std::string sQuery = "SELECT id FROM service_definition";
+
+        auto db = Core<DBPool>::database();
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            oServiceDefinitionList.uCount = 0;
+            do{
+                std::string sID;
+                ServiceDefinition oServiceDefinition;
+                row->get(0, sID);
+                oServiceDefinitionList.vServiceDefinition.push_back(oServiceDefinition);
+                processServiceDefinition(sID, oServiceDefinitionList.vServiceDefinition[oServiceDefinitionList.uCount++]);
+            } while( row->next() );
+        }
+        else
+        {
+            return "Warning: Empty response from service_definition table";
+        }
+
+        return oServiceDefinitionList.createServiceDefinitionList();
+    }
+
+    std::string processMgmtGetServicesId(std::string _sId)
+    {
+        ServiceDefinition oServiceDefinition;
+        processServiceDefinition(_sId, oServiceDefinition);
+        return oServiceDefinition.createServiceDefinition();
+    }
+
+    void processServiceDefinition(std::string _sId, ServiceDefinition &_roServiceDefinition)
+    {
+        std::string sQuery = "SELECT * FROM service_definition WHERE id = '" + _sId + "';";
+        auto db = Core<DBPool>::database();
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            std::string s;
+            row->get(0, _roServiceDefinition.sId);
+            row->get(1, _roServiceDefinition.sServiceDefinition);
+            row->get(2, _roServiceDefinition.sCreatedAt);
+            row->get(3, _roServiceDefinition.sUpdatedAt);
+        }
+    }
+
+    std::string processMgmtGetSystems()
+    {
+        SystemList oSystemList;
+
+        std::string sQuery = "SELECT id FROM system_";
+
+        auto db = Core<DBPool>::database();
+
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            oSystemList.uCount = 0;
+            do{
+                std::string sID;
+                System oSystem;
+                row->get(0, sID);
+                oSystemList.vSystem.push_back(oSystem);
+                processSystem(sID, oSystemList.vSystem[oSystemList.uCount++]);
+            } while( row->next() );
+        }
+        else
+        {
+            return "Warning: Empty response from system_ table";
+        }
+
+        return oSystemList.createSystemList();
+    }
+
+    std::string processMgmtGetSystemsId(std::string _sId)
+    {
+        System oSystem;
+        processSystem(_sId, oSystem);
+        return oSystem.createSystem();
+    }
+
+    void processSystem(std::string _sId, System &_roSystem)
+    {
+        std::string sQuery = "SELECT * FROM system_ WHERE id = '" + _sId + "';";
+        auto db = Core<DBPool>::database();
+        if (auto row = db.fetch(sQuery.c_str()) )
+        {
+            std::string s;
+            row->get(0, _roSystem.sId);
+            row->get(1, _roSystem.sSystemName);
+            row->get(2, _roSystem.sAddress);
+            row->get(3, _roSystem.sPort);
+            row->get(4, _roSystem.sAuthInfo);
+            row->get(5, _roSystem.sCreatedAt);
+            row->get(6, _roSystem.sUpdatedAt);
+        }
     }
 
 // Public and Private functions
@@ -448,7 +759,7 @@ public:
             row->get(5, oSystem.sCreatedAt);
             row->get(6, oSystem.sUpdatedAt);
 
-            return oSystem.createSystemJSON();
+            return oSystem.createSystem();
         }
         else
         {
@@ -474,7 +785,7 @@ public:
             row->get(5, oSystem.sCreatedAt);
             row->get(6, oSystem.sUpdatedAt);
 
-            return oSystem.createSystemJSON();
+            return oSystem.createSystem();
         }
         else
         {
@@ -724,7 +1035,7 @@ public:
 
 // Process HTTP Methods
 
-    std::string processGETRequest()
+    std::string processGETRequest(const char *_pszPage, const char *_pszItemPerPage, const char *_pszSortField, const char *_pszDirection)
     {
         // /echo	                            GET	-	                OK
         // /query/system/{id}	                GET	ID	                System
@@ -753,10 +1064,28 @@ public:
                 switch(viSubPath[1])
                 {
                     case GROUPED:
-                    case SERVICEDEF:
-                    case SERVICES:
-                    case SYSTEMS:
                         break;
+
+                    case SERVICEDEF:
+                        if(vsSubPath.size() != 3) break;
+                        return processMgmtGetServiceDef(vsSubPath[2], _pszPage, _pszItemPerPage, _pszSortField, _pszDirection);
+
+                    case SERVICES:
+                        switch(vsSubPath.size())
+                        {
+                            case 2: return processMgmtGetServices();
+                            case 3: return processMgmtGetServicesId(vsSubPath[2]);
+                            default: break;
+                        }
+
+                    case SYSTEMS:
+                        switch(vsSubPath.size())
+                        {
+                            case 2: return processMgmtGetSystems();
+                            case 3: return processMgmtGetSystemsId(vsSubPath[2]);
+                            default: break;
+                        }
+
                     default:
                         if(vsSubPath.size() != 2) break;
                         return processMgmtGetId(vsSubPath[1]);
@@ -792,7 +1121,18 @@ public:
                 break;
 
             case MGMT:
-                return "OK - todo: implement";
+                if(vsSubPath.size() == 1) return processMgmtPost(_szPayload);
+
+                switch(viSubPath[1])
+                {
+                    case SERVICES:
+                        return processMgmtPostServices(_szPayload);
+
+                    case SYSTEMS:
+                        return processMgmtPostSystems(_szPayload);
+                        break;
+                }
+
                 break;
         }
 
@@ -805,10 +1145,25 @@ public:
         // /mgmt/services/(id}	PUT	Service	                ServiceDefinition
         // /mgmt/systems/{id}	PUT	System	                System
 
-        if(viSubPath[0] != MGMT)
-            return "Unknown subpath";
+        switch(viSubPath[0])
+        {
+            case MGMT:
+                if(vsSubPath.size() == 1) return processMgmtPut(_szPayload);
 
-        return "OK - todo: implement";
+                switch(viSubPath[1])
+                {
+                    case SERVICES:
+                        return processMgmtPutServices(vsSubPath[2], _szPayload);
+
+                    case SYSTEMS:
+                        return processMgmtPutSystems(vsSubPath[2], _szPayload);
+                        break;
+                }
+
+                break;
+        }
+
+        return "Unknown subpath!";
     }
 
     std::string processPATCHRequest(const char *_szPayload)
@@ -868,7 +1223,7 @@ public:
 // MHD_Callbacks
 ///////////////////////////////////////
 
-    int GETCallback(const char *_szUrl, std::string &response)
+    int GETCallback(const char *_szUrl, std::string &response, const char *_pszPage, const char *_pszItemPerPage, const char *_pszSortField, const char *_pszDirection)
     {
         printf("\nGET received (URL: %s)\n", _szUrl);
 
@@ -881,7 +1236,7 @@ public:
 
         parseURL(_szUrl + strlen("/serviceregistry"));
         //printParsedURL();
-        response = processGETRequest();
+        response = processGETRequest(_pszPage, _pszItemPerPage, _pszSortField, _pszDirection);
         return 1;
     }
 

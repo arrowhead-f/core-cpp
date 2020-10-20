@@ -80,41 +80,10 @@ bool ServiceRegistryEntry::parseRegistryEntry()
     return true;
 }
 
-//void ServiceRegistryEntry::fillResponse()
-//{
-    //todo: fill response from database answer
-    //fake content - todo: fill from db response
-    //sQData.sId = "0";
-    //sQData.sServiceDefinition_id = "12";
-    //sQData.sServiceDefinition_serviceDefinition = "exampleService";
-    //sQData.sServiceDefinition_createdAt = "2020-07-01T14-00";
-    //sQData.sServiceDefinition_updatedAt  = "2020-07-01T14-10";
-    //sQData.sProvider_id = "5";
-    //sQData.sProvider_systemName = "exampleSystem";
-    //sQData.sProvider_address = "192.168.21.5";
-    //sQData.sProvider_port = "";
-    //sQData.sProvider_authenticationInfo = ""; //base64 encoded key for HTTPs, optional
-    //sQData.sProvider_createdAt = "2020-07-01T14-00";
-    //sQData.sProvider_updatedAt = "2020-07-01T14-00";
-    //sQData.sServiceUri = "/example/uri";
-    //sQData.sEndOfValidity = "2022-07-01T14-00";
-    //sQData.sSecure = "NOT_SECURE";
-    //sQData.mMetadata.insert( pair<string,string>( "meta1", "meta2"));
-    //sQData.mMetadata.insert( pair<string,string>( "meta3", "meta4"));
-    //sQData.sVersion = "1.2";
-    //interfaces array
-    //sQData.vInterfaces_id.push_back("3");
-    //sQData.vInterfaces_interfaceName.push_back("HTTP-INSECURE-JSON");
-    //sQData.vInterfaces_createdAt.push_back("2022-07-01T14-00");
-    //sQData.vInterfaces_updatedAt.push_back("2022-07-01T14-00");
-    //
-    //sQData.sCreatedAt = "2020-07-01T14-00";
-    //sQData.sUpdatedAt = "2020-07-01T14-00";
-//}
-
-string ServiceRegistryEntry::createRegistryEntry()
+void ServiceRegistryEntry::fillJsonResponse()
 {
-    json_object *jResponse = json_object_new_object();
+    jResponse = json_object_new_object();
+
     addInt(jResponse, "id", sQData.sId);
 //serviceDefinition
     json_object *jServiceDefinition = json_object_new_object();
@@ -167,8 +136,31 @@ string ServiceRegistryEntry::createRegistryEntry()
     addString(jResponse, "createdAt", sQData.sCreatedAt);
 //updatedAt
     addString(jResponse, "updatedAt", sQData.sUpdatedAt);
+}
+
+std::string ServiceRegistryEntry::createRegistryEntry()
+{
+    fillJsonResponse();
 
     return string(json_object_to_json_string(jResponse));
+}
+
+std::string ServiceRegistryEntryList::createRegistryEntryList()
+{
+    mainObject = json_object_new_object();
+    json_object *jData = json_object_new_array();
+
+    for(uint i = 0; i < vServiceRegistryEntry.size(); ++i)
+    {
+        vServiceRegistryEntry[i].fillJsonResponse();
+        json_object_array_add(jData, vServiceRegistryEntry[i].jResponse);
+    }
+
+    json_object_object_add(mainObject, "data", jData);
+
+    addInt(mainObject, "count", uCount);
+
+    return string(json_object_to_json_string(mainObject));
 }
 
 /*Creating a json boolean*/

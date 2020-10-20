@@ -25,7 +25,7 @@ struct HTTPHandlerBase {
     //virtual void setOptions(std::string &&opt)      = 0;
 
     // HTTP callbacks
-    virtual int GETCallback   (const char *url, std::string &response) = 0;
+    virtual int GETCallback   (const char *url, std::string &response, const char *page, const char *itemPerPage, const char *sortField, const char *direction) = 0;
     virtual int DELETECallback(const char *url, std::string &response, const char *addr, const char *port, const char *servdef, const char *sysname) = 0;
     virtual int POSTCallback  (const char *url, std::string &response, const char *payload) = 0;
     virtual int PUTCallback   (const char *url, std::string &response, const char *payload) = 0;
@@ -55,8 +55,8 @@ template<typename T>class HTTPHandler : public HTTPHandlerBase {
             return port;
         }
 
-        int GETCallback(const char *url, std::string &response) final {
-            return coreElement.GETCallback(url, response);
+        int GETCallback(const char *url, std::string &response, const char *page, const char *itemPerPage, const char *sortField, const char *direction) final {
+            return coreElement.GETCallback(url, response, page, itemPerPage, sortField, direction);
         }
 
         int DELETECallback(const char *url, std::string &response, const char *addr, const char *port, const char *servdef, const char *sysname) final {
