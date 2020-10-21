@@ -183,50 +183,91 @@ public:
         return "OK";
     }
 
-// PUT
+// PUT or PATCH
 
-    std::string processMgmtPut(const char * _szPayload)
+    std::string processMgmtPutOrPatch(std::string _sId, const char* _szPayload, bool _bCheckMandatoryFields)
     {
         return "todo";
     }
 
-    std::string processMgmtPutServices(std::string _sId, const char* _szPayload)
+    std::string processMgmtPutOrPatchServices(std::string _sId, const char* _szPayload, bool _bCheckMandatoryFields)
     {
         // Input: ID and ServiceDefinition
         bool bSuccess = false;
         ServiceDefinition oServiceDefinition(_szPayload, bSuccess);
         if( !bSuccess ) return "Error: Invalid JSon format!";
 
-        if( !oServiceDefinition.validJSONPayload() ) return "Error: Missing information!";
+        bool bUpdate = false;
 
-        std::string sQuery = "UPDATE service_definition SET service_definition = '" +
-                             oServiceDefinition.sServiceDefinition + "' WHERE id = '" + _sId + "';";
+        if(_bCheckMandatoryFields)
+        {
+            if( !oServiceDefinition.validJSONPayload() )
+                return "Error: Missing information!";
+            bUpdate = true;
+        }
+        else
+        {
+            if( !getValue(oServiceDefinition.mainObject, "serviceDefinition", oServiceDefinition.sServiceDefinition ) )
+                bUpdate = false;
+            bUpdate = true;
+        }
 
-        auto db = Core<DBPool>::database();
-        db.query(sQuery.c_str());
+        if(bUpdate)
+        {
+            std::string sQuery = "UPDATE service_definition SET service_definition = '" +
+                     oServiceDefinition.sServiceDefinition + "' WHERE id = '" + _sId + "';";
+
+            auto db = Core<DBPool>::database();
+            db.query(sQuery.c_str());
+        }
+
         return processMgmtGetServicesId(_sId);
     }
 
-    std::string processMgmtPutSystems(std::string _sId, const char* _szPayload)
+    std::string processMgmtPutOrPatchSystems(std::string _sId, const char* _szPayload, bool _bCheckMandatoryFields)
     {
         // Input:  System
         bool bSuccess = false;
         System oSystem(_szPayload, bSuccess);
         if( !bSuccess ) return "Error: Invalid JSon format!";
 
-        if( !oSystem.validJSONPayload() ) return "Error: Missing information!";
+        if(_bCheckMandatoryFields)
+        {
+            if( !oSystem.validJSONPayload() ) return "Error: Missing information!";
+            std::string sQuery = "UPDATE system_ SET system_name = '" + oSystem.sSystemName + "', " +
+                                 "address = '" + oSystem.sAddress + "', " +
+                                 "port = '" + oSystem.sPort + "', ";
 
-        std::string sQuery = "UPDATE system_ SET system_name = '" + oSystem.sSystemName + "', " +
-                             "address = '" + oSystem.sAddress + "', " +
-                             "port = '" + oSystem.sPort + "', ";
+            sQuery += getValue(oSystem.mainObject, "authenticationInfo", oSystem.sAuthInfo ) ? std::string("authentication_info = '" + oSystem.sAuthInfo + "' ") : std::string("authentication_info = 'NULL' ");
+            sQuery += " WHERE id = '" + _sId + "';";
 
-        sQuery += getValue(oSystem.mainObject, "authenticationInfo", oSystem.sAuthInfo ) ? std::string("authentication_info = '" + oSystem.sAuthInfo + "' ") : std::string("authentication_info = 'NULL' ");
-        sQuery += " WHERE id = '" + _sId + "';";
+            auto db = Core<DBPool>::database();
+            db.query(sQuery.c_str());
+        }
+        else
+        {
+            bool bName     = getValue(oSystem.mainObject, "systemName"        , oSystem.sSystemName);
+            bool bAddr     = getValue(oSystem.mainObject, "address"           , oSystem.sAddress);
+            bool bPort     = getValue(oSystem.mainObject, "port"              , oSystem.sPort);
+            bool bAuthInfo = getValue(oSystem.mainObject, "authenticationInfo", oSystem.sAuthInfo);
 
-        printf("%s\n", sQuery.c_str());
+            std::string sQuery = "UPDATE system_ SET ";
+            if(bName) sQuery += "system_name = '" + oSystem.sSystemName + "'";
 
-        auto db = Core<DBPool>::database();
-        db.query(sQuery.c_str());
+            if(bAddr & bName) sQuery += ", ";
+            if(bAddr) sQuery += "address = '" + oSystem.sAddress + "'";
+
+            if(bPort & (bAddr || (!bAddr & bName))) sQuery += ", ";
+            if(bPort) sQuery += "port = '" + oSystem.sPort + "'";
+
+            if(bAuthInfo & (bPort || (!bPort & bAddr) || (!bAddr & bName))) sQuery += ", ";
+            if(bAuthInfo) sQuery += "authentication_info = '" + oSystem.sAuthInfo + "'";
+
+            sQuery += " WHERE id = '" + _sId + "';";
+
+            auto db = Core<DBPool>::database();
+            db.query(sQuery.c_str());
+        }
 
         return processMgmtGetSystemsId(_sId);
     }
@@ -1139,7 +1180,7 @@ public:
         return "Unknown subpath";
     }
 
-    std::string processPUTRequest(const char *_szPayload)
+    std::string processPUTRequest(const char *_szPayload, bool _bCheckMandatoryFields)
     {
         // /mgmt/{id}	        PUT	ServiceRegistryEntry	ServiceRegistryEntry
         // /mgmt/services/(id}	PUT	Service	                ServiceDefinition
@@ -1148,15 +1189,15 @@ public:
         switch(viSubPath[0])
         {
             case MGMT:
-                if(vsSubPath.size() == 1) return processMgmtPut(_szPayload);
+                if(vsSubPath.size() == 2) return processMgmtPutOrPatch(vsSubPath[1], _szPayload, _bCheckMandatoryFields);
 
                 switch(viSubPath[1])
                 {
                     case SERVICES:
-                        return processMgmtPutServices(vsSubPath[2], _szPayload);
+                        return processMgmtPutOrPatchServices(vsSubPath[2], _szPayload, _bCheckMandatoryFields);
 
                     case SYSTEMS:
-                        return processMgmtPutSystems(vsSubPath[2], _szPayload);
+                        return processMgmtPutOrPatchSystems(vsSubPath[2], _szPayload, _bCheckMandatoryFields);
                         break;
                 }
 
@@ -1166,16 +1207,13 @@ public:
         return "Unknown subpath!";
     }
 
-    std::string processPATCHRequest(const char *_szPayload)
+    std::string processPATCHRequest(const char *_szPayload, bool _bCheckMandatoryFields)
     {
         // /mgmt/{id}	        PATCH	Key value pairs of ServiceRegistryEntry	ServiceRegistryEntry
         // /mgmt/services/{id}	PATCH	Key value pairs of ServiceDefinition	ServiceDefinition
         // /mgmt/systems/{id}	PATCH	Key value pairs of System	            System
 
-        if(viSubPath[0] != MGMT)
-            return "Unknown subpath";
-
-        return "OK - todo: implement";
+        return processPUTRequest(_szPayload, _bCheckMandatoryFields);
     }
 
     std::string processDELETERequest(const char *_pszAddr, const char *_pszPort, const char *_pszServDef, const char *_pszSystemName)
@@ -1267,7 +1305,7 @@ public:
         }
 
         parseURL(_szUrl + strlen("/serviceregistry"));
-        response = processPUTRequest(payload);
+        response = processPUTRequest(payload, true);
         return 1;
     }
 
@@ -1282,7 +1320,7 @@ public:
         }
 
         parseURL(_szUrl + strlen("/serviceregistry"));
-        response = processPATCHRequest(payload);
+        response = processPATCHRequest(payload, false);
         return 1;
     }
 
