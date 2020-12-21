@@ -3,34 +3,38 @@
 
 #include "core/Core.h"
 
-template<typename DBPool>class Authorizer final : public Core<DBPool> {
+#include <iostream>
+
+template<typename DBPool, typename RB>class Authorizer final : public Core<DBPool, RB> {
 
 public:
-    using Core<DBPool>::Core;
+    using Core<DBPool, RB>::Core;
 
-    int GETCallback(const char *_szUrl, std::string &response, const char *_pszPage, const char *_pszItemPerPage, const char *_pszSortField, const char *_pszDirection)
-    {
-        return 1;
+    int handleGET(const std::string &uri, std::string &response) final {
+        std::cout << "handle get";
+
+        response = "handle get";
+        return 0;
     }
 
-    int POSTCallback  (const char *_szUrl, std::string &response, const char *payload)
-    {
-        return 1;
+    int handlePOST(const std::string &uri, std::string &response, const std::string &payload) final {
+        response = "handle post";
+        return 0;
     }
 
-    int PUTCallback (const char *_szUrl, std::string &response, const char *payload)
-    {
-        return 1;
+    int handlePUT(const std::string &uri, std::string &response, const std::string &payload) final {
+        response = "handle put";
+        return 0;
     }
 
-    int PATCHCallback (const char *_szUrl, std::string &response, const char *payload)
-    {
-        return 1;
+    int handlePATCH(const std::string &uri, std::string &response, const std::string &payload) final {
+        response = "handle patch";
+        return 0;
     }
 
-    int DELETECallback(const char *_szUrl, std::string &response, const char *addr, const char *port, const char *servdef, const char *sysname)
-    {
-        return 1;
+    int handleDELETE(const std::string &uri, std::string &response, const std::string &payload) final {
+        response = "handle delete";
+        return 0;
     }
 
 };

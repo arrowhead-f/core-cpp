@@ -61,6 +61,11 @@ namespace logger {
                     -> typename std::enable_if<std::is_same<typename std::decay<T>::type, const char*>::value, decltype(OBefore<before..., '%', 's'>::template OCurrent<str...>::template convert<Args...>())>::type {
                         return OBefore<before..., '%', 's'>::template OCurrent<str...>::template convert<Args...>();
                     }
+                    template<typename T, typename ...Args>
+                    static constexpr auto convert()
+                    -> typename std::enable_if<std::is_same<typename std::decay<T>::type, std::string>::value, decltype(OBefore<before..., '%', 's'>::template OCurrent<str...>::template convert<Args...>())>::type {
+                        return OBefore<before..., '%', 's'>::template OCurrent<str...>::template convert<Args...>();
+                    }
                 };
 
                 template<char ...str>struct OCurrent<'{' , '{', str...> {
@@ -82,17 +87,29 @@ namespace logger {
             };
         }
 
+        template<typename T>auto to_printable(T &&t) -> typename std::enable_if<std::is_fundamental<std::decay_t<T>>::value, T>::type {
+            return t;
+        }
+
+        template<typename T>auto to_printable(T &&t) -> typename std::enable_if<std::is_same<const char *const&, T>::value, T>::type {
+            return t;
+        }
+
+        template<typename T>auto to_printable(T &&t) -> typename std::enable_if<std::is_same<std::decay_t<T>, std::string>::value, const char*>::type {
+            return t.c_str();
+        }
+
         template<unsigned S, char ...str, typename ...Args>void print_log(Args&& ...args) {
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wformat-security"
-            syslog(S, OBefore<>::template OCurrent<' ', '<', 'd', 'e', 'b', 'u', 'g', '>', ' ', ' ', str...>::template convert<Args...>(), std::forward<Args>(args)...);
+            syslog(S, OBefore<>::template OCurrent<' ', '<', 'd', 'e', 'b', 'u', 'g', '>', ' ', ' ', str...>::template convert<Args...>(), to_printable(std::forward<Args>(args))...);
             #pragma GCC diagnostic pop
         }
 
         template<char ...str, typename ...Args>void print_debug(const char *sfile, int sline, Args&& ...args) {
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wformat-security"
-            syslog(LOG_DEBUG, OBefore<>::template OCurrent<' ', '<', 'd', 'e', 'b', 'u', 'g', '>', ' ', str...>::template convert<const char*, int, Args...>(), sfile, sline, std::forward<Args>(args)...);
+            syslog(LOG_DEBUG, OBefore<>::template OCurrent<' ', '<', 'd', 'e', 'b', 'u', 'g', '>', ' ', str...>::template convert<const char*, int, Args...>(), sfile, sline, to_printable(std::forward<Args>(args))...);
             #pragma GCC diagnostic pop
         }
 

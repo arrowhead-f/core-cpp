@@ -1,0 +1,131 @@
+#ifndef _TEST_MOCKCURL_H_
+#define _TEST_MOCKCURL_H_
+
+#include <iostream>
+
+#include <initializer_list>
+#include <functional>
+#include <regex>
+#include <string>
+#include <utility>
+#include <vector>
+
+#include "../src/http/ReqBuilder.h"
+#include "../src/http/KeyProvider.h"
+
+
+class MockCurl : public http::ReqBuilder {
+
+    public:
+
+        struct RespItem {
+
+            bool except       = false;
+            int code          = 0;
+            std::string msg;
+
+            RespItem(int code, const std::string &resp) : code{ code }, msg{ resp } {}
+            RespItem(const std::string &e) : except{ true }, msg{ e } {}
+        };
+
+    private:
+
+        http::KeyProvider& getKP() {
+            static http::KeyProvider kp;
+            return kp; 
+        }
+
+        std::map<std::string, std::pair<std::size_t, std::vector<RespItem>>> resp;
+
+
+        /// The request class to make subsequent curl call from the same thread convenient and fast.
+        class Req : public http::ReqBuilder::Request {
+            private:
+                MockCurl &mc;
+            public:
+                Req(MockCurl &mc) : mc{ mc } {}
+                result send(const char *method, const std::string &url, long port, const std::string &payload) final {
+                    return mc.send(method, url, port, payload);
+                }
+                using http::ReqBuilder::Request::send;
+            };
+
+
+    public:
+
+
+        MockCurl() : http::ReqBuilder{ getKP() } {}
+
+        MockCurl(std::initializer_list<std::pair<std::string, RespItem>> r) : http::ReqBuilder{ getKP() } {
+
+            for(const auto x : r) {
+                auto &y = resp[x.first];
+                y.first = 0;
+                y.second.push_back(std::move(x.second));
+            }
+
+        }
+
+        ~MockCurl() = default;
+
+        http::ReqBuilder::result send(const char *method, const std::string &url, long port, const std::string &payload) final {
+            using namespace http;
+
+            const std::string uri = std::string{method} + ":" + url;
+
+            auto it = resp.find(uri);
+            if (it == resp.end()) {
+                it = resp.find(url);
+            }
+
+            if (it != resp.end()) {
+                auto &cursor = it->second.first;
+                auto &&data  = it->second.second;
+
+                if (!data.empty()) {
+
+                    if (cursor >= data.size())
+                        cursor = 0;
+
+                    if (data[cursor].except)
+                        throw std::runtime_error{ data[cursor++].msg };
+
+                    cursor++;
+                    return { result_code{ data[cursor-1].code }, data[cursor-1].msg };
+                }
+            }
+
+            // try find an appropriate result with pattern matching
+            for(auto x : resp) {
+
+                const std::regex base_regex(x.first);
+                std::smatch base_match;
+
+                if (std::regex_match(uri, base_match, base_regex)) {
+
+                    auto &cursor = x.second.first;
+                    auto &&data  = x.second.second;
+
+                    if (!data.empty()) {
+
+                        if (cursor >= data.size())
+                            cursor = 0;
+
+                        if (data[cursor].except)
+                            throw std::runtime_error{ data[cursor++].msg };
+
+                        cursor++;
+                        return { result_code{ data[cursor-1].code }, data[cursor-1].msg };
+                    }
+                }
+            }
+
+            throw std::runtime_error{ "General error." };
+        }
+
+        using http::ReqBuilder::send;
+
+        std::unique_ptr<http::ReqBuilder::Request> req() final { return std::make_unique<MockCurl::Req>(*this); }
+};
+
+#endif  /* _TEST_MOCKCURL_H_ */

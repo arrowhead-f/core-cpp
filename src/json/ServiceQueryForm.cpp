@@ -9,7 +9,6 @@ bool ServiceQueryForm::validQueryForm()
     return true;
 }
 
-/*
 bool ServiceQueryForm::containsKey(string _sKey)
 {
     json_object *obj;
@@ -27,7 +26,7 @@ bool ServiceQueryForm::getValue(string _sKey, string &_srValue)
     _srValue = std::string(json_object_get_string(jObj));
     return true;
 }
-*/
+
 //Source: https://linuxprograms.wordpress.com/category/json-c/
 void ServiceQueryForm::parseMeta(json_object *jobj) {
     enum json_type type;
@@ -39,7 +38,7 @@ void ServiceQueryForm::parseMeta(json_object *jobj) {
             case json_type_double:
             case json_type_int:
             case json_type_string:
-                mMetadataRequirements.insert( std::pair<std::string,std::string>(std::string(key), std::string(json_object_get_string(val))) );
+                mMetadataRequirements.insert( pair<string,string>(string(key), string(json_object_get_string(val))) );
                 break;
             case json_type_object:
                 json_object_object_get_ex(jobj, key, &jobj);
@@ -54,7 +53,7 @@ bool ServiceQueryForm::parseQueryForm()
 ////
 // serviceDefinitionRequirement
 ////
-    if( !getValue(mainObject, "serviceDefinitionRequirement", sServiceDefinition) )
+    if( !getValue("serviceDefinitionRequirement", sServiceDefinition) )
         return false;
 
 ////
@@ -68,7 +67,7 @@ bool ServiceQueryForm::parseQueryForm()
         {
             jArrayElement = json_object_array_get_idx(jArray, i);
             if(jArrayElement == NULL) break;
-            vInterfaceRequirements.push_back( std::string( json_object_get_string(jArrayElement) ) );
+            vInterfaceRequirements.push_back( string( json_object_get_string(jArrayElement) ) );
         }
     }
 
@@ -81,7 +80,7 @@ bool ServiceQueryForm::parseQueryForm()
         {
             jArrayElement = json_object_array_get_idx(jArray, i);
             if(jArrayElement == NULL) break;
-            vSecurityRequirements.push_back( std::string( json_object_get_string(jArrayElement) ) );
+            vSecurityRequirements.push_back( string( json_object_get_string(jArrayElement) ) );
         }
     }
 
@@ -96,26 +95,26 @@ bool ServiceQueryForm::parseQueryForm()
 // versionRequirement
 ////
     if( json_object_object_get_ex(mainObject, "versionRequirement", &jObj))
-        sVersionReq = std::string( json_object_get_string(jObj) );
+        sVersionReq = string( json_object_get_string(jObj) );
 
 ////
 // maxVersionRequirement
 ////
     if( json_object_object_get_ex(mainObject, "maxVersionRequirement", &jObj))
-        sMaxVersionReq = std::string( json_object_get_string(jObj) );
+        sMaxVersionReq = string( json_object_get_string(jObj) );
 
 ////
 // minVersionRequirement
 ////
     if( json_object_object_get_ex(mainObject, "minVersionRequirement", &jObj))
-        sMinVersionReq = std::string( json_object_get_string(jObj) );
+        sMinVersionReq = string( json_object_get_string(jObj) );
 
 ////
 // pingProviders
 ////
     if( json_object_object_get_ex(mainObject, "pingProviders", &jObj))
     {
-        sPingProviders = std::string( json_object_get_string(jObj) );
+        sPingProviders = string( json_object_get_string(jObj) );
         bPingProviders = json_object_get_boolean(jObj);
     }
 

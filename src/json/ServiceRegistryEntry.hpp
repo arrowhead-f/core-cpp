@@ -8,9 +8,6 @@ class ServiceRegistryEntry
 {
 public:
     json_object *mainObject;
-    json_object *jResponse;
-
-    ServiceRegistryEntry(){}
 
     ServiceRegistryEntry(const char *_sJson, bool &_brSuccess)
     {
@@ -39,23 +36,13 @@ public:
     servQueryData sQData;
 
     void parseMeta(json_object *jobj);
-    //bool containsKey(string _sKey);
-    //bool getValue(json_object *_pjsonObj, string _sKey, string &_srValue);
+    bool containsKey(string _sKey);
+    bool getValue(json_object *_pjsonObj, string _sKey, string &_srValue);
     bool validRegistryEntry();
     bool parseRegistryEntry();
 
-    void fillJsonResponse();
+    void fillResponse();
     string createRegistryEntry();
-};
-
-class ServiceRegistryEntryList
-{
-public:
-    json_object *mainObject;
-    std::vector<ServiceRegistryEntry> vServiceRegistryEntry;
-    uint uCount;
-
-    string createRegistryEntryList();
 };
 
 //Input

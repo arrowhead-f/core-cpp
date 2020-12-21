@@ -3,8 +3,11 @@
 /* Define to 1 if you have the `closelog' function. */
 #undef HAVE_CLOSELOG
 
-/* define if the compiler supports basic C++17 syntax */
-#undef HAVE_CXX17
+/* Define to 1 if you have the <curl/curl.h> header file. */
+#undef HAVE_CURL_CURL_H
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the `getopt' function. */
 #undef HAVE_GETOPT
@@ -12,17 +15,29 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* Define to 1 if you have the `crypto' library (-lcrypto). */
+#undef HAVE_LIBCRYPTO
+
+/* Define to 1 if you have the `pthread' library (-lpthread). */
+#undef HAVE_LIBPTHREAD
+
+/* Define to 1 if you have the `ssl' library (-lssl). */
+#undef HAVE_LIBSSL
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define to 1 if you have the `MHD_start_daemon' function. */
-#undef HAVE_MHD_START_DAEMON
-
-/* Define to 1 if you have the `MHD_stop_daemon' function. */
-#undef HAVE_MHD_STOP_DAEMON
-
 /* Define to 1 if you have the `openlog' function. */
 #undef HAVE_OPENLOG
+
+/* Define to 1 if you have the `pipe' function. */
+#undef HAVE_PIPE
+
+/* Define to 1 if you have the `read' function. */
+#undef HAVE_READ
+
+/* Define to 1 if you have the `signalfd' function. */
+#undef HAVE_SIGNALFD
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -47,6 +62,12 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `write' function. */
+#undef HAVE_WRITE
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE
@@ -74,6 +95,27 @@
 
 /* Unix/Linux */
 #undef UNIX
+
+/* Use iopool based https server */
+#undef USE_IOPOOL
+
+/* Use nillog for logging */
+#undef USE_NILLOG
+
+/* Use scrlog for logging */
+#undef USE_SCRLOG
+
+/* Use spdlog for logging */
+#undef USE_SPDLOG
+
+/* Use srvlet based https server */
+#undef USE_SRVLET
+
+/* Use syslog for logging */
+#undef USE_SYSLOG
+
+/* Use iopool based https server */
+#undef USE_THPOOL
 
 /* Version number of package */
 #undef VERSION

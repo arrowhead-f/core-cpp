@@ -2,15 +2,23 @@
 #define _ARROWHEAD_LOGGER_H_
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+  #include "config.h"
 #endif
 
-#if (defined USE_SYSLOG && defined NILLOG) || (defined USE_SYSLOG && defined SPDLOG) || (defined USE_SPDLOG && defined NILLOG)
+#ifdef TESTRUNNER
+  #undef USE_SYSLOG
+  #undef USE_NILLOG
+  #undef USE_SPDLOG
+
+  #define USE_NILLOG
+#endif
+
+#if (defined USE_SYSLOG && defined USE_NILLOG) || (defined USE_SYSLOG && defined USE_SPDLOG) || (defined USE_SPDLOG && defined USE_NILLOG)
 #error "Multiple logger defined. Define only one."
 #endif
 
 /* common declarations */
-#include <string>
+//#include <string>
 
 #define SOURCE_LOCATION __FILE__, __LINE__
 
@@ -54,24 +62,23 @@ namespace logger {
 #endif
 
     namespace detail {
-        template<unsigned count, template<unsigned...> class meta_functor, unsigned...  indices>
+        template<unsigned count, template<unsigned...> class meta_functor, unsigned... indices>
         struct apply_range {
             typedef typename apply_range<count - 1, meta_functor, count - 1, indices...>::result result;
         };
 
-        template<template<unsigned...> class meta_functor, unsigned...  indices>
+        template<template<unsigned...> class meta_functor, unsigned... indices>
         struct apply_range<0, meta_functor, indices...> {
             typedef typename meta_functor<indices...>::result result;
         };
     }
 
     namespace compile_time {
-        template<char...  str> struct string {
+        template<char... str> struct string {
             static inline constexpr const char chars[sizeof...(str) + 1] = {str..., '\0'};
         };
 
-        //template<char...  str> constexpr  const char  string<str...>::chars[sizeof...(str)+1];
-
+        template<char... str> constexpr  const char  string<str...>::chars[sizeof...(str)+1];
 
         template<typename lambda_str_type> struct string_builder {
             template<unsigned... indices> struct produce {
@@ -82,12 +89,12 @@ namespace logger {
 
 }  // namespace logger
 
-#define  fmt(string_literal)                                                                    \
-    []{                                                                                         \
-        struct  constexpr_string_type { const char * chars = string_literal; };                 \
-        return  logger::detail::apply_range<sizeof(string_literal)-1,                           \
-            logger::compile_time::string_builder<constexpr_string_type>::produce>::result{};    \
-    }()
+#define fmt(string_literal)                                                                            \
+    ([]{                                                                                               \
+        struct constexpr_string_type { const char *chars = string_literal; };                          \
+        return typename logger::detail::apply_range<sizeof(string_literal) - 1,                        \
+            logger::compile_time::string_builder<constexpr_string_type>::template produce>::result{};  \
+    }())
 
 /* include specific header */
 #if defined USE_SYSLOG
@@ -105,10 +112,11 @@ namespace logger {
         constexpr nil_log_stream_op() = default;
 
         constexpr void log() const {}
+        constexpr void log(const char*, int) const {}
     };
 
     template<unsigned S, typename T>
-    inline auto operator<<(nil_log_stream_op<S> &a, const T &) {
+    inline auto operator<<(const nil_log_stream_op<S> &a, T&&) {
         return a;
     }
 
@@ -178,7 +186,7 @@ namespace logger {
 
     template<typename X, typename T> auto operator<<(X &&lstr, const T &val) -> typename std::enable_if<std::is_same<X, typename X::me>::value, typename X::template next<T>>::type {
         return typename X::template next<T> {
-                std::tuple_cat( lstr.args, std::tie(val) )
+                std::tuple_cat( std::move(lstr).args, std::tie(val) )
         };
     }
 

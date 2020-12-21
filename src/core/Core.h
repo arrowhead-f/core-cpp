@@ -1,16 +1,21 @@
 #ifndef _ARROWHEAD_CORE_H_
 #define _ARROWHEAD_CORE_H_
 
+#include <cstring>
 #include <string>
 
-#include "db/DB.h"
-#include "net/ReqBuilder.h"
+#include "utils/logger.h"
 
-template<typename DBPool>class Core {
+#include "db/DB.h"
+#include "Dispatcher.h"
+#include "ErrCodes.h"
+#include "http/ReqBuilder.h"
+
+template<typename DBPool, typename RB>class Core : public Dispatcher {
     private:
 
         DBPool &dbPool;          ///< The database pool to be used.
-        ReqBuilder &reqBuilder;  ///< Used to build and send requests.
+        RB     &reqBuilder;  ///< Used to build and send requests.
 
     protected:
 
@@ -20,14 +25,41 @@ template<typename DBPool>class Core {
 
     public:
 
-        Core(DBPool &dbPool, ReqBuilder &reqBuilder) : dbPool{ dbPool }, reqBuilder{ reqBuilder } { }
+        Core(DBPool &dbPool, RB &reqBuilder) : dbPool{ dbPool }, reqBuilder{ reqBuilder } { }
+
+        int dispatch(const std::string &from, const char *method, const std::string &uri, std::string &response, const std::string &payload) final {
+
+            (info{ } << fmt("{}: {} {}") << from << method << uri).log(SOURCE_LOCATION);
+
+            if(!std::strcmp(method, "GET")) {
+                return handleGET(uri, response);
+            }
+            else if(!std::strcmp(method, "DELETE")) {
+                return handleDELETE(uri, response, payload);
+            }
+            else if(!std::strcmp(method, "POST")) {
+                return handlePOST(uri, response, payload);
+            }
+            else if(!std::strcmp(method, "PUT")) {
+                return handlePUT(uri, response, payload);
+            }
+            else if(!std::strcmp(method, "PATCH")) {
+                return handlePATCH(uri, response, payload);
+            }
+
+            return ErrCode::UNKNOWN_METHOD;
+        }
+
+        void error(const std::string &from, const char *method, const std::string &uri) final {
+            (warning{ } << fmt("{}: {} {}") << from << method << uri).log(SOURCE_LOCATION);
+        }
 
         // HTTP callbacks
-        virtual int GETCallback   (const char *url, std::string &response, const char *page, const char *itemPerPage, const char *sortField, const char *direction) = 0;
-        virtual int DELETECallback(const char *url, std::string &response, const char *addr, const char *port, const char *servdef, const char *sysname) = 0;
-        virtual int POSTCallback  (const char *url, std::string &response, const char *payload) = 0;
-        virtual int PUTCallback   (const char *url, std::string &response, const char *payload) = 0;
-        virtual int PATCHCallback (const char *url, std::string &response, const char *payload) = 0;
+        virtual int handleGET   (const std::string &uri, std::string &response) = 0;
+        virtual int handleDELETE(const std::string &uri, std::string &response, const std::string &payload) = 0;
+        virtual int handlePOST  (const std::string &uri, std::string &response, const std::string &payload) = 0;
+        virtual int handlePUT   (const std::string &uri, std::string &response, const std::string &payload) = 0;
+        virtual int handlePATCH (const std::string &uri, std::string &response, const std::string &payload) = 0;
 
 };  // class Core
 

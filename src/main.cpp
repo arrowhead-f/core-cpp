@@ -15,33 +15,24 @@
 /* core system elements */
 #include "core/ServiceRegistry/ServiceRegistry.h"
 #include "core/Authorizer/Authorizer.h"
+#include "core/CertAuthority/CertAuthority.h"
 
 /* connections*/
-#include "net/KeyProvider.h"
-#include "net/ReqBuilder.h"
-#include "net/mhttp/MHTTPHandler.h"
+#include "http/KeyProvider.h"
+#include "http/ReqBuilder.h"
+#include "http/req/RB_Curl.h"
+#include "http/HTTPServerBuilder.h"
 
 /* this should be the last header included */
 #ifdef HAVE_CONFIG_H
   #include "config.h"
 #endif
 
-#if defined UNIX && defined HAVE_SIGACTION
-  // maybe add static asserts with proper erro messages
-
-  #include <signal.h>
-  #include <unistd.h>
-
-  int pipefd[2];
-
-  /// Sigaction signal handler
-  static void signal_hdl(int, siginfo_t*, void*);
-#endif
-
 /// Print help message to the standard output.
 void print_hlp();
 
-int main(int argc, char *argv[]) {
+
+int main(int argc, char *argv[]) try {
 
     // initialize looger
     #define _____xstr(s) _____str(s)
@@ -88,102 +79,39 @@ int main(int argc, char *argv[]) {
     //auto dconfmap = parser::parseOptions(dconf.c_str());
     //db::DatabasePool<db::MariaDB> pool{ dconfmap["host"].c_str(), dconfmap["user"].c_str(), dconfmap["password"].c_str(), dconfmap["dbname"].c_str() };
 
-    db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "capi" };
+    db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "arrowhead" };
 
     //  create the key provider
-    KeyProvider keyProvider{ "../keys/tempsensor.testcloud1.publicCert.pem",
-                             "PEM",
-                             "../keys/tempsensor.testcloud1.private.key",
-                             "PEM",
-                             "12345",
-                             "../keys/tempsensor.testcloud1.caCert.pem" };
+    http::KeyProvider keyProvider{ "../keys/tempsensor.testcloud1.publicCert.pem",
+                                   "PEM",
+                                   "../keys/tempsensor.testcloud1.private.key",
+                                   "PEM",
+                                   "12345",
+                                   "../keys/tempsensor.testcloud1.caCert.pem" };
 
-    ReqBuilder reqBuilder{ keyProvider };
+    http::RB_Curl reqBuilder{ keyProvider };
 
     // create core system element
-    CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type coreElement { pool, reqBuilder };
+    auto coreElement = CoreElement<db::DatabasePool<db::MariaDB>, http::RB_Curl>::Type{ pool, reqBuilder };
 
-    // create networking
-    auto http = MHTTPHandler<CoreElement<CoreElementType::COREELEMENT, db::DatabasePool<db::MariaDB>>::Type>{ static_cast<std::size_t>(port), coreElement };
+    auto http = http::HTTPServerBuilder::create<CoreElement<db::DatabasePool<db::MariaDB>, http::RB_Curl>::DispatcherType>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider, 4);
 
-    if(!http.start()) {
-        // error starting the server
-        return 1;
-    }
-
-    #if defined UNIX && defined HAVE_SIGACTION
-    {
-        // rationale:
-        //   * a signal is caught
-        //   * a message is sent through the pipe
-        //   * the receive message forces the program to stop
-
-        // create the pipe
-        if(pipe(pipefd) == -1) {
-            // error
-            // stop the http
-            http.stop();
-            return 1;
-        }
-
-        // install the signal handlers
-        struct sigaction act;
-        std::memset(&act, 0, sizeof(act));
-        act.sa_sigaction = signal_hdl;
-        act.sa_flags = SA_SIGINFO;
-
-        if(sigaction(SIGTERM, &act, nullptr) < 0) {
-            // cannot install signal handler error
-            return 1;
-        }
-
-        if(sigaction(SIGINT, &act, nullptr) < 0) {
-            // cannot install signal handler error
-            return 1;
-        }
-
-        char buf;         // buffer for the data read through the pipe
-        ssize_t ret = 0;  // the return value of teh reading from the pipe
-
-        // signals may interrupt this system call
-        while ((ret = read(pipefd[0], &buf, 1)) == -1 && errno == EINTR)
-            continue;
-
-        // stop the server
-        http.stop();
-
-        // close pipe
-        close(pipefd[0]);
-        close(pipefd[1]);
-
-        // emit error message and exit
-        switch(ret) {
-            case 1:
-                    // normal termination
-                    return 0;
-            default:
-                    // emit error message
-                    return 1;
-        }
-    }
-    #endif
-
-
+    http.run();
 
     return 0;
+
 }
+catch(const std::exception &e) {
+    (error{ } << fmt("Execution terminated with exception. Exception: {}") << e.what()).log(SOURCE_LOCATION);
+}
+catch(...) {
+    (error{ } << fmt("Execution terminated with unexpected error.")).log(SOURCE_LOCATION);
+}
+
+
+/*----------------------------------------------------------------------------------------------------*/
+
 
 void print_hlp() {
     std::cout << "dododo-dadada\n";
 }
-
-#if defined UNIX && defined HAVE_SIGACTION
-  void signal_hdl(int sig, siginfo_t*, void*) {
-      switch(sig) {
-           case SIGTERM:
-           case SIGINT:
-               write(pipefd[1], "1", 1);
-               break;
-      }
-  }
-#endif

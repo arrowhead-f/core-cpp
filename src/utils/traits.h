@@ -1,12 +1,14 @@
 #ifndef _ARROWHEAD_TRAITS_H_
 #define _ARROWHEAD_TRAITS_H_
 
+/*
 #include "core/Elements.h"
 
 enum class CoreElementType : unsigned {
     DummyRegistry,
     ServiceRegistry,
-    Authorizer
+    Authorizer,
+    CertificateAuthority
 };
 
 template<CoreElementType, typename DBPool>struct CoreElement {
@@ -24,5 +26,10 @@ template<typename DBPool>struct CoreElement<CoreElementType::ServiceRegistry, DB
 template<typename DBPool>struct CoreElement<CoreElementType::Authorizer, DBPool> {
     using Type = Authorizer<DBPool>;
 };
+
+template<typename DBPool>struct CoreElement<CoreElementType::CertificateAuthority, DBPool> {
+    using Type = CertificateAuthority<DBPool>;
+};
+*/
 
 #endif  /* _ARROWHEAD_TRAITS_H_ */

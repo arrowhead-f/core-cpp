@@ -1,23 +1,34 @@
 bin_PROGRAMS = test
 
-AM_CPPFLAGS = -I$(top_srcdir)/inc -I$(top_srcdir)/src
-AM_LDFLAGS = $(shell mariadb_config --libs) -lmicrohttpd -lcurl -ljson-c
+noinst_LIBRARIES = libsqlite3.a
+libsqlite3_a_SOURCES = ../inc/sqlite3/sqlite3.c
 
-#AM_LDFLAGS = $(shell mariadb_config --libs)
+AM_CPPFLAGS = -I$(top_srcdir)/inc -I$(top_srcdir)/src -DTESTRUNNER
+AM_LDFLAGS = $(shell mariadb_config --libs) -lcurl -ldl
 
-
-#AM_CXXFLAGS = $(INTI_CFLAGS)
-#ArrowheadSrv_LDADD = $(INTI_LIBS)
+test_LDADD = libsqlite3.a
 
 test_SOURCES = main.cpp                  \
+               test0001.cpp              \
+               test0002.cpp              \
                test0052.cpp              \
                test0053.cpp              \
+               test0054.cpp              \
+               test0055.cpp              \
+               test0056.cpp              \
+               test0093.cpp              \
+               test0102.cpp              \
+               test0103.cpp              \
+               test0104.cpp              \
                test0125.cpp              \
+               test1000.cpp              \
+               test1001.cpp              \
+               test1002.cpp              \
+               test1003.cpp              \
+               test1004.cpp              \
+               \
+               ../inc/json11/json11.cpp \
+               \
                ../src/utils/parsers.cpp  \
-               ../src/db/MariaDB.cpp                   \
-               ../src/net/request/ReqBuilderWCurl.cpp  \
-               ../src/json/ServiceQueryForm.cpp        \
-               ../src/json/ServiceQueryList.cpp        \
-               ../src/json/ServiceRegistryEntry.cpp    \
-               ../src/json/System.cpp                  \
-               ../src/json/ServiceDefinition.cpp
+               ../src/http/req/RB_Curl.cpp
+

@@ -22,19 +22,20 @@
 #include "core/ServiceRegistry/ServiceRegistry.h"
 
 /* connections*/
-#include "net/KeyProvider.h"
-#include "net/ReqBuilder.h"
+#include "http/KeyProvider.h"
+#include "http/ReqBuilder.h"
 
 #include "utils/traits.h"
 
 TEST_CASE("ServiceRegistry: chek register", "[ServiceRegistry]") {
 
+/*
     db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "arrowhead" };
-    auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
+    auto kp = http::KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
     ReqBuilder reqBuilder{ kp };
 
     // create core system element
-    CoreElement<CoreElementType::ServiceRegistry, db::DatabasePool<db::MariaDB>>::Type coreElement { pool, reqBuilder };
+    ServiceRegistry<db::DatabasePool<db::MariaDB>> coreElement { pool, reqBuilder };
 
     std::cout << coreElement.processRegister(R"(
     { 
@@ -58,5 +59,5 @@ TEST_CASE("ServiceRegistry: chek register", "[ServiceRegistry]") {
     "interface1"
   ]
 })") << "\n";
-
+*/
 }

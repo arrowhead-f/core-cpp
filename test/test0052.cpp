@@ -11,21 +11,21 @@
 
 #include <catch2/catch.hpp>
 
-#include "net/KeyProvider.h"
+#include "http/KeyProvider.h"
 
 
 TEST_CASE("KeyProvider: Check opening notexising file", "[KeyProvider]") {
 
-    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.tqt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
-    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.tqt", "PEM", "12345", "data/test0052/tempsensor.txt" });
-    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.tqt" });
+    CHECK_THROWS(http::KeyProvider{ "data/test0052/tempsensor.tqt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
+    CHECK_THROWS(http::KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.tqt", "PEM", "12345", "data/test0052/tempsensor.txt" });
+    CHECK_THROWS(http::KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.tqt" });
 
 }
 
 
 TEST_CASE("KeyProvider: Check openning existing file", "[KeyProvider]") {
 
-    CHECK_NOTHROW(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
+    CHECK_NOTHROW(http::KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
 
 }
 
@@ -33,12 +33,12 @@ TEST_CASE("KeyProvider: Check openning existing file", "[KeyProvider]") {
 TEST_CASE("KeyProvider: Is valid", "[KeyProvider]") {
 
     {
-        auto kp = KeyProvider{};
+        auto kp = http::KeyProvider{};
         REQUIRE(kp == false);
     }
 
     {
-        auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
+        auto kp = http::KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
         REQUIRE(kp == true);
     }
 
@@ -47,7 +47,7 @@ TEST_CASE("KeyProvider: Is valid", "[KeyProvider]") {
 
 TEST_CASE("KeyProvider: Check paths stored", "[KeyProvider]") {
 
-    auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
+    auto kp = http::KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
 
     REQUIRE(kp.sslCert == "data/test0052/tempsensor.txt");
     REQUIRE(kp.sslKey  == "data/test0052/tempsensor.txt");
@@ -62,7 +62,7 @@ TEST_CASE("KeyProvider: Check paths stored", "[KeyProvider]") {
 
 TEST_CASE("KeyProvider: Check file content read", "[KeyProvider]") {
 
-    auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" };
+    auto kp = http::KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" };
 
     REQUIRE(kp.sslCertData == "12345\n54327");
     REQUIRE(kp.sslKeyData  == "12345\n54327");

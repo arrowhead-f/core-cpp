@@ -1,5 +1,5 @@
-#ifndef _DBEXCEPTION_H_
-#define _DBEXCEPTION_H_
+#ifndef _DB_DBEXCEPTION_H_
+#define _DB_DBEXCEPTION_H_
 
 #include <exception>
 
@@ -29,4 +29,4 @@ namespace db {
 
 }
 
-#endif  // _DBEXCEPTION_H_
+#endif  /* _DB_DBEXCEPTION_H_ */

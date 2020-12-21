@@ -15,7 +15,6 @@
   namespace logger {
       static std::shared_ptr<spdlog::logger> daily_logger { nullptr };
   }
-
 #endif
 
 #define LOG_ERR        1
@@ -27,7 +26,7 @@ namespace logger {
 
     namespace detail {
 
-        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_ERR, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S == LOG_ERR, void>::type {
             #ifdef USE_SPDLOG
               daily_logger->error(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
@@ -35,7 +34,7 @@ namespace logger {
             #endif
         }
 
-        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_WARNING, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S == LOG_WARNING, void>::type {
             #ifdef USE_SPDLOG
               daily_logger->warn(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
@@ -43,7 +42,7 @@ namespace logger {
             #endif
         }
 
-        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_INFO, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S == LOG_INFO, void>::type {
             #ifdef USE_SPDLOG
               daily_logger->info(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
@@ -51,7 +50,7 @@ namespace logger {
             #endif
         }
 
-        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S==LOG_DEBUG, void>::type {
+        template<unsigned S, char ...str, typename ...Args>auto print_log(Args&& ...args) -> typename std::enable_if<S == LOG_DEBUG, void>::type {
             #ifdef USE_SPDLOG
               daily_logger->debug(compile_time::string<str...>::chars, std::forward<Args>(args)...);
             #else
@@ -59,7 +58,7 @@ namespace logger {
             #endif
         }
 
-        template<char ...str, typename ...Args>void print_debug(char *sfile, int sline, Args&& ...args) {
+        template<char ...str, typename ...Args>void print_debug(const char *sfile, int sline, Args&& ...args) {
             #ifdef USE_SPDLOG
               daily_logger->debug(compile_time::string<str...>::chars, sfile, sline, std::forward<Args>(args)...);
             #else
