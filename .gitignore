@@ -57,4 +57,7 @@ Makefile
 # Binaries
 *.o
 *.so
-arrowheads
+*.lo
+*.la
+*.a
+cert-authority

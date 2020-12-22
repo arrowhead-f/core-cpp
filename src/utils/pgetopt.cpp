@@ -122,9 +122,16 @@
   #include "config.h"
 #endif
 
-#ifndef UNIX
-
 #include "pgetopt.h"
+
+#ifdef UNIX
+
+char* &poptarg = optarg;
+int   &poptind = optind;
+int   &popterr = opterr;
+
+
+#else
 
 #include <cstdio>                  /* for EOF */
 #include <cstring>                 /* for strchr() */

@@ -28,51 +28,85 @@
   #include "config.h"
 #endif
 
+
 /// Print help message to the standard output.
-void print_hlp();
+void print_hlp(const char*, const char*);
 
 
 int main(int argc, char *argv[]) try {
 
-    // initialize looger
-    #define _____xstr(s) _____str(s)
-    #define _____str(s) #s
-      logger::init(LOG_DEBUG, _____xstr(COREELEMENT), "logfile");
-    #undef _____xstr
-    #undef _____str
-
-    (info{ } << fmt("started")).log(SOURCE_LOCATION);
-
     // parse command line arguments
     int ch = 0;
-    optarg = nullptr;
+    poptarg = nullptr;
 
-    std::string dconf;    // the configuration string for the database
-    std::string cfile;    // the name of the config file
-    int port = 16223;     // the port used with the core element
+    // error flag for command line parsing
+    bool error = false;
 
-    while((ch = pgetopt (argc, argv, "hc:p:d:")) != -1) {
-        std::cout << (char)ch << "\n";
+    bool suppress = false;  // whether to suppers command line parsing errors
+    int port      = 16223;  // the listening port
+
+    std::string dbconf;    // the configuration string for the database
+    std::string config;    // the location/name of the config file
+    std::string certsd;    // the directory that stores the certificates
+    std::string passwd;    // the passphare for the certificates
+
+
+    while((ch = pgetopt (argc, argv, "hvsc:d:p:C:P:")) != -1) {
         switch (ch) {
             case 'h':
-                print_hlp();
+                // argv[0] is always there
+                print_hlp(argv[0], CoreElement::name);
+                std::exit(0);
+                break;
+            case 's':
+                suppress = true;
+                break;
+            case 'v':
+                #ifdef PACKAGE_VERSION
+                    std::cout << CoreElement::name << " version " << PACKAGE_VERSION << "\n";
+                #endif
+                std::exit(0);
                 break;
             case 'c':
-                cfile = std::string{ optarg };
+                config = std::string{ poptarg };
                 break;
             case 'd':
-                dconf = std::string{ optarg };
+                dbconf = std::string{ poptarg };
                 break;
             case 'p':
-                port = std::stoi(optarg);
+                try {
+                    port = std::stoi( std::string{ poptarg });
+                }
+                catch(...) {
+                    error = true;
+                }
+                break;
+            case 'C':
+                cerstd = std::string{ poptarg };
+                break;
+            case 'P':
+                passwd = std::string{ poptarg };
                 break;
             case '?':
                 /* some error messaging */
-                return 1;
+                error = true;
+                break;
             default:
                 return 2;
         }
     }
+
+    // initialize looger
+    logger::init(LOG_DEBUG, CoreElement::name, argv[0]);
+
+    (info{ } << fmt("Started...")).log(SOURCE_LOCATION);
+    (info{ } << fmt("Params:{} -p {} -c {} -d -C -P") << (suppress ? " -s" : "") << port << cfile).log(SOURCE_LOCATION);
+
+    if (error && !suppress) {
+        (info{ } << fmt("Could not initialize the program. Double chek the command line argument.")).log(SOURCE_LOCATION);
+    }
+
+    // process config file here
 
     // create a pool of database connection
     // -d "host=localhost port=5432 dbname=mydb user=root password=root"
@@ -92,9 +126,10 @@ int main(int argc, char *argv[]) try {
     http::RB_Curl reqBuilder{ keyProvider };
 
     // create core system element
-    auto coreElement = CoreElement<db::DatabasePool<db::MariaDB>, http::RB_Curl>::Type{ pool, reqBuilder };
+    auto coreElement = CoreElement::Type<db::DatabasePool<db::MariaDB>, http::RB_Curl>{ pool, reqBuilder };
 
-    auto http = http::HTTPServerBuilder::create<CoreElement<db::DatabasePool<db::MariaDB>, http::RB_Curl>::DispatcherType>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider, 4);
+    // create the server
+    auto http = http::HTTPServerBuilder::create<CoreElement::DispatcherType<db::DatabasePool<db::MariaDB>, http::RB_Curl>>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider, 4);
 
     http.run();
 
@@ -102,7 +137,7 @@ int main(int argc, char *argv[]) try {
 
 }
 catch(const std::exception &e) {
-    (error{ } << fmt("Execution terminated with exception. Exception: {}") << e.what()).log(SOURCE_LOCATION);
+    (error{ } << fmt("Execution terminated with exception. {}") << e.what()).log(SOURCE_LOCATION);
 }
 catch(...) {
     (error{ } << fmt("Execution terminated with unexpected error.")).log(SOURCE_LOCATION);
@@ -112,6 +147,15 @@ catch(...) {
 /*----------------------------------------------------------------------------------------------------*/
 
 
-void print_hlp() {
-    std::cout << "dododo-dadada\n";
+void print_hlp(const char *prog, const char *name) {
+    std::cout << "\n" << name << ".\n\n";
+    std::cout << "Usage: " << prog << " [-p <port>] [-c <config-file>] [-C <cert-directory>] [-P <passwd>]\n\n";
+    std::cout << "Options:\n";
+    std::cout << "  -h            Show this screen.\n"
+              << "  -v            Show version.\n"
+              << "  -p PORT       Set the listener PORT [default: 16223].\n"
+              << "  -c CONFFILE   Set the configuration file.\n"
+              << "  -C CERTDIR    Sets the certificae directory.\n"
+              << "  -P PSSWD      Password used for the certificates.\n"
+              << "\n";
 }

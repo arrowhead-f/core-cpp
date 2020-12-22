@@ -6,13 +6,13 @@
 class Dispatcher;
 template<typename, typename>class ServiceRegistry;
 
-template<typename DBPool, typename RB>struct CoreElement {
-    using Type           = ::ServiceRegistry<DBPool, RB>;
-#ifdef USE_SHAREDHTTP
-    using DispatcherType = ::Dispatcher;
-#else
-    using DispatcherType = ::ServiceRegistry<DBPool, RB>;
-#endif
+struct CoreElement {
+
+    static constexpr const char * const name = "Service Registry";  ///< The human readable name of the Core element.
+
+    template<typename DBPool, typename RB>using Type           = ::ServiceRegistry<DBPool, RB>;  ///< The type of the Core element.
+    template<typename DBPool, typename RB>using DispatcherType = ::ServiceRegistry<DBPool, RB>;  ///< 
+
 };
 
 #endif  /* ARROWHEAD_TRAITS_SERVICEREGISTRY_H_ */
