@@ -35,16 +35,16 @@ namespace db {
 
             using DatabaseType = DB;
 
-            DatabasePool(const char *host, const char *user, const char *passwd, const char *database, const char *connstr = "") {
+            DatabasePool(const char *host, const char *user, const char *passwd, const char *database, unsigned port = 0, const char *connstr = "") {
                 for(std::size_t i = 0; i < std::max(std::thread::hardware_concurrency(), static_cast<decltype(std::thread::hardware_concurrency())>(4)); i++) {
-                    pool.push_back(std::make_unique<DB>(host, user, passwd, database));
+                    pool.push_back(std::make_unique<DB>(host, user, passwd, database, port, connstr));
                     idxs.push(i);
                 }
             }
 
-            DatabasePool(std::size_t size, const char *host, const char *user, const char *passwd, const char *database, const char *connstr = "") {
+            DatabasePool(std::size_t size, const char *host, const char *user, const char *passwd, const char *database, unsigned port = 0, const char *connstr = "") {
                 for(std::size_t i = 0; i < size; i++) {
-                    pool.push_back(std::make_unique<DB>(host, user, passwd, database));
+                    pool.push_back(std::make_unique<DB>(host, user, passwd, database, port, connstr));
                     idxs.push(i);
                 }
             }

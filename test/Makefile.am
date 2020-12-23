@@ -11,6 +11,7 @@ test_LDADD = libsqlite3.a
 test_SOURCES = main.cpp                  \
                test0001.cpp              \
                test0002.cpp              \
+               test0051.cpp              \
                test0052.cpp              \
                test0053.cpp              \
                test0054.cpp              \
@@ -27,8 +28,8 @@ test_SOURCES = main.cpp                  \
                test1003.cpp              \
                test1004.cpp              \
                \
-               ../inc/json11/json11.cpp \
+               ../inc/json11/json11.cpp  \
                \
-               ../src/utils/parsers.cpp  \
+               ../src/utils/inifile.cpp  \
                ../src/http/req/RB_Curl.cpp
 

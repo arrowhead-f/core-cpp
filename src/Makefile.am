@@ -3,7 +3,7 @@ bin_PROGRAMS = service_registry authorizer cert_authority
 noinst_LIBRARIES = libgason.a libjson11.a libutils.a
 libgason_a_SOURCES = ../inc/gason/gason.cpp
 libjson11_a_SOURCES = ../inc/json11/json11.cpp
-libutils_a_SOURCES = utils/pgetopt.cpp utils/parsers.cpp
+libutils_a_SOURCES = utils/pgetopt.cpp utils/inifile.cpp
 
 lib_LTLIBRARIES = libiopool.la libthpool.la
 libiopool_la_SOURCES = http/srv/Reply.cpp http/srv/ReplyBuffer.cpp http/srv/RequestHandler.cpp http/srv/RequestParser.cpp http/srv/iopool/Connection.cpp

@@ -1,13 +1,74 @@
-#include "parsers.h"
+#include "inifile.h"
+
+#include <iostream>
 
 #include <cstring>
 #include <cctype>
 #include <string>
 #include <map>
 
-namespace parser {
 
-std::map<std::string, std::string> parseOptions(const char *opts) {
+bool INIFile::parse(const char *section /* = nullptr */, bool strict /* = false */) {
+
+    // check the file
+    if (!in.is_open())
+        throw std::runtime_error{ "Cannot read the INI file." };
+
+    in.clear();  // since C++11 this should be done by seekg
+    in.seekg(0); // rewind
+    if (!in)
+        throw std::runtime_error{ "Cannot rewind the INI file." };
+
+    bool collect = !section || !strict; // whether we want to collect the config settings
+    std::string gr;                     // the group processed currently
+
+    std::string line;
+    while(std::getline(in, line)) {
+        // comments and empty lines
+        if (line[0] == ';' || line.empty() || (line[0] == '#' && line[1] == ' '))
+            continue;
+
+        // it is a secton tag
+        if (line[0] == '[') {
+            gr.clear();
+            bool check = false;
+            for(std::string::size_type i = 1; i < line.length(); i++) {
+                if (check) {
+                    if (line[i] == '#' || line[i] != ';')
+                        break;
+
+                    if (!std::isblank(line[i]))
+                        return false;
+                }
+
+                if (line[i] == ']') {
+                    check = true;
+                    continue;
+                }
+
+                gr.push_back(line[i]);
+            }
+            if (!check)
+                return false;
+
+            collect = (section == nullptr || gr == section);
+            continue;
+        }
+
+        if (collect) {
+            // read key-values
+            auto &val = values[gr];
+            if (!val.empty())
+                val.append(" ");
+            val.append(line);
+        }
+    }
+
+    return true;
+}
+
+
+std::map<std::string, std::string> INIFile::parse_opt(const char *opts) {
 
     std::map<std::string, std::string> options;
 
@@ -102,15 +163,13 @@ std::map<std::string, std::string> parseOptions(const char *opts) {
 
         // Now that we have the name and the value, store the record.
         #ifdef __cpp_lib_map_try_emplace
-          options.try_emplace(pname, pval);
+          options.insert_or_assign(pname, pval);
         #else
-          options.emplace(pname, pval);
+          options[pname] = pval;
         #endif
     }
 
     // Done with the modifiable input string
     delete[] buf;
     return options;
-}
-
 }

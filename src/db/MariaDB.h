@@ -206,12 +206,12 @@ namespace db {
                 }
             };
 
-            MariaDB(const char *host, const char *user, const char *passwd, const char *database) : mysql{mysql_init(nullptr) } {
+            MariaDB(const char *host, const char *user, const char *passwd, const char *database, unsigned port = 0, const char *connstr = "") : mysql{mysql_init(nullptr) } {
                 if (!mysql)
                     throw db::Exception{ 1, "Not enough memory." };  // not enough memory
 
                 //mysql_options(mysql, MYSQL_READ_DEFAULT_GROUP, "your_prog_name");
-                if (!mysql_real_connect(mysql, host, user, passwd, database, 0, nullptr, 0)) {
+                if (!mysql_real_connect(mysql, host, user, passwd, database, port, nullptr, 0)) {
                     throw db::Exception{ 1, "Cannot connect to database." };
                 }
             }

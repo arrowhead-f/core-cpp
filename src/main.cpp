@@ -1,11 +1,11 @@
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <cstdlib>
 
 /* utility functions */
 #include "utils/logger.h"
 #include "utils/pgetopt.h"
-#include "utils/parsers.h"
+#include "utils/inifile.h"
 #include "utils/traits.h"
 
 /* the database adapter */
@@ -28,9 +28,14 @@
   #include "config.h"
 #endif
 
+/* configuration helpers */
+#include "conf.h"
+
 
 /// Print help message to the standard output.
-void print_hlp(const char*, const char*);
+/// \param prog             The name of the program.
+/// \param name             The name of the core element.
+void print_hlp(const char *prog, const char *name);
 
 
 int main(int argc, char *argv[]) try {
@@ -43,15 +48,16 @@ int main(int argc, char *argv[]) try {
     bool error = false;
 
     bool suppress = false;  // whether to suppers command line parsing errors
-    int port      = 16223;  // the listening port
 
-    std::string dbconf;    // the configuration string for the database
-    std::string config;    // the location/name of the config file
-    std::string certsd;    // the directory that stores the certificates
-    std::string passwd;    // the passphare for the certificates
+    unsigned port = 0;   // the listening port
+    unsigned thrd = 0;   // the number of server threads
 
+    std::string config{ conf::def::config };  // the location/name of the config file
+    std::string dbconf;  // the directory that stores the certificates
+    std::string certsd;  // the directory that stores the certificates
+    std::string passwd;  // the passphare for the certificates
 
-    while((ch = pgetopt (argc, argv, "hvsc:d:p:C:P:")) != -1) {
+    while((ch = pgetopt (argc, argv, "hvsc:p:C:P:")) != -1) {
         switch (ch) {
             case 'h':
                 // argv[0] is always there
@@ -64,6 +70,8 @@ int main(int argc, char *argv[]) try {
             case 'v':
                 #ifdef PACKAGE_VERSION
                     std::cout << CoreElement::name << " version " << PACKAGE_VERSION << "\n";
+                #else
+                    std::cout << CoreElement::name << " version " << "1.0" << "\n";
                 #endif
                 std::exit(0);
                 break;
@@ -82,7 +90,7 @@ int main(int argc, char *argv[]) try {
                 }
                 break;
             case 'C':
-                cerstd = std::string{ poptarg };
+                certsd = std::string{ poptarg };
                 break;
             case 'P':
                 passwd = std::string{ poptarg };
@@ -100,38 +108,47 @@ int main(int argc, char *argv[]) try {
     logger::init(LOG_DEBUG, CoreElement::name, argv[0]);
 
     (info{ } << fmt("Started...")).log(SOURCE_LOCATION);
-    (info{ } << fmt("Params:{} -p {} -c {} -d -C -P") << (suppress ? " -s" : "") << port << cfile).log(SOURCE_LOCATION);
+    (info{ } << fmt("Params:{} -p {} -c {} -d -C {} -P {}") << (suppress ? " -s" : "") << port << config << certsd << passwd).log(SOURCE_LOCATION);
 
     if (error && !suppress) {
         (info{ } << fmt("Could not initialize the program. Double chek the command line argument.")).log(SOURCE_LOCATION);
     }
 
-    // process config file here
+    // load the INI file
+    auto conf = INIFile{ config };
+    error = /*!conf.parse(CoreElement::name) ||*/ !conf.parse("DB", true) || !conf.parse("CERT", true) || !conf.parse("HTTP", true);
+
+    conf.prepend("DB", conf::def::dbconf); // -d "host=127.0.0.1 port=5432 dbname=arrowhead user=root passwd=root"
+    conf.append("DB", dbconf);
+
+    if (error) {
+        throw std::runtime_error{ "Cannot parse the INI file." };
+    }
+
+    // the port and the numer of threads
+    conf::getHTTPConfig(conf, &port, &thrd);
 
     // create a pool of database connection
-    // -d "host=localhost port=5432 dbname=mydb user=root password=root"
-    //auto dconfmap = parser::parseOptions(dconf.c_str());
-    //db::DatabasePool<db::MariaDB> pool{ dconfmap["host"].c_str(), dconfmap["user"].c_str(), dconfmap["password"].c_str(), dconfmap["dbname"].c_str() };
-
-    db::DatabasePool<db::MariaDB> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    auto pool = conf::createDBPool<db::DatabasePool<db::MariaDB>>(conf);
 
     //  create the key provider
-    http::KeyProvider keyProvider{ "../keys/tempsensor.testcloud1.publicCert.pem",
-                                   "PEM",
-                                   "../keys/tempsensor.testcloud1.private.key",
-                                   "PEM",
-                                   "12345",
-                                   "../keys/tempsensor.testcloud1.caCert.pem" };
+    auto keyProvider = conf::createKeyProvider(conf, certsd, passwd);
 
+    // create the request builder
     http::RB_Curl reqBuilder{ keyProvider };
 
-    // create core system element
+    // the core element
     auto coreElement = CoreElement::Type<db::DatabasePool<db::MariaDB>, http::RB_Curl>{ pool, reqBuilder };
 
-    // create the server
-    auto http = http::HTTPServerBuilder::create<CoreElement::DispatcherType<db::DatabasePool<db::MariaDB>, http::RB_Curl>>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider, 4);
+    // the http(s) server
+    auto http = http::HTTPServerBuilder::create<CoreElement::DispatcherType<db::DatabasePool<db::MariaDB>, http::RB_Curl>>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider, thrd);
 
+    // we do not need the inner structures of the INIFile anymore; free the interna structures
+    conf.close();
+
+    // ------------------***--- RUN ---***------------------ //
     http.run();
+    // ------------------***--- RUN ---***------------------ //
 
     return 0;
 
@@ -155,6 +172,7 @@ void print_hlp(const char *prog, const char *name) {
               << "  -v            Show version.\n"
               << "  -p PORT       Set the listener PORT [default: 16223].\n"
               << "  -c CONFFILE   Set the configuration file.\n"
+              << "  -d DBCONF     Config for the database.\n"
               << "  -C CERTDIR    Sets the certificae directory.\n"
               << "  -P PSSWD      Password used for the certificates.\n"
               << "\n";

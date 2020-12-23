@@ -95,7 +95,7 @@ class MockDBase : public db::Database {
             }
         }
 
-        MockDBase(const char *host, const char *user, const char *passwd, const char *database) : MockDBase{} { }
+        MockDBase(const char *host, const char *user, const char *passwd, const char *database, unsigned port = 0, const char *connstr = "") : MockDBase{} { }
 
         ~MockDBase() {
             sqlite3_close(db);

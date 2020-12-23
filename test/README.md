@@ -13,8 +13,10 @@
 |------|-----------------------------|---------------------------------|
 | 0001 | dbpool, db                  | check the pool of databases     |
 | 0001 | mariadb, db                 | check the MariaDB wrapper       |
+| 0051 | inifile                     | test the option parser          |
+| 0051 | inifile                     | test the ini file reader/parser |
 | 0052 | KeyProvider                 | check the parsing of the files  |
-| 0053 | parser                      | test config parser              |
+| 0053 | inifile                     | test the ini file reader/parser |
 | 0054 | jsonwriter                  | check json string creation      |
 | 0055 | crypto, sha256              | checking sha256 generation      |
 | 0056 | jsonwriter                  | check jsonwriter with db::Row   |
