@@ -19,10 +19,8 @@ class Dispatcher {
 
         /// Handles error.
         /// \param from             the remote address
-        /// \param method           the HTTP method
-        /// \param uri              the requested URI
         /// \param reason           the reason/description of the error
-        virtual void error(const std::string &from, const char *method, const std::string &uri, const std::string &reason) = 0;
+        virtual void error(const std::string &from, const std::string &reason) = 0;
 
         static std::string subpath(const std::string &uri) {
             const auto found = uri.find('/', 1);
