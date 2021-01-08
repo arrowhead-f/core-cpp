@@ -52,8 +52,8 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }
 
-        void error(const std::string &from, const char *method, const std::string &uri, const std::string &reason) final {
-            (warning{ } << fmt("{}: {} {} rejected; reason: {}") << from << method << uri.c_str() << reason.c_str()).log(SOURCE_LOCATION);
+        void error(const std::string &from, const std::string &reason) final {
+            (::error{ } << fmt("{}: error; reason: {}") << from << reason.c_str()).log(SOURCE_LOCATION);
         }
 
         // HTTP callbacks

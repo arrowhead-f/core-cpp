@@ -1,33 +1,28 @@
 #ifndef _HTTP_HTTPSSERVER_H_
 #define _HTTP_HTTPSSERVER_H_
 
+
+#include <algorithm>
+#include <condition_variable>
 #include <future>
+#include <mutex>
+#include <queue>
 #include <string>
+#include <thread>
 #include <vector>
-#include <memory>
-#include <cstring>
-#include <list>
 
-#ifdef TESTRUNNER
-  #include <atomic>
-#endif
-
-#include <errno.h>
 #include <unistd.h>
-#include <malloc.h>
-#include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <resolv.h>
 #include <sys/poll.h>
-
 #include <sys/signalfd.h>
+#include <signal.h>
 
 #include "openssl/ssl.h"
 #include "openssl/err.h"
-
 
 #include "http/HTTPServer.h"
 #include "http/KeyProvider.h"
@@ -35,22 +30,34 @@
 #include "RequestBuffer.h"
 
 
-/// OpenSSL based server.
+/// OpenSSL based HTTPS server.
 template<typename T>
 class HTTPSServer final : public ::HTTPServerBase<T> {
 
     private:
 
+        /// To be able to reference the parent easier.
         using Parent = ::HTTPServerBase<T>;
 
-        int thrd;      ///< Number of threads.
+        int server;        ///< The server's file descriptor.
+        SSL_CTX *ctx;      ///< The SSL context.
 
-        int server;    ///< The server's file descriptor.
-        SSL_CTX *ctx;  ///< The SSL context.
+        pthread_t pth;     ///< The identifier of the main loop's thread.
 
-        #ifdef TESTRUNNER
-            std::atomic_bool runflag = true;
-        #endif
+
+        // -- variables for the optional parallelism --
+
+        std::vector<std::future<void>> servlets;  /// List of active servlest.
+
+
+        // -- variables for the mandatory parallelism --
+
+        std::vector<std::thread> workers;         /// The thread pool of workers.
+        std::deque<SSL*> ssl_sockets;             /// All the active ssl connections that wait for the workers.
+
+        std::mutex mux;                           /// Mutex to manipulate shared storages (e.g., ssl_sockets, stop).
+        std::condition_variable cond;             /// Cond. variable used to notify the threadpool of workers about new jobs.
+        bool stop = false;                        /// Stop flag for the mandatory parallelism.
 
     public:
 
@@ -60,7 +67,7 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
         HTTPSServer& operator=(HTTPSServer&&) = delete;
 
         /// Construct the server to listen on the specified TCP address and port.
-        explicit HTTPSServer(const std::string &address, std::size_t port, T &dispatcher, KeyProvider &keyProvider, int thrd = 0)
+        explicit HTTPSServer(const std::string &address, std::size_t port, T &dispatcher, KeyProvider &keyProvider)
             : Parent{ address, port, dispatcher } {
 
             SSL_library_init();
@@ -84,10 +91,57 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             SSL_CTX_free(ctx);  /* release context     */
         }
 
+        /// Starts the HTTPSserver with the given threading model.
+        /// If this method is called with 0 as parameter, optional parallelism
+        /// is used. Numbers bigger than 0 will spawn a thread pool with the 
+        /// given number of threads (mandatory parallelsism).
+        /// \param thnum            the number of the threads
+        void run(std::size_t thnum = 0) {
 
-        void run() {
+            if (thnum) {
 
-            std::list<std::future<void>> servlets;
+                // create the worker pool
+                for(std::size_t i = 0; i < thnum; i++) {
+                    workers.emplace_back([this] {
+
+                        for(;;) {
+
+                            SSL *ssl; // this will be set in the ubsequent lines
+
+                            {
+                                std::unique_lock<std::mutex> _{ mux };
+                                cond.wait(_, [this]{ return this->stop || !this->ssl_sockets.empty(); });
+                                if (stop && ssl_sockets.empty())
+                                    return;
+                                ssl = std::move(ssl_sockets.front());
+                                ssl_sockets.pop_front();
+                            }
+
+                            // run the servlet
+                            servlet(ssl);
+                        }
+
+                    });
+                }
+            }
+
+            // start the servers main loop with the selected parallelism (e.g., mandatory or optional)
+            run_internal(thnum > 0);
+        }
+
+
+        /// Stops the server.
+        void kill() {
+            pthread_kill(pth, SIGINT);
+        }
+
+
+    private:
+
+        /// Main loop of the server. The parameter decides whether mandatory or optional
+        /// parallelism is used to serve incomming requests.
+        /// \param mandatory        whether to use mandatory parallelism
+        void run_internal(bool mandatory) {
 
             struct pollfd fds[2];
 
@@ -109,34 +163,30 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             fds[0].events = POLLIN;
             fds[1].events = POLLIN;
 
-            #ifdef TESTRUNNER
-              while (runflag) {
-            #else
-              while (1) {
-            #endif
 
-                #ifdef TESTRUNNER
-                  int rc = poll(fds, 2, 250);
-                #else
-                  int rc = poll(fds, 2, -1);
-                #endif
+            pth = pthread_self();
+
+            // the infinite main loop
+            // we can exit is by sending a data to the signal pipe
+            while (1) {
+
+                int rc = poll(fds, 2, -1);
 
                 if (rc < 0) {
-                    //std::cerr << "poll failed\n";
+                    Parent::error("127.0.0.1", "Polling failed.");
                     break;
                 }
                 if(fds[1].revents == POLLIN) {
                     const auto s = read(fds[1].fd, &fdsi, sizeof(fdsi));
                     if (s != sizeof(fdsi))
-                        ; // handle_error("read");
+                        Parent::error("127.0.0.1", "Error reading signal.");
                     if (fdsi.ssi_signo == SIGINT || fdsi.ssi_signo == SIGQUIT) {
-                        //std::cerr << "got sigquit\n";
-                        ; //std::cout << "Got SIGQUIT\n";
+                        ; // everything is ok
                     }
                     else {
-                        //std::cout << "Read unexpected signal\n";
+                        Parent::error("127.0.0.1", "Unexpected signal caught.");
                     }
-                    break; //        continue;
+                    break;
                 }
                 if(fds[0].revents != POLLIN) {
                     continue;
@@ -150,29 +200,52 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 ssl = SSL_new(ctx);         /* get new SSL state with context     */
                 SSL_set_fd(ssl, client);    /* set connection socket to SSL state */
 
-                // create the new servlet: servlet(ssl);
-                servlets.push_back(std::async(std::launch::async, [this](auto *ssl){ this->servlet(ssl); }, ssl));
+                if (mandatory) {
+                    {
+                        std::lock_guard<std::mutex> _{ mux };
+                        ssl_sockets.emplace_back(ssl);
+                    }
+                    cond.notify_one();
+                }
+                else {
+                    // create the new servlet: servlet(ssl);
+                    servlets.push_back(std::async([this](auto *ssl){ this->servlet(ssl); }, ssl));
 
-                // remove finished servlets
-                for (auto it = servlets.begin(); it != servlets.end();) {
-                    if(it->wait_for(std::chrono::milliseconds(0)) == std::future_status::ready)
-                        it = servlets.erase(it);
-                    else
-                        ++it;
+                    // remove finished servlets
+                    //for (auto it = servlets.begin(); it != servlets.end();) {
+                    //    const auto r = it->wait_for(std::chrono::seconds(0));
+                    //    if(r == std::future_status::ready || r == std::future_status::deferred)
+                    //        it = servlets.erase(it);
+                    //    else
+                    //        ++it;
+                    //}
+
+                    const auto rit = std::remove_if(servlets.begin(), servlets.end(), [](std::future<void> &f) {
+                        const auto r = f.wait_for(std::chrono::seconds(0));
+                        return (r == std::future_status::ready || r == std::future_status::deferred);
+                    });
+                    servlets.erase(rit, servlets.end());
                 }
             }
 
-            // wait for all open connections here
-            for(auto &srv : servlets) {
-                srv.wait();
+
+            if (mandatory) {
+                {
+                    std::lock_guard<std::mutex> _{ mux };
+                    stop = true;
+                }
+                cond.notify_all();
+                for(std::thread &worker: workers)
+                    worker.join();
+            }
+            else {
+                // wait for all open connections here
+                for(auto &srv : servlets) {
+                    srv.wait();
+                }
             }
         }
 
-        #ifdef TESTRUNNER
-          void kill() {
-              runflag = false;
-          }
-        #endif
 
     private:
 
@@ -301,6 +374,15 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 }
                 else if (result == RequestParser::result_t::failed) {
 
+                    // get the peer's address
+                    struct sockaddr_in addr;
+                    socklen_t slen;
+                    getpeername(SSL_get_fd(ssl), (struct sockaddr*)&addr, &slen);
+
+                    // notify
+                    Parent::error(inet_ntoa(addr.sin_addr), "Cannot parse request.");
+
+                    // create and send a factory response
                     auto reply = Response::from_stock(http::status_code::BadRequest);
                     const auto reply_str = reply.to_string();
                     SSL_write(ssl, reply_str.c_str(), reply_str.length());

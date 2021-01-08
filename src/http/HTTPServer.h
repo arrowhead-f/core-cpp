@@ -21,13 +21,18 @@ struct HTTPServer {
     virtual ~HTTPServer() = default;
 
     /// Runs the server.
-    virtual void run() = 0;
+    /// \thnum                      the number of threads
+    virtual void run(std::size_t thnum = 0) = 0;
 
-    // HTTP callbacks
+    /// Callback for successfull HTTP requests.
+    /// \param req                  the request
+    /// \return                     the response
     virtual Response handle(Request &&req) = 0;
 
-    // Handle HTTP message formar errors
-    virtual void denied(const std::string &from, const char *method, const std::string &uri, const char *reason) = 0;
+    /// Error handler.
+    /// \param from                 the object of the error
+    /// \param reason               the reason of the error
+    virtual void error(const std::string &from, const char *reason) = 0;
 
 };
 
@@ -69,12 +74,18 @@ class HTTPServerBase : public HTTPServer {
             return port;
         }
 
+        /// Callback for successfull HTTP requests.
+        /// \param req                  the request
+        /// \return                     the response
         Response handle(Request &&req) final {
             return dispatcher.dispatch(std::move(req));
         }
 
-        void denied(const std::string &from, const char *method, const std::string &uri, const char *reason) final {
-            dispatcher.error(from, method, uri, reason);
+        /// The implementation of the error handler.
+        /// \param from                 the object of the error
+        /// \param reason               the reason of the error
+        void error(const std::string &from, const char *reason) final {
+            dispatcher.error(from, reason);
         }
 
 };
