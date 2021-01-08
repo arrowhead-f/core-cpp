@@ -2,6 +2,8 @@
 #define _HTTP_HTTPSSERVER_H_
 
 
+#include <iostream>
+
 #include <algorithm>
 #include <condition_variable>
 #include <future>
@@ -132,7 +134,7 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
 
         /// Stops the server.
         void kill() {
-            pthread_kill(pth, SIGINT);
+            pthread_kill(pth, SIGINT); // send kill to the pthread
         }
 
 
@@ -163,8 +165,12 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             fds[0].events = POLLIN;
             fds[1].events = POLLIN;
 
-
+            // the pthread; used by kill
             pth = pthread_self();
+
+            // the timeout
+//            struct timeval tv;
+//            tv.tv_sec = 15;
 
             // the infinite main loop
             // we can exit is by sending a data to the signal pipe
@@ -197,6 +203,11 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 SSL *ssl;
 
                 int client = accept(server, (struct sockaddr*)&addr, &len);  /* accept connection as usual */
+
+                struct timeval tv;
+                tv.tv_sec = 15;
+                setsockopt(client, SOL_SOCKET, SO_RCVTIMEO, (struct timeval*)&tv, sizeof(struct timeval));
+
                 ssl = SSL_new(ctx);         /* get new SSL state with context     */
                 SSL_set_fd(ssl, client);    /* set connection socket to SSL state */
 
@@ -255,7 +266,7 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             OpenSSL_add_all_algorithms();  /* load & register all cryptos, etc. */
             SSL_load_error_strings();      /* load all error messages */
 
-            const SSL_METHOD *method = SSLv23_server_method(); //SSLv3_server_method();
+            const SSL_METHOD *method = TLS_server_method(); // SSLv23_server_method(); //SSLv3_server_method();
             SSL_CTX *ctx = SSL_CTX_new(method);   /* create new context from method */
             if (!ctx)
                 return nullptr;
@@ -332,8 +343,12 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             if (SSL_accept(ssl) == -1)     /* do SSL-protocol accept */
                 return;
 
+            SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+
             int len = 0;
-            while ((len = SSL_read(ssl, buffer, sizeof(buffer))) > 0) {
+            while ((len = SSL_read(ssl, buffer, sizeof(buffer) - 1)) > 0) {
+
+                buffer[len] = 0;
 
                 RequestParser::result_t result;     // the result of the parsing step
                 const char *start_parse = buffer;   // start parsing the buffer here
