@@ -111,6 +111,8 @@ class RequestParser {
             chunkSizeStr.clear();
             chunkSize   = 0;;
             chunked     = false;
+
+            req.clear();
         }
 
     private:
@@ -139,6 +141,24 @@ class RequestParser {
         /// \return                true, if the given character is digit
         static constexpr bool isDigit(int c) {
             return c >= '0' && c <= '9';
+        }
+
+        /// Check if the given character can be the first letter of any HTTP request method.
+        /// Although they can also be nouns, the request methods are sometimes referred to as
+        /// HTTP verbs. All the standardized HTTP verbs are as follows:
+        /// GET     - Requests using GET should only retrieve data.
+        /// HEAD    - The HEAD method is identical to GET, but the response is without the response body.
+        /// POST    - The POST method is used to submit an entity to the specified resource.
+        /// PUT     - The PUT method replaces all current representations of the target resource with the request payload.
+        /// DELETE  - The DELETE method deletes the specified resource.
+        /// CONNECT - The CONNECT method establishes a tunnel to the server identified by the target resource.
+        /// OPTIONS - The OPTIONS method is used to describe the communication options for the target resource.
+        /// TRACE   - The TRACE method performs a message loop-back test along the path to the target resource.
+        /// PATCH   - The PATCH method is used to apply partial modifications to a resource.
+        /// \param c               the character to de The PATCH method is used to apply partial modifications to a resource.cide of
+        /// \return                true, if the given character is the starting letter of a htt[ request method
+        static constexpr bool isMethodStart(int c) {
+            return (c == 'G' || c == 'P' || c == 'D' || c == 'H' || c == 'C' || c == 'O' || c == 'T');
         }
 
         /// Handles the next character of the input.

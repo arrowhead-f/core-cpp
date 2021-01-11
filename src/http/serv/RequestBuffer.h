@@ -33,6 +33,14 @@ struct RequestBuffer {
     std::string content;          ///< The content.
 
 
+    /// Clears  the internal state of the buffer.
+    void clear() {
+        method.clear();
+        uri.clear();
+        headers.clear();
+        content.clear();
+    }
+
     /// Converts the buffer into a request.
     Request to_request() && {
         return { std::move(remote_address), std::move(method), std::move(uri), std::move(content) };

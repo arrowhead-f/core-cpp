@@ -72,12 +72,14 @@ namespace status_line {
 }
 
 
-std::string Response::to_string() const {
+std::string Response::to_string(bool keep_alive /* = false */) const {
 
     std::ostringstream out;
 
     // build the string representation of the Response
     out << "HTTP/1.1 " << status_line::to_string(status_code)
+        << "\r\n"
+        << "Connection: " << (keep_alive ? "keep-alive" : "close")
         << "\r\n"
         << "Content-Length: " << std::to_string(content.size())
         << "\r\n"

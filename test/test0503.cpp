@@ -5,19 +5,21 @@
 /// Author(s): ng201
 ///
 /// Description:
-/// * Test the HTTPS request parser
+/// * Test the misuse of the HTTPS server.
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <catch2/catch.hpp>
 
 
+#include <chrono>
 #include <cstring>
 #include <list>
 #include <string>
 #include <stdexcept>
 #include <thread>
 #include <utility>
+#include <vector>
 
 #include <stdio.h>
 #include <errno.h>
@@ -139,7 +141,7 @@ namespace {
     /// \param msg              the message builder function
     /// \param ca               the server's certificate
     /// \return                 the response
-    std::string client(const char *hostname, unsigned port, const std::function<std::pair<bool, std::string>(int)> &msg, std::pair<std::string, std::string>& ca) {
+    std::string client(const char *hostname, unsigned port, const std::function<std::pair<bool, std::string>(int)> &msg, std::pair<std::string, std::string>& ca, bool persistent = false) {
 
         SSL_library_init();
 
@@ -159,23 +161,30 @@ namespace {
         // SSL_get_cipher(ssl) // encryption
         ca = getCertInfo(ssl);
 
+        std::string res;  // we will store the reply here
+        char buf[1024];   // the buffer for the reply
+        int bytes;        // how many bytes were read
+
         int cnt = 0;
         std::pair<bool, std::string> q;
         do {
             q = msg(cnt++);
             SSL_write(ssl, q.second.c_str(), q.second.length());   /* encrypt & send message */
+
+            if (persistent) {
+                while ((bytes = SSL_read(ssl, buf, sizeof(buf))) > 0) {
+                    buf[bytes] = 0;
+                    res += buf;
+                    break;
+                }
+            }
+
         } while (q.first);
 
-
-        /* get reply & decrypt */
-        std::string res;
-
-        char buf[1024];
-        int bytes;
-        while ((bytes = SSL_read(ssl, buf, sizeof(buf)))) {
+        // read the reply for the last packet
+        while ((bytes = SSL_read(ssl, buf, sizeof(buf))) > 0) {
             buf[bytes] = 0;
             res += buf;
-            break;
         }
 
         SSL_free(ssl);      /* release connection state */
@@ -189,7 +198,7 @@ namespace {
 
 
 
-TEST_CASE("https: Test ca used by the server", "[server] [https]") {
+TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
 
     using namespace std::literals;
 
@@ -205,11 +214,83 @@ TEST_CASE("https: Test ca used by the server", "[server] [https]") {
 
             {
                 std::pair<std::string, std::string> caInfo;
-                std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "XXX"s); }, caInfo);
+                const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "GET"s); }, caInfo);
 
                 REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
                 REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
-                REQUIRE(res == "");  // timeouted
+
+                // timeout      // only the method part of the HTTP request was sent in time
+                REQUIRE(res == "");
+            }
+
+            // enabling the next few block would increase the running time of the test
+            // thus by default are disabled
+            #if 0
+              {
+                  std::pair<std::string, std::string> caInfo;
+                  const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "PUT"s); }, caInfo);
+
+                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+                  // timeout      // only the method part of the HTTP request was sent in time
+                  REQUIRE(res == "");
+              }
+
+              {
+                  std::pair<std::string, std::string> caInfo;
+                  const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "PATCH"s); }, caInfo);
+
+                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+                  // timeout      // only the method part of the HTTP request was sent in time
+                  REQUIRE(res == "");
+              }
+
+              {
+                  std::pair<std::string, std::string> caInfo;
+                  const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "POST"s); }, caInfo);
+
+                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+                  // timeout      // only the method part of the HTTP request was sent in time
+                  REQUIRE(res == "");
+              }
+
+              {
+                  std::pair<std::string, std::string> caInfo;
+                  const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "DELETE"s); }, caInfo);
+
+                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+                  // timeout      // only the method part of the HTTP request was sent in time
+                  REQUIRE(res == "");
+              }
+            #endif
+
+            {
+                std::pair<std::string, std::string> caInfo;
+                const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "GEX"s); }, caInfo);
+
+                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+                // timeout      // only the first characte rof the request mthod is checked during the parsing
+                REQUIRE(res == "");
+            }
+
+            {
+                std::pair<std::string, std::string> caInfo;
+                const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "XXX"s); }, caInfo);
+
+                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+                // BadRequest   //the first character of the request method is not valid
+                REQUIRE(res == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 87\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>400 Bad Request</h1></body></html>");
             }
 
             break;
@@ -217,18 +298,170 @@ TEST_CASE("https: Test ca used by the server", "[server] [https]") {
         catch(const HTTPServer::Error) {
             port++;
         }
-        catch(const std::exception &e) {
-            auto webget_error = true;
-            REQUIRE_FALSE(webget_error);
+        catch(...) {
+            auto is_error = true;
+            REQUIRE_FALSE(is_error);
         }
     }
 }
 
-/*
-TEST_CASE("https: Test early hung up by the client", "[server] [https]") {
+
+TEST_CASE("https: Test client sends a very long message one-by-one", "[server] [https]") {
 
     auto mc = MockCore{};
 
+    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+
+    std::size_t port = 12500;
+
+    // generate the big request
+    std::string header = "POST /who-cares.html HTTP/1.1\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)\r\nHost: www.arrowhead.com\r\nContent-Type: text/plain\r\nConnection: close\r\nContent-Length: 2048\r\nAccept-Language: en-us\r\n\r\n";
+    std::string req = header;
+    for (std::size_t i = 0; i < 2048; i++)
+        req += 'a';
+
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
+
+            // One big packet
+            {
+                std::pair<std::string, std::string> caInfo;
+                const std::string res = client("127.0.0.1", port, [&req](int i) { return std::make_pair(false, req); }, caInfo);
+
+                REQUIRE(res == "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+            }
+
+            // Multiple small packets
+            {
+                std::pair<std::string, std::string> caInfo;
+                const std::string res = client("127.0.0.1", port, [&req](int i) {
+                    std::string r = req.substr(i * 24, 24);
+                    return std::make_pair((i +1) * 24 < req.length(), r);
+                }, caInfo);
+
+                REQUIRE(res == "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+            }
+
+            // Wait between the parts of the packet
+            {
+                std::pair<std::string, std::string> caInfo;
+                const std::string res = client("127.0.0.1", port, [&req](int i) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(125));
+                    std::string r = req.substr(i * 24, 24);
+                    return std::make_pair((i +1) * 24 < req.length(), r);
+                }, caInfo);
+
+                REQUIRE(res == "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+            }
+
+            break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto is_error = true;
+            REQUIRE_FALSE(is_error);
+        }
+    }
+}
+
+
+TEST_CASE("https: Test clients send a very long messages parallelly", "[server] [https]") {
+
+    auto mc = MockCore{};
+
+    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+
+    std::size_t port  = 12500;
+    std::size_t thnum = 4;          // the size of the server's threadpool
+    std::size_t clnum = 2 * thnum;  // number of parallelly running clients
+
+    // generate the big request
+    std::string header = "POST /who-cares.html HTTP/1.1\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)\r\nHost: www.arrowhead.com\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 2048\r\nAccept-Language: en-us\r\n\r\n";
+    std::string req = header;
+    for (std::size_t i = 0; i < 2048; i++)
+        req += 'b';
+
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp, thnum };
+
+            // One big packet
+            {
+                std::vector<std::thread> ths;
+                for (std::size_t i = 0; i < clnum; i++) {
+                    ths.push_back(std::thread{ [&req, port] {
+                        std::pair<std::string, std::string> caInfo;
+                        const std::string res = client("127.0.0.1", port, [&req](int i) { return std::make_pair(false, req); }, caInfo);
+
+                        REQUIRE(res == "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+                    } });
+                }
+
+                for (auto &th : ths)
+                    th.join();
+            }
+
+            // Multiple small packets
+            {
+                std::vector<std::thread> ths;
+                for (std::size_t i = 0; i < clnum; i++) {
+                    ths.push_back(std::thread{ [&req, port] {
+                        std::pair<std::string, std::string> caInfo;
+                        const std::string res = client("127.0.0.1", port, [&req](int i) {
+                            std::string r = req.substr(i * 24, 24);
+                            return std::make_pair((i +1) * 24 < req.length(), r);
+                        }, caInfo);
+                        REQUIRE(res == "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+                    } });
+                }
+
+                for (auto &th : ths)
+                    th.join();
+            }
+
+            // Wait between the parts of the packet
+            {
+                std::vector<std::thread> ths;
+                for (std::size_t i = 0; i < clnum; i++) {
+                    ths.push_back(std::thread{ [&req, port] {
+                        std::pair<std::string, std::string> caInfo;
+                        const std::string res = client("127.0.0.1", port, [&req](int i) {
+                            std::this_thread::sleep_for(std::chrono::milliseconds(125));
+                            std::string r = req.substr(i * 24, 24);
+                            return std::make_pair((i +1) * 24 < req.length(), r);
+                        }, caInfo);
+
+                        REQUIRE(res == "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+                    } });
+                }
+
+                for (auto &th : ths)
+                    th.join();
+            }
+
+            break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto is_error = true;
+            REQUIRE_FALSE(is_error);
+        }
+    }
+}
+
+
+TEST_CASE("https: Test keep-alive with malformed packets", "[server] [https]") {
+
+    using namespace std::literals;
+
+    auto mc = MockCore{};
     auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
 
     std::size_t port = 12500;
@@ -238,11 +471,14 @@ TEST_CASE("https: Test early hung up by the client", "[server] [https]") {
             auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
 
             {
+                std::pair<std::string, std::string> caInfo;
 
-                auto cl = WG_Curl{ KeyProvider{} };
-                auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+                // note the wrong method!
+                const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "XGET / HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n"s); }, caInfo);
 
-                REQUIRE(resp == http::status_code::NotImplemented);
+                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                REQUIRE(res == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 87\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>400 Bad Request</h1></body></html>");
             }
 
             break;
@@ -251,14 +487,62 @@ TEST_CASE("https: Test early hung up by the client", "[server] [https]") {
             port++;
         }
         catch(...) {
-            auto webget_error = true;
-            REQUIRE_FALSE(webget_error);
+            auto is_error = true;
+            REQUIRE_FALSE(is_error);
+        }
+    }
+
+}
+
+
+TEST_CASE("https: Test HTTP persistent (keep-alive) connection", "[server] [https]") {
+
+    using namespace std::literals;
+
+    auto mc = MockCore{};
+    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+
+    std::size_t port = 12500;
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
+
+            std::pair<std::string, std::string> caInfo;
+            const std::string res = client("127.0.0.1", port, [](int i){
+                switch(i) {
+                    case 0:
+                        return std::make_pair(true,  "GET /0.html HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n"s);
+                    case 1:
+                        return std::make_pair(true,  "GET /1.html HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n"s);
+                    default:
+                        return std::make_pair(false, "GET /2.html HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: close\r\n\r\n"s);
+                }
+            }, caInfo, true);
+
+            REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+            REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+
+            REQUIRE(res ==
+                           "HTTP/1.1 501 Not Implemented\r\nConnection: keep-alive\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>"
+                           "HTTP/1.1 501 Not Implemented\r\nConnection: keep-alive\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>"
+                           "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
+            break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto is_error = true;
+            REQUIRE_FALSE(is_error);
         }
     }
 }
 
 
-TEST_CASE("https: Test client sends a very long message", "[server] [https]") {
+TEST_CASE("https: Test HTTP pipelining", "[server] [https]") {
+
+    using namespace std::literals;
 
     auto mc = MockCore{};
 
@@ -270,31 +554,33 @@ TEST_CASE("https: Test client sends a very long message", "[server] [https]") {
         try {
             auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
 
-            SECTION("One big packet") {
+            std::pair<std::string, std::string> caInfo;
+            const std::string res = client("127.0.0.1", port, [](int i){
+                switch(i) {
+                    case 0:
+                        return std::make_pair(true,  "GET /0.html HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n"s);
+                    case 1:
+                        return std::make_pair(true,  "GET /1.html HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n"s);
+                    default:
+                        return std::make_pair(false, "GET /2.html HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: close\r\n\r\n"s);
+                }
+            }, caInfo);
 
-                auto cl = WG_Curl{ KeyProvider{} };
-                auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+            REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
+            REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
 
-                REQUIRE(resp == http::status_code::NotImplemented);
-            }
-
-            SECTION("Wait between the packets") {
-
-                auto cl = WG_Curl{ KeyProvider{} };
-                auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
-
-                REQUIRE(resp == http::status_code::NotImplemented);
-            }
-
+            REQUIRE(res ==
+                           "HTTP/1.1 501 Not Implemented\r\nConnection: keep-alive\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>"
+                           "HTTP/1.1 501 Not Implemented\r\nConnection: keep-alive\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>"
+                           "HTTP/1.1 501 Not Implemented\r\nConnection: close\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>");
             break;
         }
         catch(const HTTPServer::Error) {
             port++;
         }
         catch(...) {
-            auto webget_error = true;
-            REQUIRE_FALSE(webget_error);
+            auto is_error = true;
+            REQUIRE_FALSE(is_error);
         }
     }
 }
-*/

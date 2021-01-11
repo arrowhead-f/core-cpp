@@ -181,3 +181,124 @@ TEST_CASE("request_parser: Test the continuation of the parsing", "[server] [req
     }
 
 }
+
+
+TEST_CASE("request_parser: Test keep-alive for HTTP/1.0", "[server] [request_parser]") {
+
+    // connection set to close
+    {
+        auto parser = RequestParser{};
+
+        const char *msg = "GET / HTTP/1.0\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: close\r\n\r\n";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+        REQUIRE(req.keepAlive == false);
+    }
+
+    // connection set to keep-alive
+    {
+        auto parser = RequestParser{};
+
+        const char *msg = "GET / HTTP/1.0\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+        REQUIRE(req.keepAlive == true);
+    }
+
+    // connection defaults to close
+    {
+        auto parser = RequestParser{};
+
+        const char *msg = "GET / HTTP/1.0\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\n\r\n";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+        REQUIRE(req.keepAlive == false);
+    }
+}
+
+
+TEST_CASE("request_parser: Test keep-alive for HTTP/1.1", "[server] [request_parser]") {
+
+    // connection set to close
+    {
+        auto parser = RequestParser{};
+
+        const char *msg = "GET / HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: close\r\n\r\n";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+        REQUIRE(req.keepAlive == false);
+    }
+
+    // connection set to keep-alive
+    {
+        auto parser = RequestParser{};
+
+        const char *msg = "GET / HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+        REQUIRE(req.keepAlive == true);
+    }
+
+    // connection defaults to keep-alive
+    {
+        auto parser = RequestParser{};
+
+        const char *msg = "GET / HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\n\r\n";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+        REQUIRE(req.keepAlive == true);
+    }
+}
+
+
+TEST_CASE("request_parser: Test reset internal state", "[server] [request_parser]") {
+
+    auto parser = RequestParser{};
+
+    {
+        const char *msg = "POST /cgi-bin/process1.cgi HTTP/1.1\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)\r\nHost: dev.arrowheads.com\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 49\r\nAccept-Language: en-us\r\nAccept-Encoding: gzip, deflate\r\nConnection: close\r\n\r\nlicenseID=123456&content=string&/paramsXML=string";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+
+        REQUIRE(req.method == "POST");
+        REQUIRE(req.uri    == "/cgi-bin/process1.cgi");
+        REQUIRE(req.content == "licenseID=123456&content=string&/paramsXML=string");
+    }
+
+    parser.reset();
+
+    {
+        const char *msg = "PATCH /cgi-bin/process2.cgi HTTP/1.1\r\nUser-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)\r\nHost: dev.arrowheads.com\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: 49\r\nAccept-Language: en-us\r\nAccept-Encoding: gzip, deflate\r\nConnection: close\r\n\r\nlicenseID=654321&content=string&/paramsXML=string";
+        const auto res = parser.parse(msg, msg + std::strlen(msg));
+
+        REQUIRE(res.first == RequestParser::result_t::completed);
+
+        const auto &req = parser.inspect();
+
+        REQUIRE(req.method == "PATCH");
+        REQUIRE(req.uri    == "/cgi-bin/process2.cgi");
+        REQUIRE(req.content == "licenseID=654321&content=string&/paramsXML=string");
+    }
+
+}
