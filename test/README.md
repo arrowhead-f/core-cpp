@@ -26,7 +26,8 @@
 | 0103 | core, cert_authority        | test CertAuthority, sad path    |
 | 0104 | core, cert_authority, query | test CAQueries                  |
 | 0501 | server, request_parser      | test request parser             |
-| 0502 | server, httpsserver         | test the https server           |
+| 0502 | server, https               | test the https server           |
+| 0502 | server, https               | test the https server           |
 | 1000 | selftest, mockcurl          | test the MockCurl class         |
 | 1001 | selftest, mockdbase         | test the MockDBase class        |
 | 1002 | selftest, jsoncomp          | test json object comparison     |

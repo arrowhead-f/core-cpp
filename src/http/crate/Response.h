@@ -31,8 +31,9 @@ class Response {
         Response(http::status_code sc, std::string content, std::string mime_type = "application/json") : status_code{ sc }, mime_type{ std::move(mime_type) }, content{ std::move(content) } {}
 
         /// Get the reply in the form of a string.
+        /// \param keep_alive       whether keep-alive should be set; defaults to false
         /// \return                 the string representation of the reply
-        std::string to_string() const;
+        std::string to_string(bool keep_alive = false) const;
 
         /// Returns the status code of the response.
         /// \return                 the status code

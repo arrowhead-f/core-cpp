@@ -75,7 +75,7 @@ namespace {
         OpenSSL_add_all_algorithms();  /* load & register all cryptos, etc. */
         SSL_load_error_strings();   /* load all error messages */
 
-        method = SSLv23_server_method();
+        method = TLS_server_method();
         ctx = SSL_CTX_new(method);   /* create new context from method */
         if (!ctx) {
             return nullptr;

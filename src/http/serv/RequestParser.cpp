@@ -63,13 +63,22 @@ RequestParser::result_t RequestParser::consume(char input) {
 
         case RequestMethodStart:
 
-                if (!isChar(input) || isControl(input) || isSpecial(input)) {
-                    return result_t::failed;
+                //if (!isChar(input) || isControl(input) || isSpecial(input)) {
+                //    return result_t::failed;
+                //}
+                //else {
+                //    state = RequestMethod;
+                //    req.method.push_back(input);
+                //}
+
+                if (isMethodStart(input)) {
+                    state = RequestMethod;
+                   req.method.push_back(input);
                 }
                 else {
-                    state = RequestMethod;
-                    req.method.push_back(input);
+                    return result_t::failed;
                 }
+
                 break;
 
         case RequestMethod:
@@ -321,7 +330,7 @@ RequestParser::result_t RequestParser::consume(char input) {
                const auto it = std::find_if(req.headers.cbegin(), req.headers.cend(), [](const auto item){ return strcasecmp(item.name.c_str(), "Connection") == 0; });
 
                 if (it != req.headers.end()) {
-                    if (strcasecmp(it->value.c_str(), "Keep-Alive") == 0) {
+                    if (strcasecmp(it->value.c_str(), "keep-alive") == 0) {
                         req.keepAlive = true;
                     }
                     else { // == Close
@@ -329,7 +338,8 @@ RequestParser::result_t RequestParser::consume(char input) {
                     }
                 }
                 else {
-                    if (req.http_version_major > 1 || (req.http_version_major == 1 && req.http_version_minor == 1))
+                    // keep alive for HTTP/1.1 is the default
+                    if (req.http_version_major == 1 && req.http_version_minor == 1)
                         req.keepAlive = true;
                 }
 
