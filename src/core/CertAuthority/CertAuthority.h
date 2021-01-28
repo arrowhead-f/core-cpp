@@ -5,7 +5,7 @@
 
 #include <cstring>
 
-#include "json11/json11.hpp"
+#include "gason/gason.h"
 
 #include "utils/logger.h"
 #include "utils/crypto.h"
@@ -41,8 +41,20 @@ template<typename DBPool, typename RB>class CertAuthority final : public Core<DB
             try {
 
                 // { "publicKey": "string" }
-                std::string err;
-                const auto data = json11::Json::parse(req.content, err)["publicKey"].string_value();
+
+                gason::JsonAllocator allocator;
+                gason::JsonValue     root;
+                auto status = gason::jsonParse(req.content.data(), root, allocator);
+
+                if (status != gason::JSON_PARSE_OK) {
+                    return Response::from_stock(http::status_code::BadRequest);
+                }
+
+                auto data = root.child("publicKey").toString();
+                if (!data) {
+                    return Response::from_stock(http::status_code::BadRequest);
+                }
+
 
                 auto hash = std::string{};
                 crypto::sha256(data, hash);

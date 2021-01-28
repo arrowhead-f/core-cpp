@@ -5,7 +5,11 @@
 /// Author(s): ng201
 ///
 /// Description:
-/// * This will test Certificate Authority; sad path
+/// * this will test Certificate Authority
+/// * sad path, e.g.,
+///   * user data was mailformed
+///   * (mandatory) fields are missing from the json
+///   * exception was thrown by the database wrapper
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -21,7 +25,7 @@
 #include "hlpr/HelperDB.h"
 
 
-TEST_CASE("cert_authority: /ECHO", "[core] [cert_authority]") {
+TEST_CASE("cert_authority: GET /ECHO", "[core] [cert_authority]") {
 
     db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
     MockCurl reqBuilder;
@@ -49,6 +53,33 @@ TEST_CASE("cert_authority: wrong method for /checkTrustedKey", "[core] [cert_aut
 }
 
 
+TEST_CASE("cert_authority: malformed payload for /checkTrustedKey", "[core] [cert_authority]") {
+
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    {
+        // payload is empty
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", "" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    {
+        // mandatory key not found in dictionary
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", "{purricKey:\"TheKey\"}" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+    {
+        // key found, but with wrog type
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", "{publicKey: 123}" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+}
+
+
 TEST_CASE("cert_authority: POST /checkTrustedKey (exceptions)" , "[core] [cert_authority]") {
 
     HelperDB mdb{ };
@@ -71,5 +102,6 @@ TEST_CASE("cert_authority: POST /checkTrustedKey (exceptions)" , "[core] [cert_a
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", payload });
     });
 
+    // no exception was observed outside the dispatch mehod
     REQUIRE(num == 0);
 }
