@@ -5,7 +5,10 @@
 /// Author(s): ng201
 ///
 /// Description:
-/// * This will test Certificate Authority; happy path
+/// * this will test Certificate Authority
+/// * happier paths
+///   * the format of the json found in the 
+///     request is ok
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,25 +57,22 @@ TEST_CASE("cert_authority: POST /checkTrustedKey", "[core] [cert_authority]") {
     // sha256
     // TheKey   ---> cf8f9fb3da1c86745f616b8a7d6a47681179c042f4897741c3febe207ce50d45
     // WrongKey ---> b8033022e29297b50fd647b6a1c34e6595fff15cd1fe9f1bb8e18fbf5306fa52
-/*
+
     SECTION("Database entry found") {
         const std::string payload = R"json({ "publicKey": "TheKey" })json";
-        std::string response;
-        const auto ret = certAuthority.dispatch("127.0.0.1", "POST", "/checkTrustedKey", response, payload);
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", payload });
 
-        REQUIRE(ret == 0);
-        REQUIRE(JsonCompare(response, R"json({"id": 1,"createdAt": "2020-12-06","description": "St. Nicholas"})json"));
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), R"json({"id": 1,"createdAt": "2020-12-06","description": "St. Nicholas"})json"));
     }
 
     SECTION("No database entry found") {
         const std::string payload = R"json({ "publicKey": "WrongKey" })json";
-        std::string response;
-        const auto ret = certAuthority.dispatch("127.0.0.1", "POST", "/checkTrustedKey", response, payload);
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", payload });
 
-        REQUIRE(ret == 0);
-        REQUIRE(response.empty());
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(resp.value().empty());
     }
-*/
 }
 
 

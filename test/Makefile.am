@@ -33,6 +33,7 @@ test_SOURCES = main.cpp                  \
                \
                \
                ../inc/json11/json11.cpp            \
+               ../inc/gason/gason.cpp              \
                \
                ../src/utils/inifile.cpp            \
                ../src/http/wget/WG_Curl.cpp        \
