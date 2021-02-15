@@ -21,6 +21,8 @@ test_SOURCES = main.cpp                  \
                test0102.cpp              \
                test0103.cpp              \
                test0104.cpp              \
+               test0105.cpp              \
+               test0106.cpp              \
                test0501.cpp              \
                test0502.cpp              \
                test0503.cpp              \
@@ -38,4 +40,3 @@ test_SOURCES = main.cpp                  \
                ../src/http/wget/WG_Curl.cpp        \
                ../src/http/crate/Response.cpp      \
                ../src/http/serv/RequestParser.cpp
-
