@@ -4,6 +4,7 @@
 
 #include "core/Core.h"
 
+#include "endpoints/Register.h"
 
 template<typename DBPool, typename RB>class ServiceRegistry final : public Core<DBPool, RB> {
 
@@ -25,7 +26,13 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
         }
 
         Response handlePOST(Request &&req) final {
-            return Response::from_stock(http::status_code::NotImplemented);
+            if (!req.uri.compare("/register")) {
+                printf("POST message received, url: /register\n");
+                auto db = Parent::database();
+                return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req));
+            }
+
+            return Response::from_stock(http::status_code::NotFound);
         }
 
         Response handlePATCH(Request &&req) final {
