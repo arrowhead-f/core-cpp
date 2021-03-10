@@ -180,6 +180,27 @@ class MockDBase : public db::Database {
             return true;
         }
 
+        bool date(const char *table, const char *id, const char *col, bool update = false) {
+            const auto q1 = std::string{ "CREATE TRIGGER insert_timestamp_" } + table + "_" + col + " AFTER INSERT ON " + table + " BEGIN UPDATE " + table + " SET " + col + " = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE " + id + " = NEW." + id + "; END";
+            const auto q2 = std::string{ "CREATE TRIGGER update_timestamp_" } + table + "_" + col + " AFTER UPDATE ON " + table + " BEGIN UPDATE " + table + " SET " + col + " = STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW') WHERE " + id + " = NEW." + id + "; END";
+
+            {
+                int rc = sqlite3_exec(db, q1.c_str(), nullptr, 0, nullptr);
+                if (rc!=SQLITE_OK ) {
+                    return false;
+                }
+            }
+
+            if (update) {
+                int rc = sqlite3_exec(db, q2.c_str(), nullptr, 0, nullptr);
+                if (rc!=SQLITE_OK ) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         friend class Row;
 
         class Row: public db::Row {
