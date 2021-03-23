@@ -11,6 +11,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <chrono>
+#include <thread>
 
 #include "hlpr/MockDBase.h"
 
@@ -391,4 +393,42 @@ TEST_CASE("[mockdbase]: Test unique column", "[selftest] [mockdbase]") {
     int i;
     REQUIRE(mdb.fetch("SELECT COUNT(*) FROM table1", i) == true);
     REQUIRE(i == 3);
+}
+
+
+TEST_CASE("[mockdbase]: Test date column", "[selftest] [mockdbase]") {
+
+    MockDBase mdb;
+
+    mdb.table("table1", true, { "c1", "c2", "created_at", "updated_at" }, {});
+    mdb.date("table1", "c1", "created_at");
+    mdb.date("table1", "c1", "updated_at", true);
+
+    mdb.query("INSERT INTO table1 (c1, c2) VALUES (13, 'peach')");
+    mdb.query("INSERT INTO table1 (c1, c2) VALUES (14, 'pear')");
+
+
+    std::string cat13_1, cat14_1, uat13_1, uat14_1;
+    REQUIRE(mdb.fetch("SELECT created_at FROM table1 WHERE c1 = 13", cat13_1) == true);
+    REQUIRE(mdb.fetch("SELECT updated_at FROM table1 WHERE c1 = 13", uat13_1) == true);
+    REQUIRE(mdb.fetch("SELECT created_at FROM table1 WHERE c1 = 14", cat14_1) == true);
+    REQUIRE(mdb.fetch("SELECT updated_at FROM table1 WHERE c1 = 14", uat14_1) == true);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    mdb.query("UPDATE table1 SET c2 = 'peach' WHERE c1 = 14");
+
+    std::string cat13_2, cat14_2, uat13_2, uat14_2;
+    REQUIRE(mdb.fetch("SELECT created_at FROM table1 WHERE c1 = 13", cat13_2) == true);
+    REQUIRE(mdb.fetch("SELECT updated_at FROM table1 WHERE c1 = 13", uat13_2) == true);
+    REQUIRE(mdb.fetch("SELECT created_at FROM table1 WHERE c1 = 14", cat14_2) == true);
+    REQUIRE(mdb.fetch("SELECT updated_at FROM table1 WHERE c1 = 14", uat14_2) == true);
+
+    // creation time did not change
+    REQUIRE(cat13_1 == cat13_2);
+    REQUIRE(cat14_1 == cat14_2);
+
+    // update time changed for the second row with id = 14
+    REQUIRE(uat13_1 == uat13_2);
+    REQUIRE(uat14_1 != uat14_2);
 }
