@@ -34,6 +34,10 @@ class JsonBuilder {
            out << '\"' << key << "\": " << value << ",";
         }
 
+        void writeObj(const char *key, const std::string &value){
+           out << '\"' << key << "\": " << value << ",";
+        }
+
     public:
 
         JsonBuilder() : out("{") { out << "{"; }
@@ -97,6 +101,19 @@ class JsonBuilder {
             return *this;
         }
 
+        template<typename InputIt>
+        auto& to_arrayObj(const char *key, InputIt first, InputIt last) {
+            out << "\"" << key << "\": [";
+            if (first != last) {
+                for (; first != last; ++first) {
+                    out << *first;
+                    out << ",";
+                }
+                out.seekp(-1, std::ios::end);
+            }
+            out << "],";
+            return *this;
+        }
 
         template<typename R, typename Fun>
         auto& for_each(const char *key, const R &row, Fun f) {
