@@ -1,10 +1,11 @@
-#pragma once
+#ifndef _PAYLOADS_COMMONPAYLOADS_H_
+#define _PAYLOADS_COMMONPAYLOADS_H_
 
 #include <string>
 #include <vector>
 //#include <map>
 
-typedef struct serviceQueryData
+struct serviceQueryData
 {
     std::string sId;
     std::string sServiceDefinition_id;
@@ -30,4 +31,6 @@ typedef struct serviceQueryData
     std::vector<std::string> vInterfaces_updatedAt;
     std::string sCreatedAt;
     std::string sUpdatedAt;
-} servQueryData;
+};
+
+#endif /* _PAYLOADS_COMMONPAYLOADS_H_ */

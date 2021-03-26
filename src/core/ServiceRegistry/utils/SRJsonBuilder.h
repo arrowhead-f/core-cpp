@@ -1,5 +1,5 @@
-
-#pragma once
+#ifndef _UTILS_SRJSONBUILDER_H_
+#define _UTILS_SRJSONBUILDER_H_
 
 #include <string>
 #include "utils/json.h"
@@ -39,3 +39,5 @@ public:
         writeObj(key.c_str(), value);
     }
 };
+
+#endif /* _UTILS_SRJSONBUILDER_H_ */

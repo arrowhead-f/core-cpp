@@ -37,11 +37,6 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
-
-    printf("\n###TEST###\n");
-    printf("ServiceRegistry: POST /register\n");
-    printf("##########\n\n");
-
     MockDBase mdb;
     MockPool pool{ mdb };
     MockCurl reqBuilder;
@@ -57,7 +52,7 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
 
     const char *payload =
      "{"
-      "\"serviceDefinition\": \"TestService\","
+      "\"serviceDefinition\": \"TestServ ic e\","
       "\"providerSystem\":"
         "{"
             "\"systemName\": \"TestProviderSystemName18\","
@@ -67,7 +62,7 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
         "},"
       "\"serviceUri\": \"/akarmi/url18\","
       "\"endOfValidity\": \"2022-08-05 12:00:00\","
-      "\"secure\": \"NOT_SECURE\","
+      "\"secure\": \"Certificate\","
       "\"metadata\":"
       "{"
         "\"additionalProp1\": \"meta1\","
@@ -76,8 +71,8 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
       "},"
       "\"version\": 2,"
       "\"interfaces\": ["
-        "\"interface1\","
-        "\"interface2\""
+        "\"HTTP-SECURE-JSON\","
+        "\"HTTP-INSECUrE-jSon\""
       "]"
      "}";
 
@@ -90,12 +85,12 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
         "\"id\" : 1001,"
         "\"serviceDefinition\": {"
             "\"id\": 1001,"
-            "\"serviceDefinition\": \"TestService\","
+            "\"serviceDefinition\": \"testservice\","
             "\"createdAt\": \"\","
             "\"updatedAt\": \"\"},"
         "\"provider\": {"
             "\"id\": 1001,"
-            "\"systemName\": \"TestProviderSystemName18\","
+            "\"systemName\": \"testprovidersystemname18\","
             "\"address\": \"10.1.2.3\","
             "\"port\": 2345,"
             "\"authenticationInfo\": \"authInfo\","
@@ -103,7 +98,7 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
             "\"updatedAt\": \"\"},"
         "\"serviceUri\": \"/akarmi/url18\","
         "\"endOfValidity\": \"2022-08-05 12:00:00\","
-        "\"secure\": \"NOT_SECURE\","
+        "\"secure\": \"certificate\","
         "\"metadata\": {"
             "\"additionalProp1\": \"meta1\","
             "\"additionalProp2\": \"meta2\","
@@ -111,11 +106,11 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
         "\"version\": 2,"
         "\"interfaces\": ["
             "{\"id\": 1,"
-                "\"interfaceName\": \"interface1\","
+                "\"interfaceName\": \"http-secure-json\","
                 "\"createdAt\": \"\","
                 "\"updatedAt\": \"\"},"
             "{\"id\": 2,"
-                "\"interfaceName\": \"interface2\","
+                "\"interfaceName\": \"http-insecure-json\","
                 "\"createdAt\": \"\","
                 "\"updatedAt\": \"\"}],"
         "\"createdAt\": \"\","
@@ -124,18 +119,13 @@ TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
 
     REQUIRE(resp == http::status_code::OK);
 
-    printf("resp: %s\n", resp.value().c_str());
+    //printf("resp: %s\n", resp.value().c_str());
 
     const std::string sExpResp(expResp);
     REQUIRE(JsonCompare(resp.value(), sExpResp));
-
 }
 
 TEST_CASE("ServiceRegistry: POST /register (missing metadata)", "[core] [ServiceRegistry]") {
-
-    printf("\n###TEST###\n");
-    printf("ServiceRegistry: POST /register (missing metadata)\n");
-    printf("##########\n\n");
 
     MockDBase mdb;
     MockPool pool{ mdb };
@@ -162,11 +152,11 @@ TEST_CASE("ServiceRegistry: POST /register (missing metadata)", "[core] [Service
         "},"
       "\"serviceUri\": \"/akarmi/url18\","
       "\"endOfValidity\": \"2022-08-05 12:00:00\","
-      "\"secure\": \"NOT_SECURE\","
+      "\"secure\": \"CERTIFICATE\","
       "\"version\": 2,"
       "\"interfaces\": ["
-        "\"interface1\","
-        "\"interface2\""
+        "\"http-secure-json\","
+        "\"http-insecure-json\""
       "]"
      "}";
 
@@ -179,12 +169,12 @@ TEST_CASE("ServiceRegistry: POST /register (missing metadata)", "[core] [Service
         "\"id\" : 1001,"
         "\"serviceDefinition\": {"
             "\"id\": 1001,"
-            "\"serviceDefinition\": \"TestService\","
+            "\"serviceDefinition\": \"testservice\","
             "\"createdAt\": \"\","
             "\"updatedAt\": \"\"},"
         "\"provider\": {"
             "\"id\": 1001,"
-            "\"systemName\": \"TestProviderSystemName18\","
+            "\"systemName\": \"testprovidersystemname18\","
             "\"address\": \"10.1.2.3\","
             "\"port\": 2345,"
             "\"authenticationInfo\": \"authInfo\","
@@ -192,16 +182,16 @@ TEST_CASE("ServiceRegistry: POST /register (missing metadata)", "[core] [Service
             "\"updatedAt\": \"\"},"
         "\"serviceUri\": \"/akarmi/url18\","
         "\"endOfValidity\": \"2022-08-05 12:00:00\","
-        "\"secure\": \"NOT_SECURE\","
+        "\"secure\": \"certificate\","
         "\"metadata\": {},"
         "\"version\": 2,"
         "\"interfaces\": ["
             "{\"id\": 1,"
-                "\"interfaceName\": \"interface1\","
+                "\"interfaceName\": \"http-secure-json\","
                 "\"createdAt\": \"\","
                 "\"updatedAt\": \"\"},"
             "{\"id\": 2,"
-                "\"interfaceName\": \"interface2\","
+                "\"interfaceName\": \"http-insecure-json\","
                 "\"createdAt\": \"\","
                 "\"updatedAt\": \"\"}],"
         "\"createdAt\": \"\","
@@ -210,18 +200,137 @@ TEST_CASE("ServiceRegistry: POST /register (missing metadata)", "[core] [Service
 
     REQUIRE(resp == http::status_code::OK);
 
-    printf("resp: %s\n", resp.value().c_str());
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+TEST_CASE("ServiceRegistry: POST /register (bad Json contents)", "[core] [ServiceRegistryUUT]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"TestService\","
+      "\"providerSystem\":"
+        "{"
+            "\"systemName\": \"TestProviderSystemName18\","
+            "\"address\": \"10.1.2.3\","
+    "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Bad Json\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Service definition is NULL)", "[core] [ServiceRegistryUUT]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": null,"
+        "\"k\" : \"v\""
+    "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Service definition is null or blank.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Service definition is empty)", "[core] [ServiceRegistryUUT]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"\""
+    "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Service definition is null or blank.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Invalid EndOfValidity)", "[core] [ServiceRegistry]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"TestService\","
+      "\"providerSystem\":"
+        "{"
+            "\"systemName\": \"TestProviderSystemName18\","
+            "\"address\": \"10.1.2.3\","
+            "\"port\": 2345,"
+            "\"authenticationInfo\": \"authInfo\""
+        "},"
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"end of validity\","
+      "\"secure\": \"CERTIFICATE\","
+      "\"version\": 2,"
+      "\"interfaces\": ["
+        "\"http-secure-json\","
+        "\"http-insecure-json\""
+      "]"
+     "}";
+
+    //printf("%s\n", payload);
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"End of validity is specified in the wrong format. Please provide UTC time using YYYY-MM-DD hh:mm:ss pattern.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
 
     const std::string sExpResp(expResp);
     REQUIRE(JsonCompare(resp.value(), sExpResp));
 
 }
 
-TEST_CASE("ServiceRegistryUUT: POST /register (missing Json contents)", "[core] [ServiceRegistryUUT]") {
-
-    printf("\n###TEST###\n");
-    printf("ServiceRegistry: POST /register (missing Json contents)\n");
-    printf("##########\n\n");
+TEST_CASE("ServiceRegistry: POST /register (Invalid SecurityType)", "[core] [ServiceRegistry]") {
 
     MockDBase mdb;
     MockPool pool{ mdb };
@@ -237,21 +346,35 @@ TEST_CASE("ServiceRegistryUUT: POST /register (missing Json contents)", "[core] 
         "{"
             "\"systemName\": \"TestProviderSystemName18\","
             "\"address\": \"10.1.2.3\","
+            "\"port\": 2345,"
             "\"authenticationInfo\": \"authInfo\""
         "},"
-    "}";
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"2022-08-05 12:00:00\","
+      "\"secure\": \"invalid\","
+      "\"version\": 2,"
+      "\"interfaces\": ["
+        "\"http-secure-json\","
+        "\"http-insecure-json\""
+      "]"
+     "}";
+
+    //printf("%s\n", payload);
 
     const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
 
-    REQUIRE(resp == http::status_code::NotAcceptable);
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Security type is not valid.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
 }
 
-
-TEST_CASE("ServiceRegistryUUT: POST /register (bad Json contents)", "[core] [ServiceRegistryUUT]") {
-
-    printf("\n###TEST###\n");
-    printf("ServiceRegistry: POST /register (bad Json contents)\n");
-    printf("##########\n\n");
+TEST_CASE("ServiceRegistry: POST /register (Invalid ServiceInterface)", "[core] [ServiceRegistry]") {
 
     MockDBase mdb;
     MockPool pool{ mdb };
@@ -267,9 +390,200 @@ TEST_CASE("ServiceRegistryUUT: POST /register (bad Json contents)", "[core] [Ser
         "{"
             "\"systemName\": \"TestProviderSystemName18\","
             "\"address\": \"10.1.2.3\","
-    "}";
+            "\"port\": 2345,"
+            "\"authenticationInfo\": \"authInfo\""
+        "},"
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"2022-08-05 12:00:00\","
+      "\"secure\": \"certificate\","
+      "\"version\": 2,"
+      "\"interfaces\": ["
+        "\"hTTp-securfde-json\","
+        "\"http-inv-json\""
+      "]"
+     "}";
+
+    //printf("%s\n", payload);
 
     const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
 
-    REQUIRE(resp == http::status_code::NotAcceptable);
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Specified interface name is not valid: hTTp-securfde-json\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Interfaces list empty)", "[core] [ServiceRegistry]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"TestService\","
+      "\"providerSystem\":"
+        "{"
+            "\"systemName\": \"TestProviderSystemName18\","
+            "\"address\": \"10.1.2.3\","
+            "\"port\": 2345,"
+            "\"authenticationInfo\": \"authInfo\""
+        "},"
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"2022-08-05 12:00:00\","
+      "\"secure\": \"certificate\","
+      "\"version\": 2,"
+      "\"interfaces\": ["
+      "]"
+     "}";
+
+    //printf("%s\n", payload);
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Interfaces list is null or empty.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Interfaces list null)", "[core] [ServiceRegistry]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"TestService\","
+      "\"providerSystem\":"
+        "{"
+            "\"systemName\": \"TestProviderSystemName18\","
+            "\"address\": \"10.1.2.3\","
+            "\"port\": 2345,"
+            "\"authenticationInfo\": \"authInfo\""
+        "},"
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"2022-08-05 12:00:00\","
+      "\"secure\": \"certificate\","
+      "\"version\": 2"
+     "}";
+
+    //printf("%s\n", payload);
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Interfaces list is not specified.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Secure withouth auth info)", "[core] [ServiceRegistry]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"TestService\","
+      "\"providerSystem\":"
+        "{"
+            "\"systemName\": \"TestProviderSystemName18\","
+            "\"address\": \"10.1.2.3\","
+            "\"port\": 2345,"
+            "\"authenticationInfo\": \"\""
+        "},"
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"2022-08-05 12:00:00\","
+      "\"secure\": \"CERTIFICATE\","
+      "\"version\": 2,"
+      "\"interfaces\": ["
+        "\"http-secure-json\","
+        "\"http-insecure-json\""
+      "]"
+     "}";
+
+    //printf("%s\n", payload);
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    //printf("resp: %s\n", resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Security type is in conflict with the availability of the authentication info.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /register (Insecure withouth auth info)", "[core] [ServiceRegistry]") {
+
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1000, "test", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, { {1000, "test", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+    mdb.table("service_interface", true, { "id", "interface_name", "created_at", "updated_at" }, { {1000, "test", "intf", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, { {1000, 2000, 3000, "mockuri", "2022-09-11 10:39:08", "NOT_SECURE", "{\"meta1\":\"m\"}", 1.0, "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+    mdb.table("service_registry_interface_connection", true, { "id", "service_registry_id", "interface_id", "created_at", "updated_at" }, { {1000, 2000, 3000, "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinition\": \"TestService\","
+      "\"providerSystem\":"
+        "{"
+            "\"systemName\": \"TestProviderSystemName18\","
+            "\"address\": \"10.1.2.3\","
+            "\"port\": 2345,"
+            "\"authenticationInfo\": \"\""
+        "},"
+      "\"serviceUri\": \"/akarmi/url18\","
+      "\"endOfValidity\": \"2022-08-05 12:00:00\","
+      "\"secure\": \"not_secure\","
+      "\"version\": 2,"
+      "\"interfaces\": ["
+        "\"http-secure-json\","
+        "\"http-insecure-json\""
+      "]"
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/register", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(200));
+
+    //const char *expResp = "{\"errorMessage\": \"Security type is in conflict with the availability of the authentication info.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/register\"}";
+
+    //const std::string sExpResp(expResp);
+    //REQUIRE(JsonCompare(resp.value(), sExpResp));
 }

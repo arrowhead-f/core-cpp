@@ -1,10 +1,13 @@
-#pragma once
+#ifndef _PAYLOADS_SERVICEREGISTRYENTRY_H_
+#define _PAYLOADS_SERVICEREGISTRYENTRY_H_
 
 #include <string>
 #include <vector>
 #include "commonPayloads.h"
 #include "gason/gason.h"
 #include "../utils/SRJsonBuilder.h"
+
+#include <ctype.h>
 
 class ServiceRegistryEntry{
 
@@ -33,49 +36,99 @@ public:
 //Output
     serviceQueryData sQData;
 
-    void setJsonPayload(std::string &_sJsonPayload, bool &_brSuccess)
+    bool setJsonPayload(std::string &_sJsonPayload)
     {
         auto status = gason::jsonParse(_sJsonPayload.data(), jsonRootValue, jsonAllocator);
 
         if ( status == gason::JSON_PARSE_OK )
-            _brSuccess = true;
-        else
-            _brSuccess = false;
+            return true;
+
+        return false;
     }
 
-    bool validRegistryEntry()
+    uint8_t validRegistryEntry()
     {
         try
         {
-            if ( !jsonRootValue.child("serviceDefinition")            ) return false;
-            if ( !jsonRootValue.child("providerSystem")("systemName") ) return false;
-            if ( !jsonRootValue.child("providerSystem")("address")    ) return false;
-            if ( !jsonRootValue.child("providerSystem")("port")       ) return false;
-            if ( !jsonRootValue.child("serviceUri")                   ) return false;
-            if ( !jsonRootValue.child("interfaces")[0]                ) return false;
+            if ( !jsonRootValue.child("serviceDefinition")                              ) return 1;
+            if (  jsonRootValue.child("serviceDefinition").getTag() != gason::JSON_STRING ) return 2;/*JSON_NULL or JSON_FALSE*/
+            bool b = true;
+            sServiceDefinition = std::string(jsonRootValue.child("serviceDefinition").toString(&b));
+            if(sServiceDefinition.size() == 0) return 2;
+
+            if ( !jsonRootValue.child("providerSystem")                                 ) return 3;
+            if ( !jsonRootValue.child("providerSystem")("systemName")                   ) return 4;
+            if ( !jsonRootValue.child("providerSystem")("address")                      ) return 5;
+            if ( !jsonRootValue.child("providerSystem")("port")                         ) return 6;
+            // ( !jsonRootValue.child("serviceUri")                                     ) return 7; //?
+            if ( !jsonRootValue.child("interfaces")                                     ) return 8;
+            if ( !jsonRootValue.child("interfaces")[0]                                  ) return 9;
         }
         catch(...)
         {
-            return false;
+            return 10;
         }
 
-        return true;
+        return 0;
     }
 
-    void parseRegistryEntry()
+    void toLowerAndTrim(std::string &_s)
+    {
+        std::transform(_s.begin(), _s.end(), _s.begin(), ::tolower);
+
+        const char *whitespace = " \n\r\t\f\v";
+        const char *s2 = _s.c_str();
+        int n = _s.size();
+        char *tmp = (char *)malloc(n+1);
+        int j = 0;
+        for(int i = 0; i < n; ++i)
+            if( strchr(whitespace, s2[i]) == NULL) tmp[j++] = s2[i];
+        tmp[j] = '\0';
+        _s = std::string(tmp);
+        free(tmp);
+    }
+
+    uint8_t parseRegistryEntry(std::string &_errResp)
     {
         sServiceDefinition = std::string(jsonRootValue.child("serviceDefinition").toString());
-        sProviderSystem_SystemName = std::string(jsonRootValue.child("providerSystem")("systemName").toString());
-        sProviderSystem_Address = std::string(jsonRootValue.child("providerSystem")("address").toString());
-        sProviderSystem_Port = std::to_string(jsonRootValue.child("providerSystem")("port").toInt());
+        toLowerAndTrim(sServiceDefinition);
 
-        char *authInfo = jsonRootValue.child("providerSystem")("authenticationInfo").toString();
-        if(authInfo != NULL)
-            sProviderSystem_AuthInfo = std::string(authInfo);
+        sProviderSystem_SystemName = std::string(jsonRootValue.child("providerSystem")("systemName").toString());
+        if( strchr(sProviderSystem_SystemName.c_str(), '.') != NULL ) return 1;
+        toLowerAndTrim(sProviderSystem_SystemName);
+
+        sProviderSystem_Address = std::string(jsonRootValue.child("providerSystem")("address").toString());
+
+        int port = jsonRootValue.child("providerSystem")("port").toInt();
+        if( ( port < 0 ) || ( port > 65535 ) )
+            return 2;
+
+        sProviderSystem_Port = std::to_string(port);
+
+        if( jsonRootValue.child("providerSystem")("authenticationInfo") )
+        {
+            if ( jsonRootValue.child("providerSystem")("authenticationInfo").getTag() == gason::JSON_STRING )
+            {
+                bool b = true;
+                sProviderSystem_AuthInfo = std::string(jsonRootValue.child("providerSystem")("authenticationInfo").toString(&b));
+            }
+        }
 
         sServiceUri = std::string(jsonRootValue.child("serviceUri").toString());
+
         sEndOfValidity = std::string(jsonRootValue.child("endOfValidity").toString());
+
+        if( !validEndOfValidity() )
+            return 3;
+
         sSecure = std::string(jsonRootValue.child("secure").toString());
+        toLowerAndTrim(sSecure);
+
+        uint8_t status = validSecurityType(); // 4 or 5
+
+        if( status )
+            return status;
+
         sVersion = std::to_string(jsonRootValue.child("version").toInt());
 
         gason::JsonValue metaObj = jsonRootValue.child("metadata");
@@ -94,15 +147,27 @@ public:
 
         sMetaData = jMeta.str();
 
-        for( int i=0; ;++i ){
-            if(jsonRootValue.child("interfaces")[i]){
-                char *intf = jsonRootValue.child("interfaces")[i].toString();
-                vInterfaces.push_back( std::string(intf));
+        for( int i = 0; ;++i )
+        {
+            if(jsonRootValue.child("interfaces")[i])
+            {
+                std::string sintf = std::string(jsonRootValue.child("interfaces")[i].toString());
+                std::transform(sintf.begin(), sintf.end(), sintf.begin(), ::tolower);
+                if( !validInterfaceName(sintf) )
+                {
+                    _errResp = std::string(jsonRootValue.child("interfaces")[i].toString());
+                    return 7;
+                }
+
+                vInterfaces.push_back(sintf);
             }
-            else{
+            else
+            {
                 break;
             }
         }
+
+        return 0;
     }
 
     void fillJsonResponse()
@@ -157,6 +222,7 @@ public:
             jArrayElement.addStr("updatedAt", sQData.vInterfaces_updatedAt[i]);
             v.push_back(jArrayElement.str());
         }
+
         jResponse.to_arrayObj<std::vector<std::string>::iterator>("interfaces", v.begin(), v.end());
 
 //createdAt
@@ -170,6 +236,52 @@ public:
     {
         fillJsonResponse();
         return jResponse.str();
+    }
+
+    bool validEndOfValidity()
+    {
+        //YYYY-MM-DD hh:mm:ss
+        const char *c = sEndOfValidity.c_str();
+
+        if( !isdigit(c[0]) || !isdigit(c[1]) || !isdigit(c[2]) || !isdigit(c[3])) return false;
+        if( c[4] != '-' || c[7] != '-')          return false;
+        if( !isdigit(c[5]) || !isdigit(c[6]) || !isdigit(c[8]) || !isdigit(c[9])) return false;
+        if( c[10] != ' ' || c[13] != ':' || c[16] != ':' )                        return false;
+        if(!isdigit(c[11]) || !isdigit(c[12]) ) return false;
+        if(!isdigit(c[14]) || !isdigit(c[15]) ) return false;
+        if(!isdigit(c[17]) || !isdigit(c[18]) ) return false;
+
+        return true;
+    }
+
+    uint8_t validSecurityType()
+    {
+        if( sSecure.compare("not_secure")  != 0 &&
+            sSecure.compare("certificate") != 0 &&
+            sSecure.compare("token") != 0
+          ) return 4;
+
+        if(sProviderSystem_AuthInfo.size() != 0)
+            if( sSecure.compare("not_secure") == 0)
+                return 5;
+
+        if(sSecure.compare("certificate") == 0 || sSecure.compare("token") == 0)
+            if(sProviderSystem_AuthInfo.size() == 0)
+                return 5;
+
+        return 0;
+    }
+
+    bool validInterfaceName(std::string &_intf)
+    {
+        //protocol-SECURE-JSON or protocol-INSECURE-JSON
+        char *s = strchr(_intf.c_str(), '-');
+        if(s == NULL)  return false;
+
+        std::string str = std::string(s+1);
+        if( str.compare("secure-json") != 0 && str.compare("insecure-json") != 0) return false;
+
+        return true;
     }
 
 };
@@ -239,3 +351,5 @@ public:
  "updatedAt": "string"
 }
 */
+
+#endif /* _PAYLOADS_SERVICEREGISTRYENTRY_H_ */

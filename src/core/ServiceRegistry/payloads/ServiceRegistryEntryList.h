@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _PAYLOADS_SERVICEREGISTRYENTRYLIST_H_
+#define _PAYLOADS_SERVICEREGISTRYENTRYLIST_H_
 
 #include "ServiceRegistryEntry.h"
 
@@ -23,3 +24,5 @@ public:
         return mainObject.str();
     }
 };
+
+#endif /* _PAYLOADS_SERVICEREGISTRYENTRYLIST_H_ */

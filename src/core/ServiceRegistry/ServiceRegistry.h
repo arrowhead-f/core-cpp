@@ -1,7 +1,6 @@
 #ifndef _CORE_SERVICEREGISTRY_H_
 #define _CORE_SERVICEREGISTRY_H_
 
-
 #include "core/Core.h"
 
 #include "endpoints/Register.h"
@@ -27,7 +26,6 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
 
         Response handlePOST(Request &&req) final {
             if (!req.uri.compare("/register")) {
-                printf("POST message received, url: /register\n");
                 auto db = Parent::database();
                 return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req));
             }

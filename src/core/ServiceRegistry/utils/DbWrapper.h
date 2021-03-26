@@ -1,5 +1,5 @@
-
-#pragma once
+#ifndef _UTILS_DBWRAPPER_H_
+#define _UTILS_DBWRAPPER_H_
 
 #include <string>
 
@@ -73,3 +73,5 @@ public:
         }
     }
 };
+
+#endif /* _UTILS_DBWRAPPER_H_ */

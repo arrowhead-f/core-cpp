@@ -1,4 +1,10 @@
-#pragma once
+
+//todo:
+//metadata json -> key=value + urlencode, and reverse
+
+
+#ifndef _ENDPOINTS_REGISTER_H_
+#define _ENDPOINTS_REGISTER_H_
 
 #include "http/crate/Request.h"
 #include "http/crate/Response.h"
@@ -7,12 +13,14 @@
 
 #include "core/Core.h"
 #include "../utils/DbWrapper.h"
+#include "../utils/Error.h"
 
 template<typename DB>
 class Register {
 
     private:
         DB &db;
+        ServiceRegistryEntry oServiceRegistryEntry;
 
     public:
 
@@ -20,18 +28,53 @@ class Register {
 
         Response processRegister(Request &&req)
         {
-            bool bSuccessfullyParsed = false;
-            ServiceRegistryEntry oServiceRegistryEntry;
-            oServiceRegistryEntry.setJsonPayload(req.content, bSuccessfullyParsed);
+            if(!oServiceRegistryEntry.setJsonPayload(req.content))
+                return ErrorResp{"Bad Json"}.getResp();
 
-            if(!bSuccessfullyParsed)
-                return Response::from_stock(http::status_code::NotAcceptable);
+            uint8_t status = oServiceRegistryEntry.validRegistryEntry();
 
-            if(oServiceRegistryEntry.validRegistryEntry())
-                oServiceRegistryEntry.parseRegistryEntry();
-            else
-                return Response::from_stock(http::status_code::NotAcceptable);
+            switch( status )
+            {
+                case 1: return ErrorResp{"Service definition is not specified."}.getResp();
+                case 2: return ErrorResp{"Service definition is null or blank."}.getResp();
+                case 3: return ErrorResp{"Provider system is not specified."}.getResp();
+                case 4: return ErrorResp{"Provider system name is not specified."}.getResp();
+                case 5: return ErrorResp{"Provider system address is not specified."}.getResp();
+                case 6: return ErrorResp{"Provider system port is not specified."}.getResp();
+                //se 7: URI?
+                case 8: return ErrorResp{"Interfaces list is not specified."}.getResp();
+                case 9: return ErrorResp{"Interfaces list is null or empty."}.getResp();
+                case 10: return ErrorResp{"JSon parsing exception."}.getResp();
+            }
 
+            std::string errResp;
+            status = oServiceRegistryEntry.parseRegistryEntry(errResp);
+
+            switch( status )
+            {
+                case 1: return ErrorResp{"System name can't contain dot (.)", 400, "INVALID_PARAMETER"}.getResp();
+                case 2: return ErrorResp{"Port must be between 0 and 65535."}.getResp();
+                case 3: return ErrorResp{"End of validity is specified in the wrong format. Please provide UTC time using YYYY-MM-DD hh:mm:ss pattern."}.getResp();
+                case 4: return ErrorResp{"Security type is not valid."}.getResp();
+                case 5: return ErrorResp{"Security type is in conflict with the availability of the authentication info."}.getResp();
+                //?? 6: return ErrorResp{"ServiceRegistry insecure mode can not handle secure services", 400, "INVALID_PARAMETER"}.getResp();
+                case 7: return ErrorResp{"Specified interface name is not valid: " + errResp}.getResp();
+            }
+
+            status = processDB();
+
+            switch(status)
+            {
+                case 1: return ErrorResp{"Empty response from service_definition table"}.getResp();
+                case 2: return ErrorResp{"Empty response from system_ table"}.getResp();
+                case 3: return ErrorResp{"Empty response from service_interface table"}.getResp();
+                case 4: return ErrorResp{"Empty response from service_registry table"}.getResp();
+            }
+
+            return Response{ oServiceRegistryEntry.createRegistryEntry() };
+        }
+
+        uint8_t processDB(){
             //Service definition exists? if No -> save service Definition into DBase
             //TABLE: service_definition
             //
@@ -145,7 +188,7 @@ class Register {
             }
             else
             {
-                return Response{ "Error: Empty response from service_definition table" };
+                return 1;//Response{ "Error: Empty response from service_definition table" };
             }
 
             sQuery = "SELECT * FROM system_ where id = " + sProviderSystemID + ";";
@@ -162,7 +205,7 @@ class Register {
             }
             else
             {
-                return Response{ "Error: Empty response from system_ table" };
+                return 2; //Response{ "Error: Empty response from system_ table" };
             }
 
             for(uint i = 0; i < vInterfaceIDs.size(); ++i)
@@ -185,7 +228,7 @@ class Register {
                 }
                 else
                 {
-                    return Response{ "Error: Empty response from service_interface table"};
+                    return 3; //return Response{ "Error: Empty response from service_interface table"};
                 }
             }
 
@@ -203,14 +246,12 @@ class Register {
             }
             else
             {
-                return Response{ "Error: Empty response from service_registry table" };
+                return 4; //Response{ "Error: Empty response from service_registry table" };
             }
 
-            std::string res = oServiceRegistryEntry.createRegistryEntry();
-
-            //printf("res: \n%s\n", res.c_str());
-
-            return Response{ res };
+            return 0;
         }
 
 };
+
+#endif   /* _ENDPOINTS_REGISTER_H_ */
