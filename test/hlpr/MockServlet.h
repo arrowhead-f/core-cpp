@@ -86,16 +86,17 @@ namespace {
     }
 
     bool LoadCertificates(SSL_CTX* ctx, const char* CertFile, const char* KeyFile, char *keyPhrase) {
-        //New lines 
-        if (SSL_CTX_load_verify_locations(ctx, CertFile, KeyFile) != 1)
-            return false;
 
-        if (SSL_CTX_set_default_verify_paths(ctx) != 1)
-            return false;
+        //New lines 
+        //if (SSL_CTX_load_verify_locations(ctx, CertFile, KeyFile) != 1)
+        //    return false;
+
+        //if (SSL_CTX_set_default_verify_paths(ctx) != 1)
+        //    return false;
         //End new lines
 
         /* set the local certificate from CertFile */
-        if (SSL_CTX_use_certificate_file(ctx, CertFile, SSL_FILETYPE_PEM) <= 0) {
+        if (SSL_CTX_use_certificate_chain_file(ctx, CertFile) <= 0) {
             return false;
         }
 
@@ -141,6 +142,7 @@ namespace {
             // add loop read...
             bytes = SSL_read(ssl, buf, sizeof(buf));    /* get request */
             if (bytes > 0) {
+
                 buf[bytes] = 0;
 
                 std::cmatch match;
@@ -258,6 +260,7 @@ namespace MockServlet {
                 SSL_set_fd(ssl, client);  /* set connection socket to SSL state */
                 Servlet(ssl);             /* service connection                 */
             }
+
         } while(!MockServlet::stop);
 
         close(server);      /* close server socket */

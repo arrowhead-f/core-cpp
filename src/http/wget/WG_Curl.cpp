@@ -1,8 +1,5 @@
 #include "WG_Curl.h"
 
-
-#include <iostream>
-
 #include <cstring>
 #include <stdexcept>
 
@@ -47,35 +44,37 @@ WG_Curl::WG_Curl(const KeyProvider &keyProvider) : WebGet{ keyProvider }, curl{ 
     if (const auto rc = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, hdrs))
         throw WebGet::Error{ curl_easy_strerror(rc) };
 
-    if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L))
-        throw WebGet::Error{ curl_easy_strerror(rc) };
-
-    if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L))
-        throw WebGet::Error{ curl_easy_strerror(rc) };
 
     if (keyProvider) {
-        //if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L))
-        //    throw WebGet::Error{ curl_easy_strerror(rc) };
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L))
+            throw WebGet::Error{ curl_easy_strerror(rc) };
 
         //if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L))
         //    throw WebGet::Error{ curl_easy_strerror(rc) };
 
-        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLCERT, keyProvider.sslCert.c_str()))
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLCERT, keyProvider.keyStore.getCert().c_str()))
             throw WebGet::Error{ curl_easy_strerror(rc) };
 
-        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, keyProvider.sslCertType.c_str()))
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLCERTTYPE, "PEM"))
             throw WebGet::Error{ curl_easy_strerror(rc) };
 
-        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLKEY, keyProvider.sslKey.c_str()))
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLKEY, keyProvider.keyStore.getKey().c_str()))
             throw WebGet::Error{ curl_easy_strerror(rc) };
 
-        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, keyProvider.sslKeyType.c_str()))
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSLKEYTYPE, "PEM"))
             throw WebGet::Error{ curl_easy_strerror(rc) };
 
-        if (const auto rc = curl_easy_setopt(curl, CURLOPT_KEYPASSWD, keyProvider.keyPasswd.c_str()))
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_KEYPASSWD, keyProvider.keyStore.password.c_str()))
             throw WebGet::Error{ curl_easy_strerror(rc) };
 
-        if (const auto rc = curl_easy_setopt(curl, CURLOPT_CAINFO, keyProvider.caInfo.c_str()))
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_CAINFO, keyProvider.trustStore.getCert().c_str()))
+            throw WebGet::Error{ curl_easy_strerror(rc) };
+    }
+    else {
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L))
+            throw WebGet::Error{ curl_easy_strerror(rc) };
+
+        if (const auto rc = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L))
             throw WebGet::Error{ curl_easy_strerror(rc) };
     }
 
@@ -147,7 +146,7 @@ WebGet::result WG_Curl::send(CURL *handle, const char *method, const std::string
     }
 
     if (const auto rc = curl_easy_perform(handle)) {
-        return make_result(-rc, "");
+        return make_result(-rc, "perform");
     }
 
     long http_code;

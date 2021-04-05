@@ -11,7 +11,7 @@
 
 #include <catch2/catch.hpp>
 
-
+#include <iostream>
 #include <chrono>
 #include <future>
 #include <string>
@@ -25,12 +25,12 @@
 
 TEST_CASE("rbcurl: Test connection to an on-line server", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -94,12 +94,12 @@ TEST_CASE("rbcurl: Test connection to an on-line server", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test the reuse of req", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -148,12 +148,12 @@ TEST_CASE("rbcurl: Test the reuse of req", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test reqs from multiple threads", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -222,12 +222,12 @@ TEST_CASE("rbcurl: Test reqs from multiple threads", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test connecting to an offline server", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -253,12 +253,12 @@ TEST_CASE("rbcurl: Test connecting to an offline server", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test using http instead of https", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -278,12 +278,12 @@ TEST_CASE("rbcurl: Test using http instead of https", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test invalid protocol response", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -303,12 +303,12 @@ TEST_CASE("rbcurl: Test invalid protocol response", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test slow response", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -329,12 +329,12 @@ TEST_CASE("rbcurl: Test slow response", "[rbcurl] [client]") {
 
 TEST_CASE("rbcurl: Test wrong content length set by the server", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 
@@ -353,7 +353,7 @@ TEST_CASE("rbcurl: Test wrong content length set by the server", "[rbcurl] [clie
 
 TEST_CASE("rbcurl: Test connection 201", "[rbcurl] [client]") {
 
-    auto kp = KeyProvider{ "data/test0093/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0093/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0093/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
     auto rb = WG_Curl{ kp };
 
     // set the response to created
@@ -365,8 +365,8 @@ TEST_CASE("rbcurl: Test connection 201", "[rbcurl] [client]") {
     });
 
     auto th = std::thread{ [](){
-        char key[] = "12345";
-        MockServlet::run("data/test0093/tempsensor.testcloud1.publicCert.pem", "data/test0093/tempsensor.testcloud1.private.key", key);
+        char key[] = "123456";
+        MockServlet::run("data/test0093/server.pem", "data/test0093/server.key", key);
     } };
     MockServlet::ServletGuard _{ th };
 

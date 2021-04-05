@@ -74,15 +74,17 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
         explicit HTTPSServer(const std::string &address, std::size_t port, T &dispatcher, KeyProvider &keyProvider)
             : Parent{ address, port, dispatcher } {
 
+            if (!keyProvider)
+                throw HTTPServer::Error{ "Cannot initialize SSL context - no keys were given." };
+
             SSL_library_init();
 
             ctx = initCTX();          /* initialize SSL */
             if (!ctx)
                 throw HTTPServer::Error{ "Cannot initialize SSL context." };
 
-
             // this throws exception in case of error
-            loadCertificates(ctx, keyProvider.sslCert.c_str(), keyProvider.sslKey.c_str(), const_cast<char*>(keyProvider.keyPasswd.data())); /* load certs */
+            loadCertificates(ctx, keyProvider.keyStore, keyProvider.trustStore); /* load certs */
 
             server = openPort(port);    /* create server socket */
             if (server == -1)
@@ -170,10 +172,6 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             // the pthread; used by kill
             pth = pthread_self();
 
-            // the timeout
-//            struct timeval tv;
-//            tv.tv_sec = 15;
-
             // the infinite main loop
             // we can exit is by sending a data to the signal pipe
             while (1) {
@@ -218,6 +216,7 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                         std::lock_guard<std::mutex> _{ mux };
                         ssl_sockets.emplace_back(ssl);
                     }
+
                     cond.notify_one();
                 }
                 else {
@@ -240,7 +239,6 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                     servlets.erase(rit, servlets.end());
                 }
             }
-
 
             if (mandatory) {
                 {
@@ -304,24 +302,24 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
         /// \param certFile         the cert file
         /// \param keyFile          the key file
         /// \param keyPhrase        the keyphrase password
-        void loadCertificates(SSL_CTX *ctx, const char *certFile, const char *keyFile, char *keyPhrase) {
+        void loadCertificates(SSL_CTX *ctx, const KeyProvider::KeyStore &ks, const KeyProvider::TrustStore &ts) {
 
             //New lines 
-            if (SSL_CTX_load_verify_locations(ctx, certFile, keyFile) != 1)
-                throw HTTPServer::Error{ "Certificate error." };
+            //if (SSL_CTX_load_verify_locations(ctx, certFile, keyFile) != 1)
+            //    throw HTTPServer::Error{ "Certificate error." };
 
-            if (SSL_CTX_set_default_verify_paths(ctx) != 1)
-                throw HTTPServer::Error{ "Certificate error." };  // ERR_print_errors_fp(stderr);
+            //if (SSL_CTX_set_default_verify_paths(ctx) != 1)
+            //    throw HTTPServer::Error{ "Certificate error." };  // ERR_print_errors_fp(stderr);
             //End new lines
 
             /* set the local certificate from CertFile */
-            if (SSL_CTX_use_certificate_file(ctx, certFile, SSL_FILETYPE_PEM) <= 0) {
+            if (SSL_CTX_use_certificate_chain_file(ctx, ks.getCert().c_str()) <= 0) {
                 throw HTTPServer::Error{ "Certificate error." };
             }
 
             /* set the private key from KeyFile (may be the same as CertFile) */
-            SSL_CTX_set_default_passwd_cb_userdata(ctx, keyPhrase);
-            if (SSL_CTX_use_PrivateKey_file(ctx, keyFile, SSL_FILETYPE_PEM) <= 0) {
+            SSL_CTX_set_default_passwd_cb_userdata(ctx, (void*)ks.password.c_str());
+            if (SSL_CTX_use_PrivateKey_file(ctx, ks.getKey().c_str(), SSL_FILETYPE_PEM) <= 0) {
                 throw HTTPServer::Error{ "Certificate error." };
             }
 
@@ -329,6 +327,11 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             if (!SSL_CTX_check_private_key(ctx)) {
                 throw HTTPServer::Error{ "Private key does not match the public certificate." };
             }
+
+            // emphemeral
+            //RSA *rsa=RSA_generate_key(512, RSA_F4, NULL, NULL);
+            //SSL_CTX_set_tmp_rsa(ctx, rsa); 
+            //RSA_free(rsa);
 
             //New lines - Force the client-side have a certificate
             //SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
@@ -342,8 +345,13 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             char buffer[1024];     // we use this buffer for the incomming data
             RequestParser parser;  // the parser
 
-            if (SSL_accept(ssl) == -1)     /* do SSL-protocol accept */
+            if (SSL_accept(ssl) != 1) {    /* do SSL-protocol accept */
+                int sd = SSL_get_fd(ssl);
+                SSL_free(ssl);
+                close(sd);
+
                 return;
+            }
 
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
 
@@ -381,6 +389,7 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
 
                     // keep-alive connection
                     if (parser.inspect().keepAlive) {
+
                         parser.reset();
 
                         // there's still some data in the buffer
