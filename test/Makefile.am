@@ -18,6 +18,7 @@ test_SOURCES = main.cpp                  \
                test0055.cpp              \
                test0056.cpp              \
                test0093.cpp              \
+               test0100.cpp              \
                test0102.cpp              \
                test0103.cpp              \
                test0104.cpp              \

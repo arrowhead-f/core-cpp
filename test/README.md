@@ -22,6 +22,7 @@
 | 0055 | crypto, sha256              | checking sha256 generation      |
 | 0056 | jsonwriter                  | check jsonwriter with db::Row   |
 | 0093 | rbcurl, client              | test Curl-based request builder |
+| 0100 | core, core_utils            | test core utility functions     |
 | 0102 | core, cert_authority        | test CertAuthority, happy path  |
 | 0103 | core, cert_authority        | test CertAuthority, sad path    |
 | 0104 | core, cert_authority, query | test CAQueries                  |
