@@ -10,13 +10,14 @@
 
 #include "db/DB.h"
 
+#include "CoreUtils.h"
 #include "Dispatcher.h"
 
 
 template<typename DBPool, typename RB>class Core : public Dispatcher {
     private:
 
-        DBPool &dbPool;          ///< The database pool to be used.
+        DBPool &dbPool;      ///< The database pool to be used.
         RB     &reqBuilder;  ///< Used to build and send requests.
 
     protected:
