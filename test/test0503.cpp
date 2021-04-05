@@ -203,8 +203,7 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
     using namespace std::literals;
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
 
     std::size_t port = 12500;
     while(1) {
@@ -216,8 +215,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                 std::pair<std::string, std::string> caInfo;
                 const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "GET"s); }, caInfo);
 
-                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                 // timeout      // only the method part of the HTTP request was sent in time
                 REQUIRE(res == "");
@@ -230,8 +229,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                   std::pair<std::string, std::string> caInfo;
                   const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "PUT"s); }, caInfo);
 
-                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                   // timeout      // only the method part of the HTTP request was sent in time
                   REQUIRE(res == "");
@@ -241,8 +240,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                   std::pair<std::string, std::string> caInfo;
                   const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "PATCH"s); }, caInfo);
 
-                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                   // timeout      // only the method part of the HTTP request was sent in time
                   REQUIRE(res == "");
@@ -252,8 +251,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                   std::pair<std::string, std::string> caInfo;
                   const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "POST"s); }, caInfo);
 
-                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                   // timeout      // only the method part of the HTTP request was sent in time
                   REQUIRE(res == "");
@@ -263,8 +262,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                   std::pair<std::string, std::string> caInfo;
                   const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "DELETE"s); }, caInfo);
 
-                  REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                  REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                  REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                   // timeout      // only the method part of the HTTP request was sent in time
                   REQUIRE(res == "");
@@ -275,8 +274,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                 std::pair<std::string, std::string> caInfo;
                 const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "GEX"s); }, caInfo);
 
-                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                 // timeout      // only the first characte rof the request mthod is checked during the parsing
                 REQUIRE(res == "");
@@ -286,8 +285,8 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
                 std::pair<std::string, std::string> caInfo;
                 const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "XXX"s); }, caInfo);
 
-                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
                 // BadRequest   //the first character of the request method is not valid
                 REQUIRE(res == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 87\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>400 Bad Request</h1></body></html>");
@@ -309,8 +308,7 @@ TEST_CASE("https: Test server's timeout set and ca used", "[server] [https]") {
 TEST_CASE("https: Test client sends a very long message one-by-one", "[server] [https]") {
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
 
     std::size_t port = 12500;
 
@@ -372,8 +370,7 @@ TEST_CASE("https: Test client sends a very long message one-by-one", "[server] [
 TEST_CASE("https: Test clients send a very long messages parallelly", "[server] [https]") {
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
 
     std::size_t port  = 12500;
     std::size_t thnum = 4;          // the size of the server's threadpool
@@ -462,7 +459,7 @@ TEST_CASE("https: Test keep-alive with malformed packets", "[server] [https]") {
     using namespace std::literals;
 
     auto mc = MockCore{};
-    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
 
     std::size_t port = 12500;
     while(1) {
@@ -476,8 +473,8 @@ TEST_CASE("https: Test keep-alive with malformed packets", "[server] [https]") {
                 // note the wrong method!
                 const std::string res = client("127.0.0.1", port, [](int i){ return std::make_pair(false, "XGET / HTTP/1.1\r\nHost: dev.arrowheads.com\r\nAccept-Language: hu\r\nConnection: keep-alive\r\n\r\n"s); }, caInfo);
 
-                REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-                REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+                REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+                REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
                 REQUIRE(res == "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 87\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>400 Bad Request</h1></body></html>");
             }
 
@@ -500,7 +497,7 @@ TEST_CASE("https: Test HTTP persistent (keep-alive) connection", "[server] [http
     using namespace std::literals;
 
     auto mc = MockCore{};
-    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
 
     std::size_t port = 12500;
     while(1) {
@@ -520,8 +517,8 @@ TEST_CASE("https: Test HTTP persistent (keep-alive) connection", "[server] [http
                 }
             }, caInfo, true);
 
-            REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-            REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+            REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+            REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
             REQUIRE(res ==
                            "HTTP/1.1 501 Not Implemented\r\nConnection: keep-alive\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>"
@@ -545,8 +542,7 @@ TEST_CASE("https: Test HTTP pipelining", "[server] [https]") {
     using namespace std::literals;
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0503/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0503/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0503/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0093/key-store", "cert", "123456").loadTrustStore("data/test0093/trust-store", "123456");
 
     std::size_t port = 12500;
     while(1) {
@@ -566,8 +562,8 @@ TEST_CASE("https: Test HTTP pipelining", "[server] [https]") {
                 }
             }, caInfo);
 
-            REQUIRE(caInfo.first  == "/C=HU/CN=SecureTemperatureSensor.testcloud1.aitia.arrowhead.eu");
-            REQUIRE(caInfo.second == "/C=HU/ST=Hungary/L=Budapest/O=AITIA/CN=TestCloud1.aitia.arrowhead.eu");
+            REQUIRE(caInfo.first  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+            REQUIRE(caInfo.second == "/CN=testcloud2.aitia.arrowhead.eu");
 
             REQUIRE(res ==
                            "HTTP/1.1 501 Not Implemented\r\nConnection: keep-alive\r\nContent-Length: 91\r\nContent-Type: text/html\r\n\r\n<html><head><title>Arrowhead</title></head><body><h1>501 Not Implemented</h1></body></html>"

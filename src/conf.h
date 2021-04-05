@@ -74,32 +74,18 @@ namespace conf {
     }
 
 
-    inline auto createKeyProvider(INIFile &inif, const std::string &certsd, const std::string &passwd) {
+    inline auto createKeyProvider(INIFile &inif) {
 
-        auto &&kpc = inif.options("CERT");
+        auto &&kpc = inif.options("SSL");
+        auto kp = KeyProvider{};
 
-        if (certsd.empty()) {
-            const auto ssl_cert   = kpc["ssl_cert"];
-            const auto ssl_cert_t = kpc["ssl_cert_t"];
-            const auto ssl_key    = kpc["ssl_key"];
-            const auto ssl_key_t  = kpc["ssl_key_t"];
-            const auto cainfo     = kpc["cainfo"];
-            const auto keypasswd  = passwd.empty() ? kpc["keypasswd"] : passwd;
+        if (kpc["key-store-type"] != "PEM" || kpc["trust-store-type"] != "PEM")
+            throw std::runtime_error{ "Invalid store types." };
 
-            return KeyProvider{ ssl_cert, ssl_cert_t, ssl_key, ssl_key_t, keypasswd, cainfo };
-        }
-        else {
-            const auto ssl_cert   = certsd + "/ssl-cert.pem";
-            const auto ssl_cert_t = "PEM";
-            const auto ssl_key    = certsd + "/ssl_key.pem";
-            const auto ssl_key_t  = "PEM";
-            const auto cainfo     = certsd + "/cainfo.pem";
+        kp.loadKeyStore(kpc["key-store"], kpc["key-alias"], kpc["key-password"])
+          .loadTrustStore(kpc["trust-store"], kpc["trsut-store-password"], (kpc["client-auth"] == "need"));
 
-            if (passwd.empty())
-                throw std::runtime_error{ "A keypasswd should be specified together with the certificate directory." };
-
-            return KeyProvider{ ssl_cert, ssl_cert_t, ssl_key, ssl_key_t, passwd, cainfo };
-        }
+        return kp;
     }
 
 }  // namespace conf

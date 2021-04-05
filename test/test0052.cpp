@@ -14,20 +14,20 @@
 #include "http/KeyProvider.h"
 
 
-TEST_CASE("KeyProvider: Check opening notexising file", "[KeyProvider]") {
+//TEST_CASE("KeyProvider: Check opening notexising file", "[KeyProvider]") {
+//
+//    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.tqt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
+//    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.tqt", "PEM", "12345", "data/test0052/tempsensor.txt" });
+//    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.tqt" });
+//
+//}
 
-    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.tqt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
-    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.tqt", "PEM", "12345", "data/test0052/tempsensor.txt" });
-    CHECK_THROWS(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.tqt" });
 
-}
-
-
-TEST_CASE("KeyProvider: Check openning existing file", "[KeyProvider]") {
-
-    CHECK_NOTHROW(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
-
-}
+//TEST_CASE("KeyProvider: Check openning existing file", "[KeyProvider]") {
+//
+//    CHECK_NOTHROW(KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" });
+//
+//}
 
 
 TEST_CASE("KeyProvider: Is valid", "[KeyProvider]") {
@@ -38,7 +38,8 @@ TEST_CASE("KeyProvider: Is valid", "[KeyProvider]") {
     }
 
     {
-        auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
+        auto kp = KeyProvider{};
+        kp.loadKeyStore("data/test0052", "tempsensor", "passwd");
         REQUIRE(kp == true);
     }
 
@@ -47,25 +48,16 @@ TEST_CASE("KeyProvider: Is valid", "[KeyProvider]") {
 
 TEST_CASE("KeyProvider: Check paths stored", "[KeyProvider]") {
 
-    auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "AAA", "data/test0052/tempsensor.txt", "BBB", "12345", "data/test0052/tempsensor.txt" };
+    auto kp = KeyProvider{};
+    kp.loadKeyStore("data/test0052", "tempsensor", "passwd");
 
-    REQUIRE(kp.sslCert == "data/test0052/tempsensor.txt");
-    REQUIRE(kp.sslKey  == "data/test0052/tempsensor.txt");
-    REQUIRE(kp.caInfo  == "data/test0052/tempsensor.txt");
+    REQUIRE(kp.keyStore.getCert() == "data/test0052/tempsensor.pem");
+    REQUIRE(kp.keyStore.getKey()  == "data/test0052/tempsensor.key");
+    REQUIRE(kp.keyStore.password  == "passwd");
 
-    REQUIRE(kp.keyPasswd   == "12345");
-    REQUIRE(kp.sslKeyType  == "BBB");
-    REQUIRE(kp.sslCertType == "AAA");
+    kp.loadTrustStore("data/test0052", "12345", true);
 
-}
-
-
-TEST_CASE("KeyProvider: Check file content read", "[KeyProvider]") {
-
-    auto kp = KeyProvider{ "data/test0052/tempsensor.txt", "PEM", "data/test0052/tempsensor.txt", "PEM", "12345", "data/test0052/tempsensor.txt" };
-
-    REQUIRE(kp.sslCertData == "12345\n54327");
-    REQUIRE(kp.sslKeyData  == "12345\n54327");
-    REQUIRE(kp.caInfoData  == "12345\n54327");
+    REQUIRE(kp.trustStore.getCert() == "data/test0052/ca.pem");
+    REQUIRE(kp.trustStore.password  == "12345");
 
 }

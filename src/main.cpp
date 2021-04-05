@@ -52,8 +52,6 @@ int main(int argc, char *argv[]) try {
 
     std::string config{ conf::def::config };  // the location/name of the config file
     std::string dbconf;  // the directory that stores the certificates
-    std::string certsd;  // the directory that stores the certificates
-    std::string passwd;  // the passphare for the certificates
 
     while((ch = pgetopt (argc, argv, "hvsc:p:C:P:")) != -1) {
         switch (ch) {
@@ -87,12 +85,6 @@ int main(int argc, char *argv[]) try {
                     error = true;
                 }
                 break;
-            case 'C':
-                certsd = std::string{ poptarg };
-                break;
-            case 'P':
-                passwd = std::string{ poptarg };
-                break;
             case '?':
                 /* some error messaging */
                 error = true;
@@ -106,7 +98,7 @@ int main(int argc, char *argv[]) try {
     logger::init(LOG_DEBUG, CoreElement::name, argv[0]);
 
     (info{ } << fmt("Started...")).log(SOURCE_LOCATION);
-    (info{ } << fmt("Params:{} -p {} -c {} -d -C {} -P {}") << (suppress ? " -s" : "") << port << config << certsd << passwd).log(SOURCE_LOCATION);
+    (info{ } << fmt("Params:{} -p {} -c {}") << (suppress ? " -s" : "") << port << config).log(SOURCE_LOCATION);
 
     if (error && !suppress) {
         (info{ } << fmt("Could not initialize the program. Double chek the command line argument.")).log(SOURCE_LOCATION);
@@ -114,7 +106,7 @@ int main(int argc, char *argv[]) try {
 
     // load the INI file
     auto conf = INIFile{ config };
-    error = /*!conf.parse(CoreElement::name) ||*/ !conf.parse("DB", true) || !conf.parse("CERT", true) || !conf.parse("HTTP", true);
+    error = /*!conf.parse(CoreElement::name) ||*/ !conf.parse("DB", true) || !conf.parse("SSL", true) || !conf.parse("HTTP", true);
 
     conf.prepend("DB", conf::def::dbconf); // -d "host=127.0.0.1 port=5432 dbname=arrowhead user=root passwd=root"
     conf.append("DB", dbconf);
@@ -130,7 +122,7 @@ int main(int argc, char *argv[]) try {
     auto pool = conf::createDBPool<db::DatabasePool<db::MariaDB>>(conf);
 
     //  create the key provider
-    auto keyProvider = conf::createKeyProvider(conf, certsd, passwd);
+    auto keyProvider = conf::createKeyProvider(conf);
 
     // create the request builder
     CoreElement::WebGet reqBuilder{ keyProvider };
@@ -171,7 +163,5 @@ void print_hlp(const char *prog, const char *name) {
               << "  -p PORT       Set the listener PORT [default: 16223].\n"
               << "  -c CONFFILE   Set the configuration file.\n"
               << "  -d DBCONF     Config for the database.\n"
-              << "  -C CERTDIR    Sets the certificae directory.\n"
-              << "  -P PSSWD      Password used for the certificates.\n"
               << "\n";
 }

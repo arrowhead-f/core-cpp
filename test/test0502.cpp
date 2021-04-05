@@ -11,7 +11,7 @@
 
 #include <catch2/catch.hpp>
 
-
+#include <iostream>
 #include <cstring>
 #include <list>
 #include <string>
@@ -62,8 +62,7 @@ class HTTPSServerGuard {
 TEST_CASE("https: Test https server's reachability", "[server] [https]") {
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0502/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0502/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0502/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456");
 
     std::size_t port = 12500;
     while(1) {
@@ -72,7 +71,7 @@ TEST_CASE("https: Test https server's reachability", "[server] [https]") {
             auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
 
             {
-                auto cl = WG_Curl{ KeyProvider{} };
+                auto cl = WG_Curl{ kp };
                 auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
 
                 REQUIRE(resp == http::status_code::NotImplemented);
@@ -101,8 +100,7 @@ TEST_CASE("https: Test https server's reachability", "[server] [https]") {
 TEST_CASE("https: HTTPS stress tests (optional parallelism)", "[server] [https]") {
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0502/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0502/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0502/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456");
 
     std::size_t port = 12500;  // the initial guess for an empty port
     while(1) {
@@ -171,8 +169,7 @@ TEST_CASE("https: HTTPS stress tests (optional parallelism)", "[server] [https]"
 TEST_CASE("https: HTTPS stress tests (mandatory parallelism)", "[server] [https]") {
 
     auto mc = MockCore{};
-
-    auto kp = KeyProvider{ "data/test0502/tempsensor.testcloud1.publicCert.pem", "PEM", "data/test0502/tempsensor.testcloud1.private.key", "PEM", "12345", "data/test0502/tempsensor.testcloud1.caCert.pem" };
+    auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456");
 
     std::size_t port  = 12500;  // try to grab a pot starting this one
     std::size_t thnum = 4;      // the thread pool's size for mandatory parallelism
