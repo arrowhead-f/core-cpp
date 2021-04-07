@@ -15,7 +15,7 @@ class Dispatcher {
         /// Dispatches the given request.
         /// \param req              the request
         /// \return                 the response
-        virtual Response dispatch(Request &&req) = 0;
+        virtual Response dispatch(Request &&req) noexcept = 0;
 
         /// Handles error.
         /// \param from             the remote address

@@ -30,10 +30,12 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
 
         Core(DBPool &dbPool, RB &reqBuilder) : dbPool{ dbPool }, reqBuilder{ reqBuilder } { }
 
-        Response dispatch(Request &&req) final {
-
+        Response dispatch(Request &&req) noexcept final {
             (info{ } << fmt("{}: {} {}") << req.remote_address << req.method << req.uri).log(SOURCE_LOCATION);
+            return handle(std::move(req));
+        }
 
+        virtual Response handle(Request &&req) {
             if (req.method == "GET") {
                 return handleGET(std::move(req));
             }
@@ -49,6 +51,12 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
             else if (req.method == "PATCH") {
                 return handlePATCH(std::move(req));
             }
+            else if (req.method == "HEAD") {
+                return handleHEAD(std::move(req));
+            }
+            else if (req.method == "OPTIONS") {
+                return handleOPTIONS(std::move(req));
+            }
 
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }
@@ -58,13 +66,34 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
         }
 
         // HTTP callbacks
-        virtual Response handleGET   (Request &&req) = 0;
-        virtual Response handleDELETE(Request &&req) = 0;
-        virtual Response handlePOST  (Request &&req) = 0;
-        virtual Response handlePUT   (Request &&req) = 0;
-        virtual Response handlePATCH (Request &&req) = 0;
+        virtual Response handleGET    (Request &&req)  {
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        virtual Response handleDELETE (Request &&req)  {
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        virtual Response handlePUT    (Request &&req)  {
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        virtual Response handlePATCH  (Request &&req)  {
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        virtual Response handlePOST   (Request &&req) {
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        virtual Response handleHEAD   (Request &&req) {
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        virtual Response handleOPTIONS(Request &&req) {
+            return Response::from_stock(http::status_code::NotFound);
+        }
 
 };
-
 
 #endif  /* _CORE_CORE_H_ */

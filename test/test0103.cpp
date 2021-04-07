@@ -15,7 +15,7 @@
 
 #include <catch2/catch.hpp>
 
-
+#include <iostream>
 #include <string>
 
 #include "core/CertAuthority/CertAuthority.h"
@@ -23,6 +23,7 @@
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"
 #include "hlpr/HelperDB.h"
+#include "hlpr/JsonComp.h"
 
 
 TEST_CASE("cert_authority: GET /ECHO", "[core] [cert_authority]") {
@@ -39,7 +40,7 @@ TEST_CASE("cert_authority: GET /ECHO", "[core] [cert_authority]") {
 }
 
 
-TEST_CASE("cert_authority: wrong method for /checkTrustedKey", "[core] [cert_authority]") {
+TEST_CASE("cert_authority: check different methods with /checkTrustedKey", "[core] [cert_authority]") {
 
     db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
     MockCurl reqBuilder;
@@ -47,9 +48,32 @@ TEST_CASE("cert_authority: wrong method for /checkTrustedKey", "[core] [cert_aut
     // create core system element
     CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
 
-    const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/checkTrustedKey", "" });
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/checkTrustedKey", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
 
-    REQUIRE(resp == http::status_code::NotFound);
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PUT", "/checkTrustedKey", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PATCH", "/checkTrustedKey", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "DELETE", "/checkTrustedKey", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/checkTrustedKey", "" });
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(resp.value().empty() == true);                                       // it has no content
+        REQUIRE(resp.to_string().find("\r\nAllow: POST\r\n") != std::string::npos);  // the 'allow' header was found
+    }
 }
 
 
@@ -99,9 +123,192 @@ TEST_CASE("cert_authority: POST /checkTrustedKey (exceptions)" , "[core] [cert_a
 
     const auto num = mdb.run_except([&mdb, &certAuthority]() {
         const std::string payload = R"json({ "publicKey": "TheKey" })json";
-        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkTrustedKey", payload });
+        const auto resp = certAuthority.handle(Request{ "127.0.0.1", "POST", "/checkTrustedKey", payload });
     });
 
     // no exception was observed outside the dispatch mehod
     REQUIRE(num == 0);
+}
+
+
+TEST_CASE("cert_authority: check different methods with /checkCertificate", "[core] [cert_authority]") {
+
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/checkCertificate", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PUT", "/checkCertificate", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PATCH", "/checkCertificate", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "HEAD", "/checkCertificate", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "DELETE", "/checkCertificate", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/checkCertificate", "" });
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(resp.value().empty() == true);                                       // it has no content
+        REQUIRE(resp.to_string().find("\r\nAllow: POST\r\n") != std::string::npos);  // the 'allow' header was found
+    }
+
+}
+
+
+TEST_CASE("cert_authority: call /checkCertificate with empty payload", "[core] [cert_authority]") {
+/*
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkCertificate", "" });
+    REQUIRE(resp == http::status_code::BadRequest);
+*/
+}
+
+
+TEST_CASE("cert_authority: call /checkCertificate with empty param", "[core] [cert_authority]") {
+/*
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkCertificate", "{version:1}" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/checkCertificate", "{version:1;certific:\"DododoDadada\"}" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+*/
+}
+
+
+TEST_CASE("cert_authority: check different methods with /mgmt/certificates", "[core] [cert_authority]") {
+
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/mgmt/certificates", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PUT", "/mgmt/certificates", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/certificates", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "HEAD", "/mgmt/certificates", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/certificates", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/mgmt/certificates", "" });
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(resp.value().empty() == true);                                      // it has no content
+        REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+    }
+
+}
+
+
+TEST_CASE("cert_authority: check /mgmt/certificates with malformed parameters", "[core] [cert_authority]") {
+
+    MockDBase mdb{ };
+    mdb.table("ca_certificate", false, { "id", "common_name", "serial", "created_by", "created_at", "valid_after", "valid_before", "updated_at", "revoked_at" }, {
+        {  7, "sysname-1", "0707070707", "test1", "1981-05-22 10:10:10", "1981-05-22 10:10:10", "5000-07-09 10:10:10", "1981-05-22 10:10:10", nullptr }
+    });
+
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<MockPool, MockCurl> certAuthority{ pool, reqBuilder };
+
+    const auto bad_payload_msg = R"json({"errorMessage": "Only both or none of page and size may be defined.", "errorCode": 400, "exceptionType": "BAD_PAYLOAD", "origin": "/mgmt/certificates"})json";
+
+    SECTION("With null page but dfined size") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?item_per_page=5", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+    }
+
+    SECTION("With null size but defined page") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?page=5", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+    }
+
+    SECTION("With unknown parameter") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?freddy=5", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    SECTION("With invalid direction") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?direction=top", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    SECTION("With invalid sort field") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?sort_field=mushroom", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+}
+
+
+TEST_CASE("cert_authority: check /mgmt/certificates with database error", "[core] [cert_authority]") {
+
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates", "" });
+    REQUIRE(resp == http::status_code::InternalServerError);
 }

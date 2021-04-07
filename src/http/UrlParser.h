@@ -9,6 +9,94 @@
 
 namespace http {
 
+    namespace details {
+
+        template<typename H>
+        struct ValidatorValueConverter {
+            static const bool convert(const std::string &val) noexcept {
+                return true;
+            }
+        };
+
+        template<>
+        struct ValidatorValueConverter<int> {
+            static bool convert(const std::string &val) noexcept {
+                try { std::stoi(val); } catch(...) { return false; } return true;
+            }
+            static bool convert(const std::string &val, int &res) noexcept {
+                try { res = std::stoi(val); } catch(...) { return false; } return true;
+            }
+        };
+
+        template<>
+        struct ValidatorValueConverter<long> {
+            static bool convert(const std::string &val) noexcept {
+                try { std::stol(val); } catch(...) { return false; } return true;
+            }
+            static bool convert(const std::string &val, long &res) noexcept {
+                try { res = std::stol(val); } catch(...) { return false; } return true;
+            }
+        };
+
+        template<>
+        struct ValidatorValueConverter<unsigned> {
+            static bool convert(const std::string &val) noexcept {
+                try {
+                    auto result = std::stoul(val);
+                    if (result > std::numeric_limits<unsigned>::max())
+                        return false;
+                }
+                catch(...) {
+                    return false;
+                }
+                return true;
+            }
+            static bool convert(const std::string &val, unsigned &res) noexcept {
+                try {
+                    auto result = std::stoul(val);
+                    if (result > std::numeric_limits<unsigned>::max())
+                        return false;
+                    res = result;
+                }
+                catch(...) {
+                    return false;
+                }
+                return true;
+            }
+        };
+
+        template<>
+        struct ValidatorValueConverter<unsigned long> {
+            static bool convert(const std::string &val) noexcept {
+                try { std::stoul(val); } catch(...) { return false; } return true;
+            }
+            static bool convert(const std::string &val, unsigned long &res) noexcept {
+                try { res = std::stoul(val); } catch(...) { return false; } return true;
+            }
+        };
+
+        template<>
+        struct ValidatorValueConverter<float> {
+            static bool convert(const std::string &val) noexcept {
+                try { std::stof(val); } catch(...) { return false; } return true;
+            }
+            static bool convert(const std::string &val, float &res) noexcept {
+                try { res = std::stof(val); } catch(...) { return false; } return true;
+            }
+        };
+
+        template<>
+        struct ValidatorValueConverter<double> {
+            static bool convert(const std::string &val) noexcept {
+                try { std::stod(val); } catch(...) { return false; } return true;
+            }
+            static bool convert(const std::string &val, double &res) noexcept {
+                try { res = std::stod(val); } catch(...) { return false; } return true;
+            }
+        };
+    }
+
+
     struct UrlParser {
 
         private:
@@ -146,6 +234,82 @@ namespace http {
             auto getPath() const {
                 return urldecode(str.c_str(), path_len);
             }
+
+
+            class Sink {
+
+                private:
+
+                    const std::pair<std::string, std::string> &kv;
+                    bool processing_error = false;
+
+                public:
+
+                    Sink(const std::pair<std::string, std::string> &kv) : kv{ kv }{}
+
+                    bool try_consume(const char *key, std::string &target) noexcept {
+                        if (kv.first.compare(key))
+                            return false;
+
+                        target = kv.second;
+                        return true;
+                    }
+
+                    template<typename T>
+                    auto try_consume(const char *key, T &target) noexcept -> typename std::enable_if<std::is_same<T, int>::value || std::is_same<T, long>::value || std::is_same<T, unsigned>::value || std::is_same<T, unsigned long>::value || std::is_same<T, float>::value || std::is_same<T, double>::value, bool>::type {
+                        if (kv.first.compare(key))
+                            return false;
+
+                        if (!details::ValidatorValueConverter<T>::convert(kv.second, target)) processing_error = true;
+                        return true;
+                    }
+
+                    template<typename T>
+                    bool try_consume_as(const char *key, std::string &target) noexcept {
+                        if (kv.first.compare(key))
+                            return false;
+
+                        if (details::ValidatorValueConverter<T>::convert(kv.second)) target = kv.second; else processing_error = true;
+                        return true;
+                    }
+
+                    bool try_consume(const char *key, std::string &target, std::initializer_list<const char*> il) noexcept {
+                        if (kv.first.compare(key))
+                            return false;
+
+                        for(const auto &x : il) {
+                            if (!kv.second.compare(x)) {
+                                target = kv.second;
+                                return true;
+                            }
+                        }
+                        processing_error = true;
+                        return true;
+                    }
+
+                    bool try_consume_order(const char *key, std::string &target, std::initializer_list<const char*> il) noexcept {
+                        if (kv.first.compare(key))
+                            return false;
+
+                        char c = '0';
+                        for(const auto &x : il) {
+                            c++;
+                            if (!kv.second.compare(x)) {
+                                target = c;
+                                return true;
+                            }
+                        }
+                        processing_error = true;
+                        return true;
+                    }
+
+                    bool failed() const {
+                        return processing_error;
+                    }
+
+        };
+
+
 
     };
 

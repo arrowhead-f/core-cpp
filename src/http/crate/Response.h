@@ -17,6 +17,8 @@ class Response {
         std::string mime_type;  ///< The mime type.
         std::string content;    ///< The content.
 
+        std::string allow;      ///< Allow header.
+
     public:
 
         /// Creates an OK reply with the given content.
@@ -51,6 +53,12 @@ class Response {
         /// \param sc               the status code of the reply
         /// \return                 a stock reply set base the status code
         static Response from_stock(http::status_code sc);
+
+        /// Get a reply for the OPTIONS request.
+        /// \param sc               the status code of the reply
+        /// \param method           allowed methods
+        /// \return                 a stock reply set base the status code
+        static Response options(http::status_code sc, const char *method);
 
 };
 
