@@ -70,9 +70,14 @@ TEST_CASE("cert_authority: check different methods with /checkTrustedKey", "[cor
 
     {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/checkTrustedKey", "" });
-        REQUIRE(resp == http::status_code::OK);
-        REQUIRE(resp.value().empty() == true);                                       // it has no content
-        REQUIRE(resp.to_string().find("\r\nAllow: POST\r\n") != std::string::npos);  // the 'allow' header was found
+
+        #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+          REQUIRE(resp == http::status_code::OK);
+          REQUIRE(resp.value().empty() == true);                                       // it has no content
+          REQUIRE(resp.to_string().find("\r\nAllow: POST\r\n") != std::string::npos);  // the 'allow' header was found
+        #else
+          REQUIRE(resp == http::status_code::MethodNotAllowed);
+        #endif
     }
 }
 
@@ -166,9 +171,14 @@ TEST_CASE("cert_authority: check different methods with /checkCertificate", "[co
 
     {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/checkCertificate", "" });
-        REQUIRE(resp == http::status_code::OK);
-        REQUIRE(resp.value().empty() == true);                                       // it has no content
-        REQUIRE(resp.to_string().find("\r\nAllow: POST\r\n") != std::string::npos);  // the 'allow' header was found
+
+        #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+          REQUIRE(resp == http::status_code::OK);
+          REQUIRE(resp.value().empty() == true);                                      // it has no content
+          REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+        #else
+          REQUIRE(resp == http::status_code::MethodNotAllowed);
+        #endif
     }
 
 }
@@ -244,9 +254,14 @@ TEST_CASE("cert_authority: check different methods with /mgmt/certificates", "[c
 
     {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/mgmt/certificates", "" });
-        REQUIRE(resp == http::status_code::OK);
-        REQUIRE(resp.value().empty() == true);                                      // it has no content
-        REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+
+        #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+          REQUIRE(resp == http::status_code::OK);
+          REQUIRE(resp.value().empty() == true);                                      // it has no content
+          REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+        #else
+          REQUIRE(resp == http::status_code::MethodNotAllowed);
+        #endif
     }
 
 }
@@ -271,14 +286,14 @@ TEST_CASE("cert_authority: check /mgmt/certificates with malformed parameters", 
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?item_per_page=5", "" });
 
         REQUIRE(resp == http::status_code::BadRequest);
-        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+        REQUIRE(JsonCompareErrorResponse(resp.value(), "BAD_PAYLOAD") == true);
     }
 
     SECTION("With null size but defined page") {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?page=5", "" });
 
         REQUIRE(resp == http::status_code::BadRequest);
-        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+        REQUIRE(JsonCompareErrorResponse(resp.value(), "BAD_PAYLOAD") == true);
     }
 
     SECTION("With unknown parameter") {
@@ -349,9 +364,14 @@ TEST_CASE("cert_authority: check different methods with /mgmt/keys", "[core] [ce
 
     {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/mgmt/keys", "" });
-        REQUIRE(resp == http::status_code::OK);
-        REQUIRE(resp.value().empty() == true);                                      // it has no content
-        REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+
+        #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+          REQUIRE(resp == http::status_code::OK);
+          REQUIRE(resp.value().empty() == true);                                      // it has no content
+          REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+        #else
+          REQUIRE(resp == http::status_code::MethodNotAllowed);
+        #endif
     }
 
 }
@@ -370,20 +390,18 @@ TEST_CASE("cert_authority: check /mgmt/keys with malformed parameters", "[core] 
     // create core system element
     CertAuthority<MockPool, MockCurl> certAuthority{ pool, reqBuilder };
 
-    const auto bad_payload_msg = R"json({"errorMessage": "Only both or none of page and size may be defined.", "errorCode": 400, "exceptionType": "BAD_PAYLOAD", "origin": "/mgmt/keys"})json";
-
     SECTION("With null page but defined size") {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?item_per_page=5", "" });
 
         REQUIRE(resp == http::status_code::BadRequest);
-        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+        REQUIRE(JsonCompareErrorResponse(resp.value(), "BAD_PAYLOAD") == true);
     }
 
     SECTION("With null size but defined page") {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?page=5", "" });
 
         REQUIRE(resp == http::status_code::BadRequest);
-        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+        REQUIRE(JsonCompareErrorResponse(resp.value(), "BAD_PAYLOAD") == true);
     }
 
     SECTION("With unknown parameter") {

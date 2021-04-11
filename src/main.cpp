@@ -6,15 +6,10 @@
 #include "utils/logger.h"
 #include "utils/pgetopt.h"
 #include "utils/inifile.h"
-#include "utils/traits.h"
 
 /* the database adapter */
 #include "db/DB.h"
 #include "db/MariaDB.h"
-
-/* core system elements */
-#include "core/Authorizer/Authorizer.h"
-#include "core/CertAuthority/CertAuthority.h"
 
 /* connections*/
 #include "http/KeyProvider.h"
@@ -27,7 +22,7 @@
 #endif
 
 /* configuration helpers */
-#include "conf.h"
+#include "boot/boot.h"
 
 
 /// Print help message to the standard output.
@@ -50,10 +45,10 @@ int main(int argc, char *argv[]) try {
     unsigned port = 0;   // the listening port
     unsigned thrd = 0;   // the number of server threads
 
-    std::string config{ conf::def::config };  // the location/name of the config file
-    std::string dbconf;  // the directory that stores the certificates
+    std::string config;  // the location/name of the config file
+    std::string dbconf;  // extra database config
 
-    while((ch = pgetopt (argc, argv, "hvsc:p:C:P:")) != -1) {
+    while((ch = pgetopt (argc, argv, "hvsc:d:p:")) != -1) {
         switch (ch) {
             case 'h':
                 // argv[0] is always there
@@ -98,31 +93,23 @@ int main(int argc, char *argv[]) try {
     logger::init(LOG_DEBUG, CoreElement::name, argv[0]);
 
     (info{ } << fmt("Started...")).log(SOURCE_LOCATION);
-    (info{ } << fmt("Params:{} -p {} -c {}") << (suppress ? " -s" : "") << port << config).log(SOURCE_LOCATION);
+    (info{ } << fmt("Params:{} -p {} -c '{}'") << (suppress ? " -s" : "") << port << config).log(SOURCE_LOCATION);
 
     if (error && !suppress) {
         (info{ } << fmt("Could not initialize the program. Double chek the command line argument.")).log(SOURCE_LOCATION);
     }
 
-    // load the INI file
-    auto conf = INIFile{ config };
-    error = /*!conf.parse(CoreElement::name) ||*/ !conf.parse("DB", true) || !conf.parse("SSL", true) || !conf.parse("HTTP", true);
+    // boot the up, load the INI file
+    auto conf = boot("arrowhead.ini" /*CoreElement::ini*/, config, dbconf);
 
-    conf.prepend("DB", conf::def::dbconf); // -d "host=127.0.0.1 port=5432 dbname=arrowhead user=root passwd=root"
-    conf.append("DB", dbconf);
-
-    if (error) {
-        throw std::runtime_error{ "Cannot parse the INI file." };
-    }
-
-    // the port and the numer of threads
-    conf::getHTTPConfig(conf, &port, &thrd);
+    // get the port and the numer of threads
+    configureHTTP(conf, &port, &thrd);
 
     // create a pool of database connection
-    auto pool = conf::createDBPool<db::DatabasePool<db::MariaDB>>(conf);
+    auto pool = createDBPool<db::DatabasePool<db::MariaDB>>(conf);
 
     //  create the key provider
-    auto keyProvider = conf::createKeyProvider(conf);
+    auto keyProvider = createKeyProvider(conf);
 
     // create the request builder
     CoreElement::WebGet reqBuilder{ keyProvider };
@@ -131,13 +118,13 @@ int main(int argc, char *argv[]) try {
     auto coreElement = CoreElement::Type<db::DatabasePool<db::MariaDB>, CoreElement::WebGet>{ pool, reqBuilder };
 
     // the http(s) server
-    auto http = HTTPSServer<CoreElement::DispatcherType<db::DatabasePool<db::MariaDB>, CoreElement::WebGet>>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider /*, thrd*/);
+    auto http = HTTPSServer<CoreElement::DispatcherType<db::DatabasePool<db::MariaDB>, CoreElement::WebGet>>("127.0.0.1", static_cast<std::size_t>(port), coreElement, keyProvider);
 
     // we do not need the inner structures of the INIFile anymore; free the interna structures
     conf.close();
 
     // ------------------***--- RUN ---***------------------ //
-    http.run();
+    http.run(thrd);
     // ------------------***--- RUN ---***------------------ //
 
     return 0;

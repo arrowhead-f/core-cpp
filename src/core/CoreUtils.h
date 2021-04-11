@@ -81,7 +81,11 @@ class ErrorResponse {
         /// \param origin       the url of the origin
         /// \return             the Response
         static Response from_stock(http::status_code sc, ErrorResponse::Type et, const std::string &msg, const std::string &origin) {
-            return Response{ sc, "{\"errorMessage\": \"" + msg + "\", \"errorCode\": " + std::to_string(static_cast<int>(sc)) + ", \"exceptionType\": \"" + e2s(et) + "\", \"origin\": \"" + origin + "\"}" };
+            #ifdef ARROWHEAD_FEAT_NO_ERROR_MSG
+              return Response{ sc, "{\"errorMessage\":\"\",\"errorCode\":" + std::to_string(static_cast<int>(sc)) + ",\"exceptionType\":\"" + e2s(et) + "\",\"origin\":\"" + origin + "\"}" };
+            #else
+              return Response{ sc, "{\"errorMessage\":\"" + msg + "\",\"errorCode\":" + std::to_string(static_cast<int>(sc)) + ",\"exceptionType\":\"" + e2s(et) + "\",\"origin\": \"" + origin + "\"}" };
+            #endif
         }
 
 };
@@ -137,9 +141,10 @@ namespace CoreUtils {
                 return f(std::move(req));
             #endif
         }
+        #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
         if (req.method == "OPTIONS")
             return Response::options(http::status_code::OK, method);
-
+        #endif
         return Response::from_stock(http::status_code::MethodNotAllowed);
     }
 
