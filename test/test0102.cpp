@@ -285,7 +285,6 @@ TEST_CASE("cert_authority: GET /mgmt/certificates", "[core] [cert_authority]") {
         REQUIRE(JsonCompare(resp.value(), data) == true);
     }
 
-
 }
 
 
@@ -293,11 +292,103 @@ TEST_CASE("cert_authority: DELETE /mgmt/certificates/{id}", "[core] [cert_author
 }
 
 
-TEST_CASE("cert_authority: GET /mgmt/keys", "[core] [cert_authority]") {
+TEST_CASE("cert_authority: PUT /key", "[core] [cert_authority]") {
 }
 
 
-TEST_CASE("cert_authority: PUT /mgmt/keys", "[core] [cert_authority]") {
+TEST_CASE("cert_authority: GET /mgmt/keys", "[core] [cert_authority]") {
+
+    MockDBase mdb{ };
+    mdb.table("ca_trusted_key", false, { "id", "public_key", "hash", "description", "valid_after", "valid_before", "created_at", " updated_at" }, {
+        { 27, "publicKey-27", "hash-27", "description001", "1981-05-22 10:10:10", "5981-05-22 10:10:10", "1981-05-22 10:10:10", "1991-01-03 10:10:10" },
+        { 52, "publicKey-52", "hash-52", "description002", "1981-06-22 10:10:10", "5981-06-22 10:10:10", "1981-06-22 10:10:10", "1991-02-03 10:10:10" },
+        { 38, "publicKey-38", "hash-38", "description003", "1981-07-22 10:10:10", "5981-07-22 10:10:10", "1981-07-22 10:10:10", "1991-03-03 10:10:10" }
+    });
+
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<MockPool, MockCurl> certAuthority{ pool, reqBuilder };
+
+    SECTION("Should return all data sorted ASC by id") {
+        const auto data = R"json({
+            "count": 3,
+            "trustedKeys": [
+                {"id": 27, "createdAt": "1981-05-22 10:10:10", "description": "description001"},
+                {"id": 38, "createdAt": "1981-07-22 10:10:10", "description": "description003"},
+                {"id": 52, "createdAt": "1981-06-22 10:10:10", "description": "description002"}]})json";
+
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys", "" });
+
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), data) == true);
+    }
+
+    SECTION("Should return all data sorted DESC by id") {
+        const auto data = R"json({
+            "count": 3,
+            "trustedKeys": [
+                {"id": 52, "createdAt": "1981-06-22 10:10:10", "description": "description002"},
+                {"id": 38, "createdAt": "1981-07-22 10:10:10", "description": "description003"},
+                {"id": 27, "createdAt": "1981-05-22 10:10:10", "description": "description001"}]})json";
+
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?direction=DESC", "" });
+
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), data) == true);
+    }
+
+    SECTION("Should return 0th page of 2 items") {
+        const auto data = R"json({
+            "count": 3,
+            "trustedKeys": [
+                {"id": 27, "createdAt": "1981-05-22 10:10:10", "description": "description001"},
+                {"id": 38, "createdAt": "1981-07-22 10:10:10", "description": "description003"}]})json";
+
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?page=0&item_per_page=2", "" });
+
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), data) == true);
+    }
+
+    SECTION("Should return 1th page of 4 items") {
+        const auto data = R"json({
+            "count": 3,
+            "trustedKeys": []})json";
+
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?page=1&item_per_page=4", "" });
+
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), data) == true);
+    }
+
+    SECTION("Should return all data sorted ASC by createdAt") {
+        const auto data = R"json({
+            "count": 3,
+            "trustedKeys": [
+                {"id": 27, "createdAt": "1981-05-22 10:10:10", "description": "description001"},
+                {"id": 52, "createdAt": "1981-06-22 10:10:10", "description": "description002"},
+                {"id": 38, "createdAt": "1981-07-22 10:10:10", "description": "description003"}]})json";
+
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?sort_field=createdAt", "" });
+
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), data) == true);
+    }
+
+    SECTION("Should return 1th page of 2 items ordered by serialName DESC") {
+        const auto data = R"json({
+            "count": 3,
+            "trustedKeys": [
+                {"id": 27, "createdAt": "1981-05-22 10:10:10", "description": "description001"}]})json";
+
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?page=1&item_per_page=2&direction=DESC&sort_field=createdAt", "" });
+
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(JsonCompare(resp.value(), data) == true);
+    }
+
 }
 
 

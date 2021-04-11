@@ -1,6 +1,8 @@
 #ifndef _CORE_CA_MGMT_H_
 #define _CORE_CA_MGMT_H_
 
+#include <iostream>
+
 
 #include "http/crate/Request.h"
 #include "http/crate/Response.h"
@@ -8,6 +10,7 @@
 
 #include "core/CoreUtils.h"
 #include "core/CertAuthority/responses/CertificatesResponse.h"
+#include "core/CertAuthority/responses/KeysResponse.h"
 #include "core/CertAuthority/CAQueries.h"
 #include "core/CertAuthority/CAUtilities.h"
 
@@ -94,6 +97,65 @@ class Mgmt {
             return Response{ res };
         }
 
+
+        /// Function to handle /mgmt/certificates url.
+        /// \param req          the request to handle
+        /// \return             the generated response
+        Response _urlKeys(Request &&req) {
+
+            using R = KeysResponse;  // shortener for the Respone type
+
+            // get the number of stored entries
+            const auto count = CAQuery(db).getKeyCount();
+
+            // get params
+            std::string page;                   // current page
+            std::string item_per_page;          // items per page
+            std::string sort_field    = "id";   // sort field (default: id)
+            std::string direction     = "ASC";  // sorting order (default: ASC)
+
+            bool error = false;
+            auto p = http::UrlParser{ req.uri };
+
+            while(p) {
+
+                auto &&kv = *p;
+                auto &&sink = http::UrlParser::Sink{ kv };
+
+                const auto res =     sink.try_consume_as<unsigned long>("page", page)
+                                 ||  sink.try_consume_as<unsigned long>("item_per_page", item_per_page)
+                                 ||  sink.try_consume("direction",  direction,  {"ASC", "DESC" })
+                                 ||  sink.try_consume_order("sort_field", sort_field, {"id", "createdAt" });
+
+                if (!res || sink.failed()) {
+                    error = true;
+                    break;
+                }
+
+                ++p;
+            }
+
+            if(!p.check() || error) {
+                return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/mgmt/keys");
+            }
+
+            if((page.empty() && !item_per_page.empty()) || (!page.empty() && item_per_page.empty())) {
+                return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Only both or none of page and size may be defined.", "/mgmt/keys");
+            }
+
+            // and now the entries
+            auto row = CAQuery(db).getKeys(page, item_per_page, sort_field, direction);
+
+            auto cr = R{ };
+            cr << R::Count{ count };
+            const auto res = cr.for_each("trustedKeys", row, [](auto &builder, const auto &row) {
+                builder.template write_dictionary_items<decltype(row), R::ID, R::CreatedAt, R::Description>(row);
+            }).str();
+
+            return Response{ res };
+        }
+
+
     public:
 
         /// Ctor.
@@ -105,7 +167,7 @@ class Mgmt {
         /// \return             the generated response
         Response handle(Request &&req) {
 
-            if (!req.uri.compare(0, 18, "/mgmt/certificates") && (req.uri[18] == 0 || req.uri[18] == '&')) {
+            if (!req.uri.compare(0, 18, "/mgmt/certificates") && (req.uri.length() == 18 || req.uri[18] == '?')) {
                 return CoreUtils::call_if("GET", std::move(req), [this](Request &&r) {
                     try {
                         if (!r.content.empty()) {
@@ -118,6 +180,23 @@ class Mgmt {
                     }
                     catch(...) {
                         return ErrorResponse::from_stock(http::status_code::InternalServerError, ErrorResponse::GENERIC, "Unknow error.", "/mgmt/certificates");
+                    }
+                });
+            }
+
+            if (!req.uri.compare(0, 10, "/mgmt/keys") && (req.uri.length() == 10 || req.uri[10] == '?')) {
+                return CoreUtils::call_if("GET", std::move(req), [this](Request &&r) {
+                    try {
+                        if (!r.content.empty()) {
+                            return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Invalid payload for request.", "/mgmt/keys");
+                        }
+                        return this->_urlKeys(std::move(r));
+                    }
+                    catch(const db::Exception &e) {
+                        return ErrorResponse::from_stock(http::status_code::InternalServerError, ErrorResponse::ARROWHEAD, "Database error.", "/mgmt/keys");
+                    }
+                    catch(...) {
+                        return ErrorResponse::from_stock(http::status_code::InternalServerError, ErrorResponse::GENERIC, "Unknow error.", "/mgmt/keys");
                     }
                 });
             }

@@ -15,7 +15,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <iostream>
+
 #include <string>
 
 #include "core/CertAuthority/CertAuthority.h"
@@ -267,7 +267,7 @@ TEST_CASE("cert_authority: check /mgmt/certificates with malformed parameters", 
 
     const auto bad_payload_msg = R"json({"errorMessage": "Only both or none of page and size may be defined.", "errorCode": 400, "exceptionType": "BAD_PAYLOAD", "origin": "/mgmt/certificates"})json";
 
-    SECTION("With null page but dfined size") {
+    SECTION("With null page but defined size") {
         const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates?item_per_page=5", "" });
 
         REQUIRE(resp == http::status_code::BadRequest);
@@ -310,5 +310,110 @@ TEST_CASE("cert_authority: check /mgmt/certificates with database error", "[core
     CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
 
     const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/certificates", "" });
+    REQUIRE(resp == http::status_code::InternalServerError);
+}
+
+
+TEST_CASE("cert_authority: check different methods with /mgmt/keys", "[core] [cert_authority]") {
+
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "POST", "/mgmt/keys", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PUT", "/mgmt/keys", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/keys", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "HEAD", "/mgmt/keys", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/keys", "" });
+        REQUIRE(resp == http::status_code::MethodNotAllowed);
+    }
+
+    {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "OPTIONS", "/mgmt/keys", "" });
+        REQUIRE(resp == http::status_code::OK);
+        REQUIRE(resp.value().empty() == true);                                      // it has no content
+        REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+    }
+
+}
+
+
+TEST_CASE("cert_authority: check /mgmt/keys with malformed parameters", "[core] [cert_authority]") {
+
+    MockDBase mdb{ };
+    mdb.table("ca_trusted_key", false, { "id", "public_key", "hash", "description", "valid_after", "valid_before", "created_at", " updated_at" }, {
+        {  7, "publicKey7", "hash7", "description7", "1981-05-22 10:10:10", "5981-05-22 10:10:10", "1981-05-22 10:10:10", "1991-01-03 10:10:10" }
+    });
+
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<MockPool, MockCurl> certAuthority{ pool, reqBuilder };
+
+    const auto bad_payload_msg = R"json({"errorMessage": "Only both or none of page and size may be defined.", "errorCode": 400, "exceptionType": "BAD_PAYLOAD", "origin": "/mgmt/keys"})json";
+
+    SECTION("With null page but defined size") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?item_per_page=5", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+    }
+
+    SECTION("With null size but defined page") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?page=5", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+        REQUIRE(JsonCompare(resp.value(), bad_payload_msg) == true);
+    }
+
+    SECTION("With unknown parameter") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?freddy=5", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    SECTION("With invalid direction") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?direction=top", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    SECTION("With invalid sort field") {
+        const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys?sort_field=mushroom", "" });
+
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+}
+
+
+TEST_CASE("cert_authority: check /mgmt/keys with database error", "[core] [cert_authority]") {
+
+    db::DatabasePool<MockDBase> pool{ "127.0.0.1", "root", "root", "arrowhead" };
+    MockCurl reqBuilder;
+
+    // create core system element
+    CertAuthority<db::DatabasePool<MockDBase>, MockCurl> certAuthority{ pool, reqBuilder };
+
+    const auto resp = certAuthority.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/keys", "" });
     REQUIRE(resp == http::status_code::InternalServerError);
 }
