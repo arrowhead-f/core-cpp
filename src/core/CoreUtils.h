@@ -17,11 +17,16 @@
 
 
 #include <exception>
+#ifdef __cpp_lib_invoke
+  #include <functional>
+#endif
 #include <string>
 
 #include "http/StatusCode.h"
 #include "http/crate/Response.h"
 
+#include "http/crate/Request.h"
+#include "http/crate/Response.h"
 
 class ErrorResponse {
 
@@ -119,5 +124,25 @@ class CoreException : public std::exception {
         }
 
 };
+
+
+namespace CoreUtils {
+
+    template<typename F>inline auto call_if(const char *method, Request &&req, F f) {
+
+        if (req.method == method) {
+            #ifdef __cpp_lib_invoke
+                return std::invoke(std::move(f), std::move(req));
+            #else
+                return f(std::move(req));
+            #endif
+        }
+        if (req.method == "OPTIONS")
+            return Response::options(http::status_code::OK, method);
+
+        return Response::from_stock(http::status_code::MethodNotAllowed);
+    }
+
+}
 
 #endif  /* _CORE_COREUTILS_H_ */

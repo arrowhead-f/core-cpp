@@ -40,6 +40,12 @@ namespace {
         const std::string &value;
     };
 
+    struct OptionalStringValue {
+        static constexpr const char *key = "optStrValue";
+        const std::string &value;
+        const bool is_null;
+    };
+
 }
 
 
@@ -49,6 +55,20 @@ TEST_CASE("jsonwriter: Create dictionary", "[jsonwriter]") {
 
     REQUIRE(JsonCompare(res, R"json({"intValue":42,"stringValue":"2020-11-29","doubleValue":3.1415})json") == true);
 }
+
+
+TEST_CASE("jsonwriter: Create dictionary with optional value", "[jsonwriter]") {
+
+    {
+        const auto res = (JsonBuilder{} << IntValue{ 42 } << StringValue{ "2020-11-29" } << DoubleValue{ 3.1415 } << OptionalStringValue{ "str1", true }).str();
+        REQUIRE(JsonCompare(res, R"json({"intValue":42,"stringValue":"2020-11-29","doubleValue":3.1415,"optStrValue": null})json") == true);
+    }
+    {
+        const auto res = (JsonBuilder{} << IntValue{ 42 } << StringValue{ "2020-11-29" } << DoubleValue{ 3.1415 } << OptionalStringValue{ "str1", false }).str();
+        REQUIRE(JsonCompare(res, R"json({"intValue":42,"stringValue":"2020-11-29","doubleValue":3.1415,"optStrValue": "str1"})json") == true);
+    }
+}
+
 
 
 TEST_CASE("jsonwriter: Create array with to_array", "[jsonwriter]") {

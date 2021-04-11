@@ -3,6 +3,7 @@
 
 #include "core/Core.h"
 
+
 #include <cstring>
 
 #include "gason/gason.h"
@@ -39,8 +40,6 @@ template<typename DBPool, typename RB>class CertAuthority final : public Core<DB
 
             std::string response;
             try {
-
-                // { "publicKey": "string" }
 
                 gason::JsonAllocator allocator;
                 gason::JsonValue     root;
@@ -86,29 +85,21 @@ template<typename DBPool, typename RB>class CertAuthority final : public Core<DB
 
         using Core<DBPool, RB>::Core;
 
-        Response handleGET(Request &&req) final {
-            if (!req.uri.compare("/echo")) { return _urlEcho(std::move(req)); }
-            if (!req.uri.compare(0, 5, "/mgmt")) {
+        Response handle(Request &&req) final {
+            if (!req.uri.compare("/echo"))
+                return CoreUtils::call_if("GET", std::move(req), [this](Request &&r){ return this->_urlEcho(std::move(r)); });
+
+            if (!req.uri.compare(0, 6, "/mgmt/")) {
                 auto db = Parent::database();
-                return Mgmt<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handleGET(std::move(req));
+                return Mgmt<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handle(std::move(req));
             }
-            return Response::from_stock(http::status_code::NotFound);
-        }
 
-        Response handlePOST(Request &&req) final {
-            if (!req.uri.compare("/checkTrustedKey")) { return _urlCheckTrustedKey(std::move(req)); }
-            return Response::from_stock(http::status_code::NotFound);
-        }
+            if (!req.uri.compare("/checkTrustedKey"))
+                return CoreUtils::call_if("POST", std::move(req), [this](Request &&r){ return this->_urlCheckTrustedKey(std::move(r)); });
 
-        Response handlePATCH(Request &&req) final {
-            return Response::from_stock(http::status_code::NotFound);
-        }
+            if (!req.uri.compare("/checkCertificate"))
+                return CoreUtils::call_if("POST", std::move(req), [this](Request &&r){ return this->_urlCheckCertificate(std::move(r)); });
 
-        Response handlePUT(Request &&req) final {
-            return Response::from_stock(http::status_code::NotFound);
-        }
-
-        Response handleDELETE(Request &&req) final {
             return Response::from_stock(http::status_code::NotFound);
         }
 
