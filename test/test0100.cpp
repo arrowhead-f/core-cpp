@@ -22,7 +22,12 @@
 TEST_CASE("ErrorResponse: check format", "[core] [core_utils]") {
 
     const auto resp = ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::ARROWHEAD, "An error message", "/origin");
-    const auto json = R"json({"errorMessage": "An error message", "errorCode": 400, "exceptionType": "ARROWHEAD", "origin": "/origin"})json";
+
+    #ifndef ARROWHEAD_FEAT_NO_ERROR_MSG
+      const auto json = R"json({"errorMessage": "An error message", "errorCode": 400, "exceptionType": "ARROWHEAD", "origin": "/origin"})json";
+    #else
+      const auto json = R"json({"errorMessage": "", "errorCode": 400, "exceptionType": "ARROWHEAD", "origin": "/origin"})json";
+    #endif
 
     REQUIRE(resp == http::status_code::BadRequest);
     REQUIRE(JsonCompare(resp.value(), json) == true);
@@ -37,7 +42,11 @@ TEST_CASE("CoreException: check format", "[core] [core_utils]") {
     catch(const CoreException &ex) {
 
         const auto resp = ex.toResponse();
-        const auto json = R"json({"errorMessage": "An error message", "errorCode": 404, "exceptionType": "INVALID_PARAMETER", "origin": "/origin/2"})json";
+        #ifndef ARROWHEAD_FEAT_NO_ERROR_MSG
+          const auto json = R"json({"errorMessage": "An error message", "errorCode": 404, "exceptionType": "INVALID_PARAMETER", "origin": "/origin/2"})json";
+        #else
+          const auto json = R"json({"errorMessage": "", "errorCode": 404, "exceptionType": "INVALID_PARAMETER", "origin": "/origin/2"})json";
+        #endif
 
         REQUIRE(resp == http::status_code::NotFound);
         REQUIRE(JsonCompare(resp.value(), json) == true);

@@ -3,7 +3,7 @@ bin_PROGRAMS = test
 noinst_LIBRARIES = libsqlite3.a
 libsqlite3_a_SOURCES = ../inc/sqlite3/sqlite3.c
 
-AM_CPPFLAGS = -I$(top_srcdir)/inc -I$(top_srcdir)/src -DTESTRUNNER
+AM_CPPFLAGS = -I$(top_srcdir)/inc -I$(top_srcdir)/src -include boot/features.h -DTESTRUNNER
 AM_LDFLAGS = $(shell mariadb_config --libs) -lcurl -ldl
 
 test_LDADD = libsqlite3.a
