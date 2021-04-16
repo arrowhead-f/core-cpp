@@ -1,0 +1,39 @@
+#ifndef _CORE_CA_KEYSRESPONSE_H_
+#define _CORE_CA_KEYSRESPONSE_H_
+
+
+#include <string>
+
+#include "utils/json.h"
+
+
+class KeysResponse : public JsonBuilder {
+
+    public:
+
+        using JsonBuilder::JsonBuilder;
+
+        struct Count {
+            static constexpr const char *key = "count";
+            long value;
+        };
+
+        struct ID {
+            static constexpr const char *key = "id";
+            long value;
+        };
+
+        struct CreatedAt {
+            static constexpr const char *key = "createdAt";
+            const std::string &value;
+        };
+
+        struct Description {
+            static constexpr const char *key = "description";
+            const std::string &value;
+        };
+
+
+};
+
+#endif  /* _CORE_CA_KEYSRESPONSE_H_ */

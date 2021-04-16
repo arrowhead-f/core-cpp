@@ -1,5 +1,5 @@
-#ifndef _TRAITS_CERTAUTHORITY_H_
-#define _TRAITS_CERTAUTHORITY_H_
+#ifndef _BOOT_TRAITS_CERTAUTHORITY_H_
+#define _BOOT_TRAITS_CERTAUTHORITY_H_
 
 
 #include "config.h"
@@ -11,6 +11,7 @@
 struct CoreElement {
 
     static constexpr const char * const name = "Certificate Authority";  ///< The human readable name of the Core element.
+    static constexpr const char * const ini  = "certauthorit.ini";
 
     template<typename DBPool, typename RB>using Type           = ::CertAuthority<DBPool, RB>;  ///< The type of the Core element.
     template<typename DBPool, typename RB>using DispatcherType = ::CertAuthority<DBPool, RB>;  ///< 
@@ -18,4 +19,4 @@ struct CoreElement {
     using WebGet = WG_Null;
 };
 
-#endif  /* _TRAITS_CERTAUTHORITY_H_ */
+#endif  /* _BOOT_TRAITS_CERTAUTHORITY_H_ */

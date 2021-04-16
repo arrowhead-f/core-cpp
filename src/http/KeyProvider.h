@@ -15,51 +15,56 @@ class KeyProvider {
 
     public:
 
-        const std::string sslCert;
-        const std::string sslCertType;
-        const std::string sslKey;
-        const std::string sslKeyType;
-        const std::string keyPasswd;
-        const std::string caInfo;
+        struct KeyStore {
+            std::string store;              ///< Where the certificates are stored.
+            std::string alias;              ///< The filename.
+            std::string password;           ///< The password for the key.
 
-        const std::string sslCertData;
-        const std::string sslKeyData;
-        const std::string caInfoData;
+            std::string getCert() const {
+                return store + "/" + alias + ".pem";
+            }
+
+            std::string getKey() const {
+                return store + "/" + alias + ".key";
+            }
+
+        } keyStore;
+
+        struct TrustStore {
+            bool        mandatory = false;  ///< Whether client's authentication is mandatory or not.
+            std::string store;              ///< The storage.
+            std::string password;           ///< The password if used.
+
+            std::string getCert() const {
+                return store + "/ca.pem";
+            }
+
+        } trustStore;
 
     public:
 
         KeyProvider() = default;
 
-        KeyProvider(const std::string &sslCert, const std::string &sslCertType, const std::string &sslKey, const std::string &sslKeyType, const std::string &keyPasswd, const std::string &caInfo)
-            : isValid{ true }
-            , sslCert{ sslCert }
-            , sslCertType{ sslCertType }
-            , sslKey{ sslKey }
-            , sslKeyType{ sslKeyType }
-            , keyPasswd{ keyPasswd }
-            , caInfo{ caInfo }
-            , sslCertData{ get_file_contents(sslCert) }
-            , sslKeyData{ get_file_contents(sslKey) }
-            , caInfoData{ get_file_contents(caInfo) }
-        {}
+        KeyProvider& loadKeyStore(const std::string &store, const std::string &alias, const std::string &password) {
+            keyStore.store    = store;
+            keyStore.alias    = alias;
+            keyStore.password = password;
+
+            isValid = true;
+
+            return *this;
+        }
+
+        KeyProvider& loadTrustStore(const std::string &store, const std::string &password, bool mandatory = true) {
+            trustStore.mandatory = mandatory;
+            trustStore.store = store;
+            trustStore.password = password;
+
+            return *this;
+        }
 
         operator bool() const {
             return isValid;
-        }
-
-    private:
-
-        static std::string get_file_contents(const std::string &filename) {
-            if(std::ifstream in{ filename, std::ios::in | std::ios::binary }) {
-                std::string contents;
-                in.seekg(0, std::ios::end);
-                contents.resize(in.tellg());
-                in.seekg(0, std::ios::beg);
-                in.read(&contents[0], contents.size());
-                in.close();
-                return contents;
-            }
-            throw std::runtime_error{ "Cannot initialize KeyProvider." };
         }
 
 };

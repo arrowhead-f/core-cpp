@@ -29,7 +29,7 @@ inline bool JsonParse(const std::string &str) {
 /// \param lhs    the first json object's string represenatation
 /// \param rhs    the second json object's string representation
 /// \return       true, if the two json objects are the same
-inline int JsonCompare(const std::string &lhs, const std::string &rhs) {
+inline bool JsonCompare(const std::string &lhs, const std::string &rhs) {
 
     using namespace json11;
 
@@ -46,6 +46,20 @@ inline int JsonCompare(const std::string &lhs, const std::string &rhs) {
         return false;
 
     return jlhs == jrhs;
+}
+
+
+inline bool JsonCompareErrorResponse(const std::string &json, const std::string &type) {
+    std::string err;
+    const auto j = json11::Json::parse(json, err);
+
+    if (!err.empty())
+        return false;
+
+    if (j["exceptionType"] != type)
+        return false;
+
+    return true;
 }
 
 #endif  /* _TEST_JSONCOMP_H_ */

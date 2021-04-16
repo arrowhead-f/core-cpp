@@ -80,8 +80,12 @@ std::string Response::to_string(bool keep_alive /* = false */) const {
     out << "HTTP/1.1 " << status_line::to_string(status_code)
         << "\r\n"
         << "Connection: " << (keep_alive ? "keep-alive" : "close")
-        << "\r\n"
-        << "Content-Length: " << std::to_string(content.size())
+        << "\r\n";
+
+    if (!allow.empty())
+        out << "Allow: " << allow << "\r\n";
+
+    out << "Content-Length: " << std::to_string(content.size())
         << "\r\n"
         << "Content-Type: "   << mime_type
         << "\r\n"
@@ -89,7 +93,6 @@ std::string Response::to_string(bool keep_alive /* = false */) const {
         << content;
 
     return out.str();
-
 }
 
 
@@ -159,7 +162,11 @@ namespace stock_replies {
 
 
 Response Response::from_stock(http::status_code sc) {
-
     return { sc, stock_replies::to_string(sc), "text/html" };
+}
 
+Response Response::options(http::status_code sc, const char *method) {
+    auto resp = Response{ sc, "", "text/html" };
+    resp.allow = method;
+    return resp;
 }
