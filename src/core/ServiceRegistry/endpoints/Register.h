@@ -252,6 +252,62 @@ class Register {
             return 0;
         }
 
+        Response processUnregister(std::string &_rServiceDefinition, std::string &_rSystemName, std::string &_rsAddress, std::string &_rsPort)
+        {
+            if( _rServiceDefinition.size() == 0 )
+                return ErrorResp{"Service definition is blank", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            if( _rSystemName.size() == 0 )
+                return ErrorResp{"Name of the provider system is blank", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            if( _rsAddress.size() == 0)
+                return ErrorResp{"Address of the provider system is blank", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            if( _rsPort.size() == 0)
+                return ErrorResp{"Port of the provider system is blank", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            int iPort = std::stoi(_rsPort);
+
+            if(iPort < 0 || iPort > 65535)
+                return ErrorResp{"Port must be between 0 and 65535.", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            std::string sServiceDefinitionID, sProviderSystemID, sServiceRegistryId, sResponse;
+
+            std::string sQuery = "SELECT * FROM service_definition WHERE service_definition = '" + _rServiceDefinition + "' ;";
+            db.fetch(sQuery.c_str(), sServiceDefinitionID);
+
+            if(sServiceDefinitionID.size() == 0)
+                return ErrorResp{"Missing information from service_definition table", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            sQuery = "SELECT * FROM system_ WHERE system_name = '" + _rSystemName + "' AND " +
+                      "address = '" + _rsAddress + "' AND " +
+                      "port = '" + _rsPort + "';";
+
+            db.fetch(sQuery.c_str(), sProviderSystemID);
+
+            if(sProviderSystemID.size() == 0)
+                return ErrorResp{"Missing information from system_ table", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            sQuery = "SELECT * FROM service_registry WHERE service_id = " + sServiceDefinitionID + " AND "+
+                     "system_id = " + sProviderSystemID + ";";
+
+            db.fetch(sQuery.c_str(), sServiceRegistryId);
+
+            if(sServiceRegistryId.size() == 0)
+                return ErrorResp{"Missing information from service_registry table", 400, "BAD_PAYLOAD", "serviceregistry/unregister"}.getResp();
+
+            sQuery = "DELETE FROM service_registry_interface_connection WHERE service_registry_id = '" + sServiceRegistryId + "';";
+
+            db.query(sQuery.c_str());
+
+            sQuery = "DELETE FROM service_registry WHERE service_id = " + sServiceDefinitionID + " AND "+
+                     "system_id = " + sProviderSystemID + ";";
+
+            db.query(sQuery.c_str());
+
+            return Response{"OK"};
+        }
+
 };
 
 #endif   /* _ENDPOINTS_REGISTER_H_ */
