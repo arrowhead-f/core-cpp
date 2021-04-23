@@ -5,6 +5,8 @@
 
 #include "endpoints/Register.h"
 
+#include "http/UrlParser.h"
+
 template<typename DBPool, typename RB>class ServiceRegistry final : public Core<DBPool, RB> {
 
     private:
@@ -42,6 +44,63 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
         }
 
         Response handleDELETE(Request &&req) final {
+            auto parser = http::UrlParser{ req.uri };
+
+            if(parser.check() == true && static_cast<bool>(parser) == true)
+            {
+                if(parser.getPath().compare("/unregister") == 0)
+                {
+                    std::string service_definition;
+                    std::string system_name;
+                    std::string address;
+                    std::string port;
+
+                    bool servDefExists = false;
+                    bool sysNameExists = false;
+                    bool addrExists = false;
+                    bool portExists = false;
+
+                    while(1){
+                        auto &&kv = *parser;
+                        if(kv.first.compare("service_definition") == 0)
+                        {
+                            servDefExists = true;
+                            service_definition = kv.second;
+                        }
+                        else if(kv.first.compare("system_name") == 0)
+                        {
+                            sysNameExists = true;
+                            system_name = kv.second;
+                        }
+                        else if(kv.first.compare("address") == 0)
+                        {
+                            addrExists = true;
+                            address = kv.second;
+                        }
+                        else if(kv.first.compare("port") == 0)
+                        {
+                            portExists = true;
+                            port = kv.second;
+                        }
+
+                        ++parser;
+
+                        if(static_cast<bool>(parser) == false)
+                            break;
+                    }
+
+                    if(servDefExists && sysNameExists && addrExists && portExists)
+                    {
+                        auto db = Parent::database();
+                        return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processUnregister(service_definition, system_name, address, port);
+                    }
+                    else
+                    {
+                        return Response::from_stock(http::status_code::BadRequest);
+                    }
+                }
+            }
+
             return Response::from_stock(http::status_code::NotImplemented);
         }
 };
