@@ -27,6 +27,35 @@
 | 0102 | core, cert_authority        | test CertAuthority, happy path  |
 | 0103 | core, cert_authority        | test CertAuthority, sad path    |
 | 0104 | core, cert_authority, query | test CAQueries                  |
+| 0105 | core, service_registry      | test ServiceRegistry            |
+| 0106 | core, sservice_registry     | test ServiceRegistry            |
+| 0108 | core, orchestrator          | test Orchestrator               |
+| 0109 | core, orchestrator          | test Orchestrator               |
+| 0110 | core, orchestrator, query   | test queries for Orchestrator   |
+| 0111 | core, gatekeeper            | test Gatekeeper (happy path)    |
+| 0112 | core, gatekeeper            | test Gatekeeper (sad path)      |
+| 0113 | core, gatekeeper, query     | test queries for Gatekeeper     |
+| 0114 | core, choreographer         | test Choreographer (happy path) |
+| 0115 | core, choreographer         | test Choreographer (sad path)   |
+| 0116 | core, choreographer, query  | test queries for Choreographer  |
+| 0117 | core, dev_registry          | test DevRegistry (happy path)   |
+| 0118 | core, dev_registry          | test DevRegistry (sad path)     |
+| 0119 | core, dev_registry, query   | test queries for DevRegistry    |
+| 0120 | core, eventhandler          | test EventHandler (happy path)  |
+| 0121 | core, eventhandler          | test EventHandler (sad path)    |
+| 0122 | core, eventhandler, query   | test queries for EventHandler   |
+| 0123 | core, gateway               | test Gateway (happy path)       |
+| 0124 | core, gateway               | test Gateway (sad path)         |
+| 0125 | core, gateway, query        | test queries for Gateway        |
+| 0126 | core, onboarding            | test Onboarding (happy path)    |
+| 0127 | core, onboarding            | test Onboarding (sad path)      |
+| 0128 | core, onboarding, query     | test queries for Onboarding     |
+| 0129 | core, qos_monitor           | test QosMonitor (happy path)    |
+| 0130 | core, qos_monitor           | test QosMonitor (sad path)      |
+| 0131 | core, qos_monitor, query    | test queries for QosMonitor     |
+| 0132 | core, sys_registry          | test SysRegistry (happy path)   |
+| 0133 | core, sys_registry          | test SysRegistry (sad path)     |
+| 0134 | core, sys_registry, query   | test queries for SysRegistry    |
 | 0501 | server, request_parser      | test request parser             |
 | 0502 | server, https               | test the https server           |
 | 0502 | server, https               | test the https server           |

@@ -175,7 +175,7 @@ TEST_CASE("cert_authority: check different methods with /checkCertificate", "[co
         #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
           REQUIRE(resp == http::status_code::OK);
           REQUIRE(resp.value().empty() == true);                                      // it has no content
-          REQUIRE(resp.to_string().find("\r\nAllow: GET\r\n") != std::string::npos);  // the 'allow' header was found
+          REQUIRE(resp.to_string().find("\r\nAllow: POST\r\n") != std::string::npos);  // the 'allow' header was found
         #else
           REQUIRE(resp == http::status_code::MethodNotAllowed);
         #endif

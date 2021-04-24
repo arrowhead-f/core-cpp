@@ -11,7 +11,7 @@
 struct CoreElement {
 
     static constexpr const char * const name = "Certificate Authority";  ///< The human readable name of the Core element.
-    static constexpr const char * const ini  = "certauthorit.ini";
+    static constexpr const char * const ini  = "certauthority.ini";
 
     template<typename DBPool, typename RB>using Type           = ::CertAuthority<DBPool, RB>;  ///< The type of the Core element.
     template<typename DBPool, typename RB>using DispatcherType = ::CertAuthority<DBPool, RB>;  ///< 
