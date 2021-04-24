@@ -25,6 +25,24 @@ test_SOURCES = main.cpp                  \
                test0104.cpp              \
                test0105.cpp              \
                test0106.cpp              \
+               test0108.cpp              \
+               test0109.cpp              \
+               test0111.cpp              \
+               test0112.cpp              \
+               test0114.cpp              \
+               test0115.cpp              \
+               test0117.cpp              \
+               test0118.cpp              \
+               test0120.cpp              \
+               test0121.cpp              \
+               test0123.cpp              \
+               test0124.cpp              \
+               test0126.cpp              \
+               test0127.cpp              \
+               test0129.cpp              \
+               test0130.cpp              \
+               test0132.cpp              \
+               test0133.cpp              \
                test0501.cpp              \
                test0502.cpp              \
                test0503.cpp              \
