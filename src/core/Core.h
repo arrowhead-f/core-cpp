@@ -61,8 +61,12 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }
 
-        void error(const std::string &from, const std::string &reason) final {
+        void report(const std::string &from, const std::string &reason) final {
             (::error{ } << fmt("{}: error; reason: {}") << from << reason.c_str()).log(SOURCE_LOCATION);
+        }
+
+        void report(const std::string &from, const char *reason) final {
+            (::error{ } << fmt("{}: error; reason: {}") << from << reason).log(SOURCE_LOCATION);
         }
 
         // HTTP callbacks

@@ -17,10 +17,15 @@ class Dispatcher {
         /// \return                 the response
         virtual Response dispatch(Request &&req) noexcept = 0;
 
-        /// Handles error.
+        /// Reports the error.
         /// \param from             the remote address
         /// \param reason           the reason/description of the error
-        virtual void error(const std::string &from, const std::string &reason) = 0;
+        virtual void report(const std::string &from, const std::string &reason) = 0;
+
+        /// Reports the error.
+        /// \param from             the remote address
+        /// \param reason           the reason/description of the error
+        virtual void report(const std::string &from, const char *reason) = 0;
 
         static std::string subpath(const std::string &uri) {
             const auto found = uri.find('/', 1);

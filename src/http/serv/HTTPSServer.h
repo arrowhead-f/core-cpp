@@ -32,6 +32,35 @@
 #include "RequestBuffer.h"
 
 
+namespace {
+
+    inline HTTPServer*& theCurrentServer() {
+        static HTTPServer *server;
+        return server;
+    }
+
+    inline int verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
+
+        if (!preverify_ok) {
+            X509 *cert = X509_STORE_CTX_get_current_cert(ctx);
+            auto err   = X509_STORE_CTX_get_error(ctx);
+            auto depth = X509_STORE_CTX_get_error_depth(ctx);
+
+            SSL *ssl = static_cast<SSL*>(X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
+
+            struct sockaddr_in addr;
+            socklen_t slen;
+            getpeername(SSL_get_fd(ssl), (struct sockaddr*)&addr, &slen);
+            const std::string remote_address = inet_ntoa(addr.sin_addr);
+
+            theCurrentServer()->error(remote_address, "Certificate error. Error code: " + std::to_string(err));
+        }
+
+        return preverify_ok;
+    }
+}
+
+
 /// OpenSSL based HTTPS server.
 template<typename T>
 class HTTPSServer final : public ::HTTPServerBase<T> {
@@ -89,6 +118,9 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
             server = openPort(port);    /* create server socket */
             if (server == -1)
                 throw HTTPServer::Error{ "Cannot open listening port." };
+
+            // store the current server
+            theCurrentServer() = this;
         }
 
 
@@ -304,14 +336,6 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
         /// \param keyPhrase        the keyphrase password
         void loadCertificates(SSL_CTX *ctx, const KeyProvider::KeyStore &ks, const KeyProvider::TrustStore &ts) {
 
-            //New lines 
-            //if (SSL_CTX_load_verify_locations(ctx, certFile, keyFile) != 1)
-            //    throw HTTPServer::Error{ "Certificate error." };
-
-            //if (SSL_CTX_set_default_verify_paths(ctx) != 1)
-            //    throw HTTPServer::Error{ "Certificate error." };  // ERR_print_errors_fp(stderr);
-            //End new lines
-
             /* set the local certificate from CertFile */
             if (SSL_CTX_use_certificate_chain_file(ctx, ks.getCert().c_str()) <= 0) {
                 throw HTTPServer::Error{ "Certificate error." };
@@ -328,15 +352,24 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 throw HTTPServer::Error{ "Private key does not match the public certificate." };
             }
 
+            /* set the trust store */
+            if (SSL_CTX_load_verify_locations(ctx, ts.getCert().c_str(), 0) != 1)
+                throw HTTPServer::Error{ "Certificate error." };
+
+            /* is mantatory to peers have certificate */
+            if (ts.mandatory) {
+                SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, /*verify_callback*/ nullptr);
+                SSL_CTX_set_verify_depth(ctx, 4);
+            }
+            else {
+                SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, /*verify_callback*/ nullptr);
+                SSL_CTX_set_verify_depth(ctx, 4);
+            }
+
             // emphemeral
             //RSA *rsa=RSA_generate_key(512, RSA_F4, NULL, NULL);
             //SSL_CTX_set_tmp_rsa(ctx, rsa); 
             //RSA_free(rsa);
-
-            //New lines - Force the client-side have a certificate
-            //SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
-            //SSL_CTX_set_verify_depth(ctx, 4);
-            //End new lines
         }
 
         /// Serve the connection.
@@ -353,7 +386,13 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 return;
             }
 
+            if (auto peer = SSL_get_peer_certificate(ssl)) {
+                if (SSL_get_verify_result(ssl) == X509_V_OK) {
+                }
+            }
+
             SSL_set_mode(ssl, SSL_MODE_AUTO_RETRY);
+
 
             int len = 0;
             while ((len = SSL_read(ssl, buffer, sizeof(buffer) - 1)) > 0) {
