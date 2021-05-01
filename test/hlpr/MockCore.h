@@ -102,7 +102,7 @@ class MockCore {
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }
 
-        void error(const std::string &from, const std::string &reason) {
+        void report(const std::string &from, const std::string &reason) {
            /// need a member variable to keed track the errors
         }
 

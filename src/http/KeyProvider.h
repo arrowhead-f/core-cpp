@@ -55,7 +55,7 @@ class KeyProvider {
             return *this;
         }
 
-        KeyProvider& loadTrustStore(const std::string &store, const std::string &password, bool mandatory = true) {
+        KeyProvider& loadTrustStore(const std::string &store, const std::string &password, bool mandatory = false) {
             trustStore.mandatory = mandatory;
             trustStore.store = store;
             trustStore.password = password;

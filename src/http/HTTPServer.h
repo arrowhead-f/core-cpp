@@ -34,6 +34,10 @@ struct HTTPServer {
     /// \param reason               the reason of the error
     virtual void error(const std::string &from, const char *reason) = 0;
 
+    /// Error handler.
+    /// \param from                 the object of the error
+    /// \param reason               the reason of the error
+    virtual void error(const std::string &from, const std::string &reason) = 0;
 };
 
 
@@ -85,7 +89,14 @@ class HTTPServerBase : public HTTPServer {
         /// \param from                 the object of the error
         /// \param reason               the reason of the error
         void error(const std::string &from, const char *reason) final {
-            dispatcher.error(from, reason);
+            dispatcher.report(from, reason);
+        }
+
+        /// The implementation of the error handler.
+        /// \param from                 the object of the error
+        /// \param reason               the reason of the error
+        void error(const std::string &from, const std::string &reason) final {
+            dispatcher.report(from, reason);
         }
 
 };

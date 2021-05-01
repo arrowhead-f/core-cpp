@@ -241,3 +241,44 @@ TEST_CASE("https: HTTPS stress tests (mandatory parallelism)", "[server] [https]
         }
     }
 }
+
+
+TEST_CASE("https: Test mandatory client certificate", "[server] [https]") {
+
+    auto mc = MockCore{};
+    auto serverKP = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456", true);
+
+    std::size_t port = 12500;
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, serverKP };
+
+            // the client key is ok
+            {
+                auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456", true);
+                auto cl = WG_Curl{ kp };
+                auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+
+                REQUIRE(resp == http::status_code::NotImplemented);
+            }
+
+            // client without key, lib error
+            {
+                auto cl = WG_Curl{ KeyProvider{} };
+                auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+
+                REQUIRE(resp.has_library_error());
+            }
+
+            break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto webget_error = true;
+            REQUIRE_FALSE(webget_error);
+        }
+    }
+}
