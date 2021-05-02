@@ -282,3 +282,148 @@ TEST_CASE("https: Test mandatory client certificate", "[server] [https]") {
         }
     }
 }
+
+
+TEST_CASE("https: Check clients certificate I.", "[server] [https]") {
+
+    auto mc = MockCore{};
+    auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456", true);
+
+    std::size_t port = 12500;
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
+
+            bool has_cert = false;
+            std::string issuer;
+            std::string subject;
+
+            mc.addFunction("/index.html", [&has_cert, &issuer, &subject](Request &&req){
+                has_cert = req.hasCert();
+
+                if (has_cert) {
+                    auto &cert = req.getCert();
+
+                    issuer  = cert.issuer(false);
+                    subject = cert.subject_name();
+                }
+
+                return Response::from_stock(http::status_code::NotFound);
+            });
+
+            auto cl = WG_Curl{ kp };
+            auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+
+            REQUIRE(resp == http::status_code::NotFound);
+            REQUIRE(has_cert == true);
+            REQUIRE(issuer   == "/CN=testcloud2.aitia.arrowhead.eu");
+            REQUIRE(subject  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+
+            break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto webget_error = true;
+            REQUIRE_FALSE(webget_error);
+        }
+    }
+}
+
+
+TEST_CASE("https: Check clients certificate II.", "[server] [https]") {
+
+    auto mc = MockCore{};
+    auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456", false);
+
+    std::size_t port = 12500;
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
+
+            bool has_cert = false;
+            std::string issuer;
+            std::string subject;
+
+            mc.addFunction("/index.html", [&has_cert, &issuer, &subject](Request &&req){
+                has_cert = req.hasCert();
+
+                if (has_cert) {
+                    auto &cert = req.getCert();
+
+                    issuer  = cert.issuer(false);
+                    subject = cert.subject_name();
+                }
+
+                return Response::from_stock(http::status_code::NotFound);
+            });
+
+            auto cl = WG_Curl{ KeyProvider{} };
+            auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+
+            REQUIRE(resp == http::status_code::NotFound);
+            REQUIRE(has_cert == false);
+
+             break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto webget_error = true;
+            REQUIRE_FALSE(webget_error);
+        }
+    }
+}
+
+
+TEST_CASE("https: Check clients certificate III.", "[server] [https]") {
+
+    auto mc = MockCore{};
+    auto kp = KeyProvider{}.loadKeyStore("data/test0502/key-store", "cert", "123456").loadTrustStore("data/test0502/trust-store", "123456", false);
+
+    std::size_t port = 12500;
+    while(1) {
+
+        try {
+            auto ms = HTTPSServerGuard<MockCore>{ "127.0.0.1", port, mc, kp };
+
+            bool has_cert = false;
+            std::string issuer;
+            std::string subject;
+
+            mc.addFunction("/index.html", [&has_cert, &issuer, &subject](Request &&req){
+                has_cert = req.hasCert();
+
+                if (has_cert) {
+                    auto &cert = req.getCert();
+
+                    issuer  = cert.issuer(false);
+                    subject = cert.subject_name();
+                }
+
+                return Response::from_stock(http::status_code::NotFound);
+            });
+
+            auto cl = WG_Curl{ kp };
+            auto resp = cl.send("GET", "https://127.0.0.1/index.html", port, "");
+
+            REQUIRE(resp == http::status_code::NotFound);
+            REQUIRE(has_cert == true);
+            REQUIRE(issuer   == "/CN=testcloud2.aitia.arrowhead.eu");
+            REQUIRE(subject  == "/CN=authorization.testcloud2.aitia.arrowhead.eu");
+
+            break;
+        }
+        catch(const HTTPServer::Error) {
+            port++;
+        }
+        catch(...) {
+            auto webget_error = true;
+            REQUIRE_FALSE(webget_error);
+        }
+    }
+}

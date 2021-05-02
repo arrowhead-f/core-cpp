@@ -386,8 +386,12 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 return;
             }
 
-            if (auto peer = SSL_get_peer_certificate(ssl)) {
-                if (SSL_get_verify_result(ssl) == X509_V_OK) {
+            X509 *cert = nullptr;
+            if ((cert  = SSL_get_peer_certificate(ssl))) {
+                if (SSL_get_verify_result(ssl) != X509_V_OK) {
+                    //; error handling here??
+                    X509_free(cert);
+                    cert = nullptr;
                 }
             }
 
@@ -417,6 +421,7 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                     // get the parsed request and set the remote address
                     auto req = parser.request();
                     req.remote_address = inet_ntoa(addr.sin_addr);
+                    req.setCert(X509Cert{ cert });
 
                     // generate the response
                     const auto resp = Parent::handle(std::move(req));
