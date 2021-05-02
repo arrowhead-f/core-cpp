@@ -39,8 +39,9 @@ class MockCore {
         }
 
         template<typename Fun>
-        MockCore& addFuntion(std::string key, Fun &&f) {
-            funtory_resp[key] = f;
+        MockCore& addFunction(std::string key, Fun &&f) {
+            funtory_resp.try_emplace(key, std::move(f));
+            return *this;
         }
 
         Response dispatch(Request &&req) {

@@ -28,6 +28,7 @@ sources = main.cpp                         \
 libraries = libgason.a libjson11.a libutils.a
 
 sources += http/crate/Response.cpp         \
+           http/crate/X509Cert.cpp         \
            http/serv/RequestParser.cpp
 
 ################################################################################################

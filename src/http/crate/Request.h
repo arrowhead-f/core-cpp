@@ -1,7 +1,10 @@
 #ifndef _HTTP_REQUEST_H_
 #define _HTTP_REQUEST_H_
 
+
 #include <string>
+
+#include "X509Cert.h"
 
 
 /// The request received from the client.
@@ -17,8 +20,7 @@ class Request {
 
     private:
 
-        int has_cert = 0;       ///< Whether the request stores the remote ends certificate. 1 means that a cert is stored, 2 means that a hash of a cert is stored.
-        std::string cert;       ///< The remote ends certificate.
+        X509Cert cert;          ///< The remote ends certificate.
 
     public:
 
@@ -32,22 +34,16 @@ class Request {
 
         /// Returns whether a certicifate is stored or not.
         /// \return                 true, if a certificate is stored
-        bool hasCert() const { return has_cert; }
-
-        /// Returns whether the stored cert is a hash.
-        /// \return                 true if a hash is stored instead of a certificate
-        bool hasCertHash() const { return has_cert; }
+        bool hasCert() const { return cert; }
 
         /// Returns the stored certificate.
         /// \return                 the certificate; if no certificate is stored empty string is returned
-        const std::string& getCert() const { return cert; }
+        const auto& getCert() const { return cert; }
 
         /// Sets the certificate.
         /// \param c                the certificate
-        /// \param hash             whether the certificate is a hash or not, default: true (i.e., hash)
-        void setCert(std::string c, bool hash = true) {
+        void setCert(X509Cert c) {
             cert = std::move(c);
-            has_cert = hash ? 2 : 1;
         }
 
 };

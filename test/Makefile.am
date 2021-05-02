@@ -18,6 +18,7 @@ test_SOURCES = main.cpp                  \
                test0055.cpp              \
                test0056.cpp              \
                test0058.cpp              \
+               test0059.cpp              \
                test0093.cpp              \
                test0100.cpp              \
                test0102.cpp              \
@@ -60,4 +61,5 @@ test_SOURCES = main.cpp                  \
                ../src/utils/inifile.cpp            \
                ../src/http/wget/WG_Curl.cpp        \
                ../src/http/crate/Response.cpp      \
+               ../src/http/crate/X509Cert.cpp      \
                ../src/http/serv/RequestParser.cpp
