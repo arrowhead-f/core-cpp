@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <iostream>
+#include <stdexcept>
 
 /* utility functions */
 #include "utils/logger.h"
@@ -110,6 +112,9 @@ int main(int argc, char *argv[]) try {
 
     //  create the key provider
     auto keyProvider = createKeyProvider(conf);
+    if (!keyProvider.check()) {
+        throw std::runtime_error{ "Cannot parse certificate." };
+    }
 
     // create the request builder
     CoreElement::WebGet reqBuilder{ keyProvider };
