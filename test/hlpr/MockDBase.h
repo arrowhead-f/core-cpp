@@ -379,6 +379,13 @@ class MockDBase : public db::Database {
                 throw db::Exception{ 4, "Statement fetch error.888" };
         }
 
+        std::size_t query_and_check(const char *statement) override {
+            auto rc = sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
+            if (rc)
+                throw db::Exception{ 4, "Statement fetch error.888" };
+            return sqlite3_changes(db);
+        }
+
         bool insert(const char *statement, int &id) override {
             auto rc = sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
             if (rc)
@@ -402,6 +409,11 @@ class MockDBase : public db::Database {
             return out.str();
         }
 
+        std::string escape(const std::string &str, char quote = '\'') const final {
+            std::ostringstream out;
+            out << std::quoted(str, quote, quote);
+            return out.str();
+        }
 
 };  // class MockDBase
 
