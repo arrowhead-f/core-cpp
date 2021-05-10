@@ -235,7 +235,6 @@ namespace http {
                 return urldecode(str.c_str(), path_len);
             }
 
-
             class Sink {
 
                 private:

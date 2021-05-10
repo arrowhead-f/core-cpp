@@ -54,7 +54,6 @@ template<typename DBPool, typename RB>class CertAuthority final : public Core<DB
                     return Response::from_stock(http::status_code::BadRequest);
                 }
 
-
                 auto hash = std::string{};
                 crypto::sha256(data, hash);
 

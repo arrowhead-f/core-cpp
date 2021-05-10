@@ -266,6 +266,12 @@ namespace db {
                     throw Exception{-1, "Query failed.", mysql_errno(mysql), mysql_error(mysql) };
             }
 
+            std::size_t query_and_check(const char *statement) final {
+                if (mysql_query(mysql, statement))
+                    throw Exception{-1, "Query failed.", mysql_errno(mysql), mysql_error(mysql) };
+                return mysql_affected_rows(mysql);
+            }
+
             bool insert(const char *statement, int &id) final {
                 if (mysql_query(mysql, statement))
                     throw Exception{-1, "Query failed.", mysql_errno(mysql), mysql_error(mysql) };
@@ -309,6 +315,27 @@ namespace db {
 
                 return result;
             }
+
+            std::string escape(const std::string &str, char quote = '\'') const final {
+                const auto len = str.length();
+
+                if(STRING_BUFFER_LEN >= 2 * len) {
+                    mysql_real_escape_string(mysql, escbuffer, str.c_str(), len);
+                    return { escbuffer };
+                }
+
+                // sadly enough, but we have to allocate a new array for conversion
+                char *buffer = new char[2 * len + 1];
+
+                //mysql_real_escape_string_quote(mysql, buffer, str, len, quote);
+                mysql_real_escape_string(mysql, buffer, str.c_str(), len);  // in mariadb howto escape table name and column names??
+
+                std::string result{ buffer };
+                delete[] buffer;
+
+                return result;
+            }
+
 
     };  // class MariaDB
 

@@ -140,7 +140,7 @@ class JsonBuilder {
         }
 
         template<typename R, typename Fun>
-        auto& for_each(const char *key, const R &row, Fun f) {
+        auto for_each(const char *key, const R &row, Fun f) -> typename std::enable_if<!std::is_same<bool, typename std::invoke_result<Fun, JsonBuilder&, const R&>::type>::value, JsonBuilder>::type& {
             out << "\"" << key << "\": [";
             if(row) {
                 do {
@@ -148,6 +148,23 @@ class JsonBuilder {
                     f(*this, row);
                     out.seekp(-1, std::ios::end);
                     out << "},";
+                } while(row->next());
+                out.seekp(-1, std::ios::end);
+            }
+            out << "],";
+            return *this;
+        }
+
+        template<typename R, typename Fun>
+        auto for_each(const char *key, const R &row, Fun f) -> typename std::enable_if<std::is_same<bool, typename std::invoke_result<Fun, JsonBuilder&, const R&>::type>::value, JsonBuilder>::type& {
+            out << "\"" << key << "\": [";
+            if(row) {
+                do {
+                    out << "{";
+                    const auto res = f(*this, row);
+                    out.seekp(-1, std::ios::end);
+                    if (res)
+                        out << "},";
                 } while(row->next());
                 out.seekp(-1, std::ios::end);
             }
@@ -189,6 +206,15 @@ class JsonBuilder {
         auto write_dictionary_items(const Row &row, int i = 0) -> typename std::enable_if<(sizeof...(T) > 0), void>::type {
             write_dictionary_items<Row, H>(row, i);
             write_dictionary_items<Row, T...>(row, i + 1);
+        }
+
+        template<typename Row, typename H, typename ...T>
+        auto write_dictionary_items(const char *key, const Row &row, int i = 0) -> typename std::enable_if<(sizeof...(T) > 0), void>::type {
+            out << "\"" << key << "\": {";
+            write_dictionary_items<Row, H>(row, i);
+            write_dictionary_items<Row, T...>(row, i + 1);
+            out.seekp(-1, std::ios::end);
+            out << "},";
         }
 
 };
