@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/CertAuthority/CertAuthority.h"
+#include "core/apps/CertAuthority/CertAuthority.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

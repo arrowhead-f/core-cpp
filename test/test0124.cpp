@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/Gateway/Gateway.h"
+#include "core/apps/Gateway/Gateway.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

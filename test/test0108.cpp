@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/Orchestrator/Orchestrator.h"
+#include "core/apps/Orchestrator/Orchestrator.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

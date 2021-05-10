@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/Authorizer/Authorizer.h"
+#include "core/apps/Authorizer/Authorizer.h"
 #include "http/wget/WG_Curl.h"
 
 

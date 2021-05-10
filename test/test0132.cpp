@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/SysRegistry/SysRegistry.h"
+#include "core/apps/SysRegistry/SysRegistry.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

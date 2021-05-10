@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/Onboarding/Onboarding.h"
+#include "core/apps/Onboarding/Onboarding.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

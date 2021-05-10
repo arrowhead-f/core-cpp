@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/QosMonitor/QosMonitor.h"
+#include "core/apps/QosMonitor/QosMonitor.h"
 #include "http/wget/WG_Null.h"
 
 

@@ -129,6 +129,9 @@ namespace db {
             /// Run a query that does not returns any result.
             virtual void query(const char*) = 0;
 
+            /// Runs a query and returns the number of affected rows.
+            virtual std::size_t query_and_check(const char*) = 0;
+
             /// Insert into table and return the last inserted id.
             virtual bool insert(const char*, int  &id) = 0;
             virtual bool insert(const char*, long &id) = 0;
@@ -140,6 +143,7 @@ namespace db {
 
             /// Escapes the given string.
             virtual std::string escape(const char*, char quote = '\'') const = 0;
+            virtual std::string escape(const std::string&, char quote = '\'') const = 0;
 
     };  // class Database
 
@@ -198,6 +202,10 @@ namespace db {
                 db->query(statement);
             }
 
+            std::size_t query_and_check(const char *statement) {
+                return db->query_and_check(statement);
+            }
+
             bool insert(const char *statement, int &id) {
                 return db->insert(statement, id);
             }
@@ -211,6 +219,10 @@ namespace db {
             }
 
             [[nodiscard]] std::string escape(const char *txt, char quote = '\'') const {
+                return db->escape(txt, quote);
+            }
+
+            [[nodiscard]] std::string escape(const std::string &txt, char quote = '\'') const {
                 return db->escape(txt, quote);
             }
 

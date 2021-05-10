@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/Choreographer/Choreographer.h"
+#include "core/apps/Choreographer/Choreographer.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

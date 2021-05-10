@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/Gateway/Gateway.h"
+#include "core/apps/Gateway/Gateway.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

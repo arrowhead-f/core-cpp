@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/Onboarding/Onboarding.h"
+#include "core/apps/Onboarding/Onboarding.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

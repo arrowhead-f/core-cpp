@@ -61,5 +61,6 @@ test_SOURCES = main.cpp                  \
                ../src/utils/inifile.cpp            \
                ../src/http/wget/WG_Curl.cpp        \
                ../src/http/crate/Response.cpp      \
+               ../src/http/crate/Uri.cpp           \
                ../src/http/crate/X509Cert.cpp      \
                ../src/http/serv/RequestParser.cpp

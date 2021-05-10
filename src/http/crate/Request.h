@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "Uri.h"
 #include "X509Cert.h"
 
 
@@ -15,7 +16,7 @@ class Request {
         std::string remote_address;    ///< The remote address.
 
         std::string method;     ///< The request method, e.g., GET, POST, PATCH, ...
-        std::string uri;        ///< The requested URI
+        Uri uri;                ///< The requested URI
         std::string content;    ///< The content.
 
     private:

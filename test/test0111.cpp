@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/Gatekeeper/Gatekeeper.h"
+#include "core/apps/Gatekeeper/Gatekeeper.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

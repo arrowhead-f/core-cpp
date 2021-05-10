@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/QosMonitor/QosMonitor.h"
+#include "core/apps/QosMonitor/QosMonitor.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/Gatekeeper/Gatekeeper.h"
+#include "core/apps/Gatekeeper/Gatekeeper.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

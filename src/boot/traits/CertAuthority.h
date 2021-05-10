@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/CertAuthority/CertAuthority.h"
+#include "core/apps/CertAuthority/CertAuthority.h"
 #include "http/wget/WG_Null.h"
 
 

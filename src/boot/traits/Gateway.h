@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/Gateway/Gateway.h"
+#include "core/apps/Gateway/Gateway.h"
 #include "http/wget/WG_Null.h"
 
 

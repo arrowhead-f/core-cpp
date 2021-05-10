@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) try {
     }
 
     // boot the up, load the INI file
-    auto conf = boot("arrowhead.ini" /*CoreElement::ini*/, config, dbconf);
+    auto conf = boot(/*"arrowhead.ini"*/ CoreElement::ini, config, dbconf);
 
     // get the port and the numer of threads
     configureHTTP(conf, &port, &thrd);
