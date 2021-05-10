@@ -2,6 +2,8 @@
 #define _CORE_CORE_H_
 
 
+#include <iostream>
+
 #include <cstring>
 #include <string>
 #include <string_view>
@@ -25,6 +27,35 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
         auto database() {
             return db::DatabaseConnection<typename DBPool::DatabaseType>{ dbPool };
         };
+
+        template<template<typename> typename EP>auto invoke(const char *method, Request &&req) {
+            if (req.method == method) {
+                auto db = database();
+                return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handle(std::move(req));
+            }
+            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+              if (req.method == "OPTIONS")
+                  return Response::options(http::status_code::OK, method);
+            #endif
+            return Response::from_stock(http::status_code::MethodNotAllowed);
+        }
+
+        template<template<typename> typename EP>auto invoke(const char *method, Response(EP<db::DatabaseConnection<typename DBPool::DatabaseType>>::*func)(Request&&), Request &&req) {
+            if (req.method == method) {
+                auto db = database();
+                return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.func(std::move(req));
+            }
+            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+              if (req.method == "OPTIONS")
+                  return Response::options(http::status_code::OK, method);
+            #endif
+            return Response::from_stock(http::status_code::MethodNotAllowed);
+        }
+
+        template<template<typename> typename EP, std::size_t N>
+        auto crudify(const char(&ar)[N], Request &&req) {
+            return crudify<EP>(std::move(req), N);
+        }
 
     public:
 
@@ -96,6 +127,55 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
 
         virtual Response handleOPTIONS(Request &&req) {
             return Response::from_stock(http::status_code::NotFound);
+        }
+
+    private:
+
+        template<template<typename> typename EP>auto crudify(Request &&req, std::size_t M) {
+
+            const std::size_t N = M - 1;
+
+            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+              if (req.method == "OPTIONS")
+                  return Response::options(http::status_code::OK, "GET, POST, PUT, PATCH, DELETE");
+            #endif
+            if (req.uri.length() == N) {
+                if (req.method == "POST") {
+                    auto db = database();
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doPost(std::move(req));
+                }
+                if (req.method == "GET") {
+                    auto db = database();
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doGet(std::move(req));
+                }
+                return Response::from_stock(http::status_code::MethodNotAllowed);
+            }
+            if (req.uri[N] == '?') {
+                if (req.method == "GET") {
+                    auto db = database();
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doGet(std::move(req));
+                }
+                return Response::from_stock(http::status_code::MethodNotAllowed);
+            }
+            if (req.uri[N] == '/') {
+                unsigned long id = 0;
+                try {
+                    id = std::stoul(req.uri.substr(N + 1));
+                }
+                catch(...) {
+                    return Response::from_stock(http::status_code::MethodNotAllowed);
+                }
+                auto db = database();
+                if (req.method == "PUT")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doPut(std::move(req), id);
+                if (req.method == "PATCH")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doPatch(std::move(req), id);
+                if (req.method == "DELETE")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doDelete(std::move(req), id);
+            }
+
+
+            return Response::from_stock(http::status_code::MethodNotAllowed);
         }
 
 };
