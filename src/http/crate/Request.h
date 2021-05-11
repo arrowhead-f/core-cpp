@@ -15,7 +15,7 @@ class Request {
         std::string remote_address;    ///< The remote address.
 
         std::string method;     ///< The request method, e.g., GET, POST, PATCH, ...
-        std::string uri;        ///< The requested URI
+        std::string uri;                ///< The requested URI
         std::string content;    ///< The content.
 
     private:

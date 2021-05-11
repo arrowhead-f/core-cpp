@@ -27,11 +27,6 @@ class Dispatcher {
         /// \param reason           the reason/description of the error
         virtual void report(const std::string &from, const char *reason) = 0;
 
-        static std::string subpath(const std::string &uri) {
-            const auto found = uri.find('/', 1);
-            return found == std::string::npos ? uri : uri.substr(found);
-        }
-
 };
 
 #endif  /* _CORE_DISPATCHER_H_ */
