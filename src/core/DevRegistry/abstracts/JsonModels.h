@@ -115,7 +115,7 @@ namespace JsonModels {
 
             bool error  = false;  ///< Whether there was a parsing error.
             bool valid  = false;  ///< Whether the structure is valid.
-            bool device = false;  ///< Whether the device is given.
+            //bool device = false;  ///< Whether the device is given.
 
 
         public:
@@ -136,29 +136,29 @@ namespace JsonModels {
                     if (!node.isObject())
                         return dev;
 
-                    dev.device = true;
+                    //dev.device = true;
                     if (auto node = root.child("address")) {
                         if (!node.isString())
                             return dev;
-                        dev.address = node.toString();
+                        dev.device.address = node.toString();
                         dev.valid   = true;
                     }
                     if (auto node = root.child("deviceName")) {
                         if (!node.isString())
                             return dev;
-                        dev.dev_name = node.toString();
+                        dev.device.dev_name = node.toString();
                         dev.valid       = true;
                     }
                     if (auto node = root.child("macAddress")) {
                         if (!node.isString())
                             return dev;
-                        dev.mac_address = node.toString();
+                        dev.device.mac_address = node.toString();
                         dev.valid       = true;
                     }
                     if (auto node = root.child("authenticationInfo")) {
                         if (!node.isString())
                             return dev;
-                        dev.auth_info = node.toString();
+                        dev.device.auth_info = node.toString();
                         dev.valid    = true;
                     }
                 }
@@ -195,11 +195,11 @@ namespace JsonModels {
             }
 
             const char* validate() const {
-                if (dev_name == nullptr)
+                if (device.dev_name == nullptr)
                     return "Device name must have value.";
-                if (mac_address == nullptr)
+                if (device.mac_address == nullptr)
                     return "Device MAC address must have value.";
-                if (address == nullptr)
+                if (device.address == nullptr)
                     return "Device address must have value.";
 
                 return nullptr;

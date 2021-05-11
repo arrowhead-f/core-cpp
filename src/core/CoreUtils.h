@@ -28,6 +28,9 @@
 #include "http/crate/Request.h"
 #include "http/crate/Response.h"
 
+#include "gason/gason.h"
+
+
 class ErrorResponse {
 
     public:
@@ -149,5 +152,57 @@ namespace CoreUtils {
     }
 
 }
+
+
+template<typename T>
+class ModelBuilder {
+
+    private:
+
+        gason::JsonAllocator   allocator;
+        gason::JsonValue       root;
+
+        union storage_t {
+            unsigned char dummy;
+            T value;
+
+            constexpr storage_t() noexcept : dummy{} {}
+
+            constexpr storage_t(T &&value) noexcept : value{ std::move(value) } {}
+            constexpr storage_t(const T &&value) : value{ value } {}
+
+            ~storage_t(){}
+        } storage;
+
+        bool error = false;
+
+    public:
+
+        const T& getModel() const noexcept {
+            return storage.value;
+        }
+
+        template<typename B>
+        static auto parse_with(std::string &&str) {
+            ModelBuilder<T> builder;
+
+            gason::JsonParseStatus status = gason::jsonParse(str, builder.root, builder.allocator);
+            if (status != gason::JSON_PARSE_OK) {
+                builder.error = true;
+                return builder;
+            }
+
+            // generate the root
+            builder.storage.value = B::build(builder.root);
+            return builder;
+        }
+
+        operator bool() const noexcept {
+            return error;
+        }
+
+};
+
+
 
 #endif  /* _CORE_COREUTILS_H_ */
