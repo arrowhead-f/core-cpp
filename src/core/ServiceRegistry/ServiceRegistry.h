@@ -4,6 +4,7 @@
 #include "core/Core.h"
 
 #include "endpoints/Register.h"
+#include "endpoints/SRQuery.h"
 
 #include "http/UrlParser.h"
 
@@ -30,6 +31,10 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
             if (!req.uri.compare("/register")) {
                 auto db = Parent::database();
                 return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req));
+            }
+            if (!req.uri.compare("/query")) {
+                auto db = Parent::database();
+                return SRQuery<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processQuery(std::move(req));
             }
 
             return Response::from_stock(http::status_code::NotFound);
