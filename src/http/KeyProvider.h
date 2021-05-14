@@ -6,6 +6,8 @@
 #include <string>
 #include <fstream>
 
+#include "crate/X509Cert.h"
+
 
 class KeyProvider {
 
@@ -65,6 +67,11 @@ class KeyProvider {
 
         operator bool() const {
             return isValid;
+        }
+
+        bool check() {
+            const auto cert = X509Cert::load(keyStore.getCert());
+            return (isValid = static_cast<bool>(cert));
         }
 
 };

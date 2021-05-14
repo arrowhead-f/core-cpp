@@ -1,6 +1,8 @@
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <iostream>
+#include <stdexcept>
 
 /* utility functions */
 #include "utils/logger.h"
@@ -100,7 +102,7 @@ int main(int argc, char *argv[]) try {
     }
 
     // boot the up, load the INI file
-    auto conf = boot("arrowhead.ini" /*CoreElement::ini*/, config, dbconf);
+    auto conf = boot(/*"arrowhead.ini"*/ CoreElement::ini, config, dbconf);
 
     // get the port and the numer of threads
     configureHTTP(conf, &port, &thrd);
@@ -110,6 +112,9 @@ int main(int argc, char *argv[]) try {
 
     //  create the key provider
     auto keyProvider = createKeyProvider(conf);
+    if (!keyProvider.check()) {
+        throw std::runtime_error{ "Cannot parse certificate." };
+    }
 
     // create the request builder
     CoreElement::WebGet reqBuilder{ keyProvider };

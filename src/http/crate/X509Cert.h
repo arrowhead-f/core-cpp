@@ -77,6 +77,10 @@ class X509Cert {
         /// \return                 the name of the issuer
         std::string issuer(bool CN = true) const;
 
+        /// Returns the validity period of th ecertificate.
+        /// \return                 pair of not_before and not_after
+        std::pair<std::string, std::string> validity() const;
+
 };
 
 #endif  /* _HTTP_X509CERT_H_ */
