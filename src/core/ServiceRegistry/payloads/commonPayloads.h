@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-//#include <map>
 
 struct serviceQueryData
 {
@@ -22,7 +21,6 @@ struct serviceQueryData
     std::string sServiceUri;
     std::string sEndOfValidity;
     std::string sSecure;
-    //std::map<std::string,std::string> mMetadata;
     std::string sMetadata;
     std::string sVersion;
     std::vector<std::string> vInterfaces_id;

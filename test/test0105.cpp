@@ -21,6 +21,10 @@
 
 #include "utils/json.h"
 
+///////////////////////
+// Client - Echo
+//////////////////////
+
 TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 
     MockDBase mdb;
@@ -35,6 +39,149 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
     REQUIRE(resp == http::status_code::OK);
     REQUIRE(resp.value()  == "Got it!");
 }
+
+///////////////////////
+// Client - Query
+//////////////////////
+
+TEST_CASE("ServiceRegistry: POST /query blank Service Definition", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinitionRequirement\": \" \""
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Service definition requirement is null or blank\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/query\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /query missing Service Definition", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+        "\"key\" : \"value\""
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Service definition requirement is null or blank\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/query\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /query", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, {
+        {1, 1, 1, "mockuri1", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 12, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 1, 1, "mockuri2", "2022-09-11 10:39:08", "certificate", "meta1=m,meta2=2", 13, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 14, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {4, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 16, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {5, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2,meta3=test,meta4=true", 17, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {6, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 18, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_interface", true, { "id", "interface_name", "created_at", "updated_at" }, {
+        {1, "testintf_1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, "http-secure-json", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry_interface_connection", true, { "id", "service_registry_id", "interface_id", "created_at", "updated_at" }, {
+        {1, 1, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 2, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, 2, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {4, 3, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {5, 4, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {6, 5, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {7, 6, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+      "\"serviceDefinitionRequirement\": \"TestServ ic e\","
+      "\"interfaceRequirements\": ["
+            "\"HtTp-secure-json\""
+        "],"
+     "\"securityRequirements\": ["
+       "\"NoT_SeCURE\""
+        "]"
+     "\"versionRequirement\": 17,"
+     "\"minVersionRequirement\" : 17,"
+     "\"maxVersionRequirement\" : 18,"
+
+     "\"metadataRequirements \": {"
+        "\"meta1\": \"m\","
+        "\"meta2\": 2,"
+        "\"meta3\": \"test\","
+        "\"meta4\": true"
+     "},"
+
+     "\"pingProviders\": false"
+
+     "}";
+
+    //printf("%s\n", payload);
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query", std::string(payload) });
+
+    const char *expResp =
+    "{"
+        "\"serviceQueryData\": ["
+        "{\"id\": 5,\"serviceDefinition\":"
+        "{\"id\": 1,\"serviceDefinition\": \"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\",\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\","
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"serviceUri\": \"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\","
+        "\"secure\": \"not_secure\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\",\"meta3\":\"test\",\"meta4\":\"true\"},"
+        "\"version\": 17,\"interfaces\": [{\"id\": 2,\"interfaceName\": \"http-secure-json\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}],"
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],"
+        "\"unfilteredHits\": 6"
+    "}";
+
+    REQUIRE(resp == http::status_code::OK);
+    //printf("resp: %s\n", resp.value().c_str());
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+///////////////////////
+// Client - Register
+//////////////////////
 
 TEST_CASE("ServiceRegistry: POST /register", "[core] [ServiceRegistry]") {
     MockDBase mdb;
@@ -589,9 +736,9 @@ TEST_CASE("ServiceRegistry: POST /register (Insecure withouth auth info)", "[cor
 }
 
 
-///////////////
-// Unregister
-//////////////
+///////////////////////
+// Client - Unregister
+//////////////////////
 
 TEST_CASE("ServiceRegistry: DELETE /unregister", "[core] [ServiceRegistry]") {
 
