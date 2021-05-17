@@ -42,6 +42,7 @@ class Dispatcher {
 
         /// Destructor.
         virtual ~Dispatcher() = default;
+
 };
 
 #endif  /* _CORE_DISPATCHER_H_ */

@@ -15,6 +15,7 @@
 #define _CORE_CORE_H_
 
 
+#include <cstring>
 #include <string>
 
 #include "utils/logger.h"
@@ -37,7 +38,7 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
         /// Returns a locked database connection from the pool.
         auto database() {
             return db::DatabaseConnection<typename DBPool::DatabaseType>{ dbPool };
-        };
+        }
 
     public:
 
