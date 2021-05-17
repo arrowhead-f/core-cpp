@@ -131,21 +131,26 @@ public:
 
         sVersion = std::to_string(jsonRootValue.child("version").toInt());
 
-        gason::JsonValue metaObj = jsonRootValue.child("metadata");
-        SRJsonBuilder jMeta;
-        for(gason::JsonIterator it = gason::begin(metaObj); it != gason::end(metaObj); ++it)
+        if(jsonRootValue.child("metadata"))
         {
-            if(it->value.isNumber())
-                jMeta.addInt(it->key, it->value.toInt());
-            else if(it->value.isString())
-                jMeta.addStr(it->key, it->value.toString());
-            else if(it->value.isDouble())
-                jMeta.addDbl(it->key, it->value.toNumber());
-            else if(it->value.isBoolean())
-                jMeta.addStr(it->key, it->value.toBool() ? "TRUE" : "FALSE");
-        }
+            gason::JsonValue metaObj = jsonRootValue.child("metadata");
+            sMetaData = "";
 
-        sMetaData = jMeta.str();
+            for(gason::JsonIterator it = gason::begin(metaObj); it != gason::end(metaObj); ++it)
+            {
+                if(it->value.isNumber())
+                    sMetaData += std::string(it->key) + std::string("=") + std::to_string(it->value.toInt()) + std::string(",");
+                else if(it->value.isString())
+                    sMetaData += std::string(it->key) + std::string("=") + it->value.toString() + std::string(",");
+                else if(it->value.isDouble())
+                    sMetaData += std::string(it->key) + std::string("=") + std::to_string(it->value.toNumber()) + std::string(",");
+                else if(it->value.isBoolean())
+                    sMetaData += std::string(it->key) + std::string("=") + (it->value.getTag() == 4 ? std::string("true,") : std::string("false,"));
+            }
+
+            sMetaData.erase( sMetaData.end() - 1 );
+            toLowerAndTrim(sMetaData);
+        }
 
         for( int i = 0; ;++i )
         {
