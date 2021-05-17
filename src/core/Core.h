@@ -1,12 +1,22 @@
+/********************************************************************************
+ * Copyright (c) 2020 BME
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ *
+ * SPDX-License-Identifier: EPL-2.0
+ *
+ * Contributors:
+ *   * Budapest University of Technology and Economics - implementation
+ *     * ng201
+ ********************************************************************************/
 #ifndef _CORE_CORE_H_
 #define _CORE_CORE_H_
 
 
-#include <iostream>
-
 #include <cstring>
 #include <string>
-#include <string_view>
 
 #include "utils/logger.h"
 
@@ -17,6 +27,7 @@
 
 
 template<typename DBPool, typename RB>class Core : public Dispatcher {
+
     private:
 
         DBPool &dbPool;      ///< The database pool to be used.
@@ -24,48 +35,25 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
 
     protected:
 
+        /// Returns a locked database connection from the pool.
         auto database() {
             return db::DatabaseConnection<typename DBPool::DatabaseType>{ dbPool };
-        };
-
-        template<template<typename> typename EP>auto invoke(const char *method, Request &&req) {
-            if (req.method == method) {
-                auto db = database();
-                return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handle(std::move(req));
-            }
-            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
-              if (req.method == "OPTIONS")
-                  return Response::options(http::status_code::OK, method);
-            #endif
-            return Response::from_stock(http::status_code::MethodNotAllowed);
-        }
-
-        template<template<typename> typename EP>auto invoke(const char *method, Response(EP<db::DatabaseConnection<typename DBPool::DatabaseType>>::*func)(Request&&), Request &&req) {
-            if (req.method == method) {
-                auto db = database();
-                return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.func(std::move(req));
-            }
-            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
-              if (req.method == "OPTIONS")
-                  return Response::options(http::status_code::OK, method);
-            #endif
-            return Response::from_stock(http::status_code::MethodNotAllowed);
-        }
-
-        template<template<typename> typename EP, std::size_t N>
-        auto crudify(const char(&ar)[N], Request &&req) {
-            return crudify<EP>(std::move(req), N);
         }
 
     public:
 
+        /// Ctor.
         Core(DBPool &dbPool, RB &reqBuilder) : dbPool{ dbPool }, reqBuilder{ reqBuilder } { }
 
+        /// Dispatches the requests.
         Response dispatch(Request &&req) noexcept final {
-            (info{ } << fmt("{}: {} {}") << req.remote_address << req.method << req.uri).log(SOURCE_LOCATION);
+            (info{ } << fmt("{}: {} {}") << req.remote_address << req.method << req.uri.str()).log(SOURCE_LOCATION);
             return handle(std::move(req));
         }
 
+        /// Request handler method. This default implementation calls the corresponding handleMETHOD member function.
+        /// \param req              The request to handle.
+        /// \return                 The produced response.
         virtual Response handle(Request &&req) {
             if (req.method == "GET") {
                 return handleGET(std::move(req));
@@ -129,51 +117,79 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
             return Response::from_stock(http::status_code::NotFound);
         }
 
-    private:
+    protected:
 
-        template<template<typename> typename EP>auto crudify(Request &&req, std::size_t M) {
+        /// Calls the EP's handle method with the given req, if the request's method is the given one.
+        /// Otherwise returns method not allowed.
+        /// \param method           Desired method for the endpoint.
+        /// \param req              The request to handle.
+        /// \return                 The response.
+        template<template<typename> typename EP>auto invoke(const char *method, Request &&req) {
+            if (req.method == method) {
+                auto db = database();
+                return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handle(std::move(req));
+            }
+            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+              if (req.method == "OPTIONS")
+                  return Response::options(http::status_code::OK, method);
+            #endif
+            return Response::from_stock(http::status_code::MethodNotAllowed);
+        }
 
-            const std::size_t N = M - 1;
+
+        /// Calls the EP's given member function with the given req, if the request's method is the given one.
+        /// Otherwise returns method not allowed.
+        /// \param method           Desired method for the endpoint.
+        /// \param func             Member function to call.
+        /// \param req              The request to handle.
+        /// \return                 The response.
+        template<template<typename> typename EP>auto invoke(const char *method, Response(EP<db::DatabaseConnection<typename DBPool::DatabaseType>>::*func)(Request&&), Request &&req) {
+            if (req.method == method) {
+                auto db = database();
+                return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.func(std::move(req));
+            }
+            #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+              if (req.method == "OPTIONS")
+                  return Response::options(http::status_code::OK, method);
+            #endif
+            return Response::from_stock(http::status_code::MethodNotAllowed);
+        }
+
+        /// Handles all calls to a CRUD capable endpoint.
+        /// \param req              The request to handle.
+        /// \return                 The response.
+        template<template<typename> typename EP>
+        auto crudify(Request &&req) {
 
             #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
               if (req.method == "OPTIONS")
                   return Response::options(http::status_code::OK, "GET, POST, PUT, PATCH, DELETE");
             #endif
-            if (req.uri.length() == N) {
+
+            if (req.uri.empty()) {
                 if (req.method == "POST") {
                     auto db = database();
-                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doPost(std::move(req));
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handlePost(std::move(req));
                 }
                 if (req.method == "GET") {
                     auto db = database();
-                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doGet(std::move(req));
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handleGet(std::move(req));
                 }
                 return Response::from_stock(http::status_code::MethodNotAllowed);
-            }
-            if (req.uri[N] == '?') {
-                if (req.method == "GET") {
-                    auto db = database();
-                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doGet(std::move(req));
-                }
-                return Response::from_stock(http::status_code::MethodNotAllowed);
-            }
-            if (req.uri[N] == '/') {
-                unsigned long id = 0;
-                try {
-                    id = std::stoul(req.uri.substr(N + 1));
-                }
-                catch(...) {
-                    return Response::from_stock(http::status_code::MethodNotAllowed);
-                }
-                auto db = database();
-                if (req.method == "PUT")
-                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doPut(std::move(req), id);
-                if (req.method == "PATCH")
-                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doPatch(std::move(req), id);
-                if (req.method == "DELETE")
-                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.doDelete(std::move(req), id);
             }
 
+            unsigned long id;
+            if (req.uri.pathId(id)) {
+                auto db = database();
+                if (req.method == "GET")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handleGet(std::move(req), id);
+                if (req.method == "PUT")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handlePut(std::move(req), id);
+                if (req.method == "PATCH")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handlePatch(std::move(req), id);
+                if (req.method == "DELETE")
+                    return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handleDelete(std::move(req), id);
+            }
 
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }

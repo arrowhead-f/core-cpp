@@ -13,7 +13,7 @@
 
 #include <string>
 
-#include "core/ServiceRegistry/ServiceRegistry.h"
+#include "core/apps/ServiceRegistry/ServiceRegistry.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

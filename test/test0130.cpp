@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/QosMonitor/QosMonitor.h"
+#include "core/apps/QosMonitor/QosMonitor.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

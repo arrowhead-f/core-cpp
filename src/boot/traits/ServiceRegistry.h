@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/ServiceRegistry/ServiceRegistry.h"
+#include "core/apps/ServiceRegistry/ServiceRegistry.h"
 #include "http/wget/WG_Curl.h"
 
 

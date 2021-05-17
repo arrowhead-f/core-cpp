@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/SysRegistry/SysRegistry.h"
+#include "core/apps/SysRegistry/SysRegistry.h"
 #include "http/wget/WG_Null.h"
 
 

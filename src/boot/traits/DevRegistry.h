@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/DevRegistry/DevRegistry.h"
+#include "core/apps/DevRegistry/DevRegistry.h"
 #include "http/wget/WG_Null.h"
 
 

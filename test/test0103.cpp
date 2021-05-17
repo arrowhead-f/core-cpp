@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/CertAuthority/CertAuthority.h"
+#include "core/apps/CertAuthority/CertAuthority.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

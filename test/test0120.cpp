@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/EventHandler/EventHandler.h"
+#include "core/apps/EventHandler/EventHandler.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

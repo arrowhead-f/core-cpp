@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/DevRegistry/DevRegistry.h"
+#include "core/apps/DevRegistry/DevRegistry.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"
@@ -37,6 +37,43 @@ TEST_CASE("dev_registry: GET /ECHO", "[core] [dev_registry]") {
     const auto resp = devreg.dispatch(Request{ "127.0.0.1", "GET", "/ECHO", "" });
 
     REQUIRE(resp == http::status_code::NotFound);
+}
+
+
+TEST_CASE("dev_registry: call /mgmt/device with wrong params", "[core] [dev_registry]") {
+
+    MockDBase mdb{ };
+    mdb.table("device", true, { "id", "device_name", "address", "mac_address", "authentication_info", "created_at", "updated_at" }, {
+        { 3, "sensor1", "address3", "33:34:56:78:9a:bc", "ai3", "2000-02-02", "2021-05-05" },
+        { 4, "sensor2", "address4", "44:34:56:78:9a:bc", "ai4", "2000-02-02", "2021-05-05" },
+    });
+
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    DevRegistry<MockPool, MockCurl> devRegistry{ pool, reqBuilder };
+
+    {
+        const auto resp = devRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/device/3/13", "" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    {
+        const auto resp = devRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/device/-3", "" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+
+    {
+        const auto resp = devRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/device/3.5", "" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
+
+    {
+        const auto resp = devRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/device/almafa", "" });
+        REQUIRE(resp == http::status_code::BadRequest);
+    }
 }
 
 
@@ -219,30 +256,3 @@ TEST_CASE("dev_registry: check different methods with /query", "[core] [dev_regi
         #endif
     }
 }
-
-
-TEST_CASE("dev_registry: call /mgmt/device with wrong params", "[core] [dev_registry]") {
-
-    MockDBase mdb{ };
-    mdb.table("device", true, { "id", "device_name", "address", "mac_address", "authentication_info", "created_at", "updated_at" }, {
-        { 3, "sensor1.testcloud2.arrowhead.aitia.eu", "address3", "33:34:56:78:9a:bc", "ai3", "2000-02-02", "2021-05-05" },
-        { 4, "sensor2.testcloud2.arrowhead.aitia.eu", "address4", "44:34:56:78:9a:bc", "ai4", "2000-02-02", "2021-05-05" },
-    });
-
-    MockPool pool{ mdb };
-    MockCurl reqBuilder;
-
-    // create core system element
-    DevRegistry<MockPool, MockCurl> devRegistry{ pool, reqBuilder };
-
-    {
-        const auto resp = devRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/device/12/13", "" });
-        REQUIRE(resp == http::status_code::BadRequest);
-    }
-
-    {
-        const auto resp = devRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/device/almafa", "" });
-        REQUIRE(resp == http::status_code::BadRequest);
-    }
-}
-

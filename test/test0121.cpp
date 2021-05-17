@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/EventHandler/EventHandler.h"
+#include "core/apps/EventHandler/EventHandler.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

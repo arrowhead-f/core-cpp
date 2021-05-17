@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/SysRegistry/SysRegistry.h"
+#include "core/apps/SysRegistry/SysRegistry.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

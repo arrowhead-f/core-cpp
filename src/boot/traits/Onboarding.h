@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/Onboarding/Onboarding.h"
+#include "core/apps/Onboarding/Onboarding.h"
 #include "http/wget/WG_Null.h"
 
 

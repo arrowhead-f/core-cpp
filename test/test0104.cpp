@@ -12,7 +12,7 @@
 #include <catch2/catch.hpp>
 
 
-#include "core/CertAuthority/CAQueries.h"
+#include "core/apps/CertAuthority/CAQueries.h"
 
 #include "hlpr/MockDBase.h"
 

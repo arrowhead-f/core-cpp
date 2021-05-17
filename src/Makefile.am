@@ -17,6 +17,7 @@ libjson11_a_SOURCES = ../inc/json11/json11.cpp
 libutils_a_SOURCES = utils/pgetopt.cpp utils/inifile.cpp
 
 libcrate_a_SOURCES = http/crate/Response.cpp     \
+                     http/crate/Uri.cpp          \
                      http/crate/X509Cert.cpp     \
                      http/serv/RequestParser.cpp
 

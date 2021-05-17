@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/Gatekeeper/Gatekeeper.h"
+#include "core/apps/Gatekeeper/Gatekeeper.h"
 #include "http/wget/WG_Null.h"
 
 

@@ -18,7 +18,7 @@
 #include <ctime>
 #include <string>
 
-#include "core/Choreographer/Choreographer.h"
+#include "core/apps/Choreographer/Choreographer.h"
 
 #include "hlpr/JsonComp.h"
 #include "hlpr/MockCurl.h"

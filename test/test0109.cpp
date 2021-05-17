@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include "core/Orchestrator/Orchestrator.h"
+#include "core/apps/Orchestrator/Orchestrator.h"
 
 #include "hlpr/MockCurl.h"
 #include "hlpr/MockDBase.h"

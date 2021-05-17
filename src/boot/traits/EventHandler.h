@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/EventHandler/EventHandler.h"
+#include "core/apps/EventHandler/EventHandler.h"
 #include "http/wget/WG_Null.h"
 
 

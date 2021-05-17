@@ -4,7 +4,7 @@
 
 #include "config.h"
 
-#include "core/Choreographer/Choreographer.h"
+#include "core/apps/Choreographer/Choreographer.h"
 #include "http/wget/WG_Null.h"
 
 

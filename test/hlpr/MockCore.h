@@ -55,13 +55,13 @@ class MockCore {
 
             if (req.method == "GET" || req.method == "DELETE" || req.method == "POST" || req.method == "PUT" || req.method == "PATCH") {
 
-                if (!req.uri.compare(0, 7, "/sleep/")) {
-                    auto t = std::stoi(req.uri.substr(7, std::string::npos));
+                if (!req.uri.str().compare(0, 7, "/sleep/")) {
+                    auto t = std::stoi(req.uri.str().substr(7, std::string::npos));
                     std::this_thread::sleep_for(std::chrono::milliseconds(t));
                 }
 
                 {
-                    const auto it = funtory_resp.find(req.uri);
+                    const auto it = funtory_resp.find(req.uri.str());
                     if (it != funtory_resp.cend()) {
 
 
@@ -74,7 +74,7 @@ class MockCore {
                 }
 
                 {
-                    const auto it = factory_resp.find(req.uri);
+                    const auto it = factory_resp.find(req.uri.str());
                     if (it != factory_resp.cend()) {
 
                         {
