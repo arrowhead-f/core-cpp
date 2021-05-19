@@ -13,8 +13,9 @@ class SRSystemList
 
     public:
 
-        std::string SystemList::createSystemList()
+        std::string createSystemList()
         {
+/*
             mainObject = json_object_new_object();
             json_object *jData = json_object_new_array();
 
@@ -29,7 +30,10 @@ class SRSystemList
             addInt(mainObject, "count", uCount);
 
             return std::string(json_object_to_json_string(mainObject));
+*/
+         return std::string("");
         }
+
 };
 
 #endif /* _PAYLOADS_SRSYSTEMLIST_H_ */

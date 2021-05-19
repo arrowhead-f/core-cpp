@@ -50,6 +50,10 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
                 auto db = Parent::database();
                 return SRQuery<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processQuery(std::move(req));
             }
+            if ( req.uri.compare("/query/system") ) {
+                auto db = Parent::database();
+                return SRQuery<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processQuerySystem(std::move(req));
+            }
 
             return Response::from_stock(http::status_code::NotFound);
         }
