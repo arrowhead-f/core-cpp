@@ -326,6 +326,43 @@ class SRQuery {
             }
         }
 
+        Response processQuerySystem(Request &&req)
+        {
+            SRSystem oSRSystem;
+            if(!oSRSystem.setJsonPayload(req.content))
+                return ErrorResp{"Bad Json", 400, "BAD_PAYLOAD", "serviceregistry/query/system"}.getResp();
+
+            uint8_t status = oSRSystem.validSystem();
+
+            switch(status)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 5: return ErrorResp{"parameter null or empty", 400, "INVALID_PARAMETER", "serviceregistry/query/system"}.getResp();
+                case 6: return ErrorResp{"Port must be between 0 and 65535.", 400, "INVALID_PARAMETER", "serviceregistry/query/system"}.getResp();
+            }
+
+            std::string sQuery = "SELECT * FROM system_ where system_name = '" + oSRSystem.sSystemName +
+                                 "' AND address = '" + oSRSystem.sAddress +
+                                 "' AND port = '"    + oSRSystem.sPort    + "';";
+
+            if ( auto row = db.fetch(sQuery.c_str()) )
+            {
+                row->get(0, oSRSystem.sId);
+                row->get(4, oSRSystem.sAuthInfo);
+                row->get(5, oSRSystem.sCreatedAt);
+                row->get(6, oSRSystem.sUpdatedAt);
+            }
+            else
+            {
+                return ErrorResp{"No system with name: " + oSRSystem.sSystemName + ", address: " + oSRSystem.sAddress + " and port: " + oSRSystem.sPort, 400, "INVALID_PARAMETER", "serviceregistry/query/system"}.getResp();
+            }
+
+            return Response{ oSRSystem.createSRSystem() };
+        }
+
         Response processQuerySystemId(int _Id)
         {
             if (_Id < 0)

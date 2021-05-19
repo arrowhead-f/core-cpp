@@ -27,6 +27,22 @@ class SRSystem
         std::string sCreatedAt;
         std::string sUpdatedAt;
 
+        void toLowerAndTrim(std::string &_s)
+        {
+            std::transform(_s.begin(), _s.end(), _s.begin(), ::tolower);
+
+            const char *whitespace = " \n\r\t\f\v";
+            const char *s2 = _s.c_str();
+            int n = _s.size();
+            char *tmp = (char *)malloc(n+1);
+            int j = 0;
+            for(int i = 0; i < n; ++i)
+                if( strchr(whitespace, s2[i]) == NULL) tmp[j++] = s2[i];
+            tmp[j] = '\0';
+            _s = std::string(tmp);
+            free(tmp);
+        }
+
         bool setJsonPayload(std::string &_sJsonPayload)
         {
             auto status = gason::jsonParse(_sJsonPayload.data(), jsonRootValue, jsonAllocator);
@@ -43,6 +59,9 @@ class SRSystem
             if (  jsonRootValue.child("systemName").getTag() != gason::JSON_STRING ) return 2;/*JSON_NULL or JSON_FALSE*/
             bool b = true;
             sSystemName = std::string(jsonRootValue.child("systemName").toString(&b));
+            if(sSystemName.size() == 0) return 2;
+
+            toLowerAndTrim(sSystemName);
             if(sSystemName.size() == 0) return 2;
 
             if ( !jsonRootValue.child("address")                                   ) return 3;

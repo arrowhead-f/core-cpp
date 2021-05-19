@@ -40,9 +40,177 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
     REQUIRE(resp.value()  == "Got it!");
 }
 
-///////////////////////
+
+///////////////////////////
+// Private - Query/System
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: POST /query/system missing systemName", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+          "\"systemName\": \"\","
+          "\"address\": \"127.0.0.2\","
+          "\"port\": 1234"
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query/system", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"parameter null or empty\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/query/system\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /query/system missing address", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+          "\"systemName\": \"test\","
+          "\"port\": 1234"
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query/system", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"parameter null or empty\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/query/system\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+
+TEST_CASE("ServiceRegistry: POST /query/system missing port", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+          "\"systemName\": \"test\","
+          "\"address\": \"127.0.0.2\""
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query/system", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"parameter null or empty\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/query/system\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+
+TEST_CASE("ServiceRegistry: POST /query/system invalid port", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+          "\"systemName\": \"test\","
+          "\"address\": \"127.0.0.2\","
+          "\"port\": 65536"
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query/system", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Port must be between 0 and 65535.\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/query/system\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /query/system missing system from db", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+          "\"systemName\": \"test\","
+          "\"address\": \"127.0.0.2\","
+          "\"port\": 65533"
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query/system", std::string(payload) });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"No system with name: test, address: 127.0.0.2 and port: 65533\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/query/system\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: POST /query/system", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const char *payload =
+     "{"
+          "\"systemName\": \"tesT sy sTemName\","
+          "\"address\": \"127.0.0.2\","
+          "\"port\": 1234,"
+     "}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/query/system", std::string(payload) });
+
+    REQUIRE(resp == http::status_code::OK);
+
+    const char *expResp =
+    "{"
+        "\"id\": 1,"
+        "\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\","
+        "\"port\": 1234,"
+        "\"authenticationInfo\": \"fdsa\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+
+///////////////////////////////
 // Private - Query/System/Id
-//////////////////////
+//////////////////////////////
 
 
 TEST_CASE("ServiceRegistry: GET /query/system/{id} missing id", "[core] [ServiceRegistry]") {
