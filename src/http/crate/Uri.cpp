@@ -86,11 +86,28 @@ bool Uri::pathParam(std::string &result) const {
 
 bool Uri::pathId(unsigned long &value) const noexcept {
     if (uri[p] == '/') {
+        if (uri[p + 1] == '\0')
+            return false;
+
         char *endp;
         value = std::strtoul(uri.c_str() + p + 1, &endp, 10);
 
         if (*endp)
             return false;
+        return true;
+    }
+
+    return false;
+}
+
+
+bool Uri::pathId(int &value) const noexcept {
+    if (uri[p] == '/') {
+        if (uri[p + 1] == '\0')
+            return false;
+
+        value = std::stoi(uri.c_str() + p + 1);
+
         return true;
     }
 

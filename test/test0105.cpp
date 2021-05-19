@@ -41,6 +41,104 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 ///////////////////////
+// Private - Query/System/Id
+//////////////////////
+
+
+TEST_CASE("ServiceRegistry: GET /query/system/{id} missing id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const auto resp1 = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/query/system", "" });
+
+    REQUIRE(resp1 == http::status_code::NotFound);
+
+    const auto resp2 = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/query/system/", "" });
+
+    REQUIRE(resp1 == http::status_code::NotFound);
+}
+
+TEST_CASE("ServiceRegistry: GET /query/system/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/query/system/12", "" });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"System with id 12 not found.\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/query/system/{id}\"}";
+
+    const std::string sExpResp(expResp);
+
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /query/system/{id} negative id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/query/system/-1", "" });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"Id must be greater than 0.\",\"errorCode\": 400,\"exceptionType\": \"BAD_PAYLOAD\",\"origin\": \"serviceregistry/query/system/{id}\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /query/system/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    // create core system element
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/query/system/1", "" });
+
+    REQUIRE(resp == http::status_code::OK);
+
+    const char *expResp =
+    "{"
+        "\"id\": 1,"
+        "\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\","
+        "\"port\": 1234,"
+        "\"authenticationInfo\": \"fdsa\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+///////////////////////
 // Client - Query
 //////////////////////
 
