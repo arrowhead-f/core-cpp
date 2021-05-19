@@ -127,6 +127,7 @@ class Uri {
         bool pathParam(std::string&) const;
 
         bool pathId(unsigned long &value) const noexcept;
+        bool pathId(int &value)           const noexcept;
 
         const std::string& str() const noexcept {
             return uri;

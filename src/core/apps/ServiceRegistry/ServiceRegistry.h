@@ -22,17 +22,31 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
         using Core<DBPool, RB>::Core;
 
         Response handleGET(Request &&req) final {
-            if (req.uri.compare("/echo")){ return Response{"Got it!"}; }
+            if( req.uri.compare("/echo") ){ return Response{"Got it!"}; }
+
+            if( req.uri.consume("/query/system") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return SRQuery<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processQuerySystemId( id );
+                }
+                else
+                {
+                    return Response::from_stock(http::status_code::NotFound);
+                }
+            }
 
             return Response::from_stock(http::status_code::NotFound);
         }
 
         Response handlePOST(Request &&req) final {
-            if (req.uri.compare("/register")) {
+            if ( req.uri.compare("/register") ) {
                 auto db = Parent::database();
                 return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req));
             }
-            if (req.uri.compare("/query")) {
+            if ( req.uri.compare("/query") ) {
                 auto db = Parent::database();
                 return SRQuery<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processQuery(std::move(req));
             }
@@ -51,9 +65,9 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
         Response handleDELETE(Request &&req) final {
             auto parser = Uri::Parser{ req.uri };
 
-            if(parser.check() == true && static_cast<bool>(parser) == true)
+            if ( parser.check() == true && static_cast<bool>(parser) == true )
             {
-                if(req.uri.compare("/unregister"))
+                if ( req.uri.compare("/unregister") )
                 {
                     std::string service_definition;
                     std::string system_name;
@@ -67,22 +81,22 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
 
                     while(1){
                         auto &&kv = *parser;
-                        if(kv.first.compare("service_definition") == 0)
+                        if ( kv.first.compare("service_definition") == 0 )
                         {
                             servDefExists = true;
                             service_definition = kv.second;
                         }
-                        else if(kv.first.compare("system_name") == 0)
+                        else if ( kv.first.compare("system_name") == 0 )
                         {
                             sysNameExists = true;
                             system_name = kv.second;
                         }
-                        else if(kv.first.compare("address") == 0)
+                        else if ( kv.first.compare("address") == 0 )
                         {
                             addrExists = true;
                             address = kv.second;
                         }
-                        else if(kv.first.compare("port") == 0)
+                        else if ( kv.first.compare("port") == 0 )
                         {
                             portExists = true;
                             port = kv.second;
@@ -90,11 +104,11 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
 
                         ++parser;
 
-                        if(static_cast<bool>(parser) == false)
+                        if ( static_cast<bool>(parser) == false )
                             break;
                     }
 
-                    if(servDefExists && sysNameExists && addrExists && portExists)
+                    if ( servDefExists && sysNameExists && addrExists && portExists )
                     {
                         auto db = Parent::database();
                         return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processUnregister(service_definition, system_name, address, port);

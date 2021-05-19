@@ -6,6 +6,7 @@
 
 #include "../payloads/ServiceQueryForm.h"
 #include "../payloads/ServiceQueryList.h"
+#include "../payloads/SRSystem.h"
 
 #include "core/Core.h"
 #include "../utils/DbWrapper.h"
@@ -322,6 +323,33 @@ class SRQuery {
                 }
 
                 ++it;
+            }
+        }
+
+        Response processQuerySystemId(int _Id)
+        {
+            if (_Id < 0)
+                return ErrorResp{"Id must be greater than 0.", 400, "BAD_PAYLOAD", "serviceregistry/query/system/{id}"}.getResp();
+
+            std::string sQuery = "SELECT * FROM system_ where id = " + std::to_string(_Id) + ";";
+
+            if ( auto row = db.fetch(sQuery.c_str()) )
+            {
+                SRSystem oSRSystem;
+
+                row->get(0, oSRSystem.sId);
+                row->get(1, oSRSystem.sSystemName);
+                row->get(2, oSRSystem.sAddress);
+                row->get(3, oSRSystem.sPort);
+                row->get(4, oSRSystem.sAuthInfo);
+                row->get(5, oSRSystem.sCreatedAt);
+                row->get(6, oSRSystem.sUpdatedAt);
+
+                return Response{ oSRSystem.createSRSystem() };
+            }
+            else
+            {
+                return ErrorResp{"System with id " + std::to_string(_Id) + " not found.", 400, "INVALID_PARAMETER", "serviceregistry/query/system/{id}"}.getResp();
             }
         }
 
