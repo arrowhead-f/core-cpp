@@ -51,7 +51,6 @@ public:
         if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
         {
             dbSaveContent(_sTable, _sCheckColumn, _sCheckValue, false);
-            //todo: get ID as db.query() response!
             dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
         }
     }
@@ -68,7 +67,6 @@ public:
         if( !dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue))
         {
             dbSaveContent(_sTable, _sInsertColumn, _sInsertValue, true);
-            //todo: get ID as db.query() response!
             dbContentExists(_sReturnColumn, _sTable, _sCheckColumn, _sCheckValue, _rRetValue);
         }
     }

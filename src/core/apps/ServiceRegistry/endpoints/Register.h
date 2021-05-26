@@ -1,8 +1,4 @@
 
-//todo:
-//metadata json -> key=value + urlencode, and reverse
-
-
 #ifndef _ENDPOINTS_REGISTER_H_
 #define _ENDPOINTS_REGISTER_H_
 
@@ -239,11 +235,7 @@ class Register {
                 row->get(3, oServiceRegistryEntry.sQData.sServiceUri);
                 row->get(4, oServiceRegistryEntry.sQData.sEndOfValidity);
                 row->get(5, oServiceRegistryEntry.sQData.sSecure);
-
-                std::string sMetaData;
-                row->get(6, sMetaData);
-                oServiceRegistryEntry.sQData.sMetadata = dbMetadataToJsonMetadata(sMetaData);
-
+                row->get(6, oServiceRegistryEntry.sQData.sMetadata);
                 row->get(7, oServiceRegistryEntry.sQData.sVersion);
                 row->get(8, oServiceRegistryEntry.sQData.sCreatedAt);
                 row->get(9, oServiceRegistryEntry.sQData.sUpdatedAt);
@@ -254,33 +246,6 @@ class Register {
             }
 
             return 0;
-        }
-
-        std::string dbMetadataToJsonMetadata(std::string _dbMeta)
-        {
-            std::string sJsonMeta = "{";
-            std::string token;
-            std::istringstream tokenStream(_dbMeta);
-            while(std::getline(tokenStream, token, ','))
-            {
-                std::istringstream tokenStream2(token);
-                std::string key;
-                std::string value;
-                std::getline(tokenStream2, key, '=');
-                if ( key.size() != 0)
-                {
-                    std::getline(tokenStream2, value, '=');
-                    if ( value.size() != 0)
-                        sJsonMeta += "\"" + key + "\":"+"\""+value+"\",";
-                }
-            }
-
-            if(sJsonMeta.size() != 1)
-                sJsonMeta.back() = '}';
-            else
-                sJsonMeta += "}";
-
-            return sJsonMeta;
         }
 
         Response processUnregister(std::string &_rServiceDefinition, std::string &_rSystemName, std::string &_rsAddress, std::string &_rsPort)

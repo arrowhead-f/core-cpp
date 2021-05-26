@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include "commonPayloads.h"
 #include "../utils/SRJsonBuilder.h"
 
 #include <ctype.h>
@@ -12,7 +11,8 @@
 #include <sstream>
 #include <fstream>
 
-class ServiceQueryList{
+class ServiceQueryList : SRPayloads
+{
 
 private:
 
@@ -62,7 +62,7 @@ public:
             if(vServQueryData[i].sMetadata.size() < 2)
                 vServQueryData[i].sMetadata = "{}";
 
-            jArrayElement.addObj("metadata", dbMetadataToJsonMetadata(vServQueryData[i].sMetadata));
+            jArrayElement.addMetaData("metadata", vServQueryData[i].sMetadata);
 
             //version - int
             jArrayElement.addInt("version", vServQueryData[i].sVersion);
@@ -95,33 +95,6 @@ public:
         jResponse.addInt("unfilteredHits", hits);
 
         return jResponse.str();
-    }
-
-    std::string dbMetadataToJsonMetadata(std::string _dbMeta)
-    {
-        std::string sJsonMeta = "{";
-        std::string token;
-        std::istringstream tokenStream(_dbMeta);
-        while(std::getline(tokenStream, token, ','))
-        {
-            std::istringstream tokenStream2(token);
-            std::string key;
-            std::string value;
-            std::getline(tokenStream2, key, '=');
-            if ( key.size() != 0)
-            {
-                std::getline(tokenStream2, value, '=');
-                if ( value.size() != 0)
-                    sJsonMeta += "\"" + key + "\":"+"\""+value+"\",";
-            }
-        }
-
-        if(sJsonMeta.size() != 1)
-            sJsonMeta.back() = '}';
-        else
-            sJsonMeta += "}";
-
-        return sJsonMeta;
     }
 
 };

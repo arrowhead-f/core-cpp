@@ -38,6 +38,39 @@ public:
     void addObj(std::string key, const std::string &value){
         writeObj(key.c_str(), value);
     }
+
+    void addMetaData(std::string key, const std::string &value)
+    {
+        addObj(key, dbMetadataToJsonMetadata(value));
+    }
+
+    std::string dbMetadataToJsonMetadata(std::string _dbMeta)
+    {
+        std::string sJsonMeta = "{";
+        std::string token;
+        std::istringstream tokenStream(_dbMeta);
+        while(std::getline(tokenStream, token, ','))
+        {
+            std::istringstream tokenStream2(token);
+            std::string key;
+            std::string value;
+            std::getline(tokenStream2, key, '=');
+            if ( key.size() != 0)
+            {
+                std::getline(tokenStream2, value, '=');
+                if ( value.size() != 0)
+                    sJsonMeta += "\"" + key + "\":"+"\""+value+"\",";
+            }
+        }
+
+        if(sJsonMeta.size() != 1)
+            sJsonMeta.back() = '}';
+        else
+            sJsonMeta += "}";
+
+        return sJsonMeta;
+    }
+
 };
 
 #endif /* _UTILS_SRJSONBUILDER_H_ */

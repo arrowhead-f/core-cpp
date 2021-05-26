@@ -17,12 +17,13 @@
 #include <sstream>
 #include <fstream>
 
-#include <sys/socket.h>	//socket
-#include <arpa/inet.h>	//inet_addr
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 
 template<typename DB>
-class SRQuery {
+class SRQuery : SRPayloads
+{
 
     private:
         DB &db;

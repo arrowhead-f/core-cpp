@@ -3,13 +3,13 @@
 
 #include <string>
 #include <vector>
-#include "commonPayloads.h"
+#include "SRPayloads.h"
 #include "gason/gason.h"
 #include "../utils/SRJsonBuilder.h"
-
 #include <ctype.h>
 
-class ServiceRegistryEntry{
+class ServiceRegistryEntry : SRPayloads
+{
 
 private:
 
@@ -72,22 +72,6 @@ public:
         return 0;
     }
 
-    void toLowerAndTrim(std::string &_s)
-    {
-        std::transform(_s.begin(), _s.end(), _s.begin(), ::tolower);
-
-        const char *whitespace = " \n\r\t\f\v";
-        const char *s2 = _s.c_str();
-        int n = _s.size();
-        char *tmp = (char *)malloc(n+1);
-        int j = 0;
-        for(int i = 0; i < n; ++i)
-            if( strchr(whitespace, s2[i]) == NULL) tmp[j++] = s2[i];
-        tmp[j] = '\0';
-        _s = std::string(tmp);
-        free(tmp);
-    }
-
     uint8_t parseRegistryEntry(std::string &_errResp)
     {
         sServiceDefinition = std::string(jsonRootValue.child("serviceDefinition").toString());
@@ -118,13 +102,13 @@ public:
 
         sEndOfValidity = std::string(jsonRootValue.child("endOfValidity").toString());
 
-        if( !validEndOfValidity() )
+        if( !validEndOfValidity(sEndOfValidity.c_str()) )
             return 3;
 
         sSecure = std::string(jsonRootValue.child("secure").toString());
         toLowerAndTrim(sSecure);
 
-        uint8_t status = validSecurityType(); // 4 or 5
+        uint8_t status = validSecurityType(sSecure, sProviderSystem_AuthInfo); // 4 or 5
 
         if( status )
             return status;
@@ -211,7 +195,7 @@ public:
         if(sQData.sMetadata.size() < 2)
             sQData.sMetadata = "{}";
 
-        jResponse.addObj("metadata", sQData.sMetadata);
+        jResponse.addMetaData("metadata", sQData.sMetadata);
 
 //version - double? int?
         jResponse.addDbl("version", sQData.sVersion);
@@ -241,52 +225,6 @@ public:
     {
         fillJsonResponse();
         return jResponse.str();
-    }
-
-    bool validEndOfValidity()
-    {
-        //YYYY-MM-DD hh:mm:ss
-        const char *c = sEndOfValidity.c_str();
-
-        if( !isdigit(c[0]) || !isdigit(c[1]) || !isdigit(c[2]) || !isdigit(c[3])) return false;
-        if( c[4] != '-' || c[7] != '-')          return false;
-        if( !isdigit(c[5]) || !isdigit(c[6]) || !isdigit(c[8]) || !isdigit(c[9])) return false;
-        if( c[10] != ' ' || c[13] != ':' || c[16] != ':' )                        return false;
-        if(!isdigit(c[11]) || !isdigit(c[12]) ) return false;
-        if(!isdigit(c[14]) || !isdigit(c[15]) ) return false;
-        if(!isdigit(c[17]) || !isdigit(c[18]) ) return false;
-
-        return true;
-    }
-
-    uint8_t validSecurityType()
-    {
-        if( sSecure.compare("not_secure")  != 0 &&
-            sSecure.compare("certificate") != 0 &&
-            sSecure.compare("token") != 0
-          ) return 4;
-
-        if(sProviderSystem_AuthInfo.size() != 0)
-            if( sSecure.compare("not_secure") == 0)
-                return 5;
-
-        if(sSecure.compare("certificate") == 0 || sSecure.compare("token") == 0)
-            if(sProviderSystem_AuthInfo.size() == 0)
-                return 5;
-
-        return 0;
-    }
-
-    bool validInterfaceName(std::string &_intf)
-    {
-        //protocol-SECURE-JSON or protocol-INSECURE-JSON
-        char *s = strchr(_intf.c_str(), '-');
-        if(s == NULL)  return false;
-
-        std::string str = std::string(s+1);
-        if( str.compare("secure-json") != 0 && str.compare("insecure-json") != 0) return false;
-
-        return true;
     }
 
 };

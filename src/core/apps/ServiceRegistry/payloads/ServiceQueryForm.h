@@ -4,13 +4,13 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "commonPayloads.h"
+#include "SRPayloads.h"
 #include "gason/gason.h"
 #include "../utils/SRJsonBuilder.h"
-
 #include <ctype.h>
 
-class ServiceQueryForm{
+class ServiceQueryForm : SRPayloads
+{
 
 private:
 
@@ -30,34 +30,6 @@ public:
     bool bMaxVersionReqExists;
     int iMaxVersionReq;
     bool bPingProviders;
-
-    void toLowerAndTrim(std::string &_s)
-    {
-        std::transform(_s.begin(), _s.end(), _s.begin(), ::tolower);
-
-        const char *whitespace = " \n\r\t\f\v";
-        const char *s2 = _s.c_str();
-        int n = _s.size();
-        char *tmp = (char *)malloc(n+1);
-        int j = 0;
-        for(int i = 0; i < n; ++i)
-            if( strchr(whitespace, s2[i]) == NULL) tmp[j++] = s2[i];
-        tmp[j] = '\0';
-        _s = std::string(tmp);
-        free(tmp);
-    }
-
-    bool validInterfaceName(std::string &_intf)
-    {
-        //protocol-SECURE-JSON or protocol-INSECURE-JSON
-        char *s = strchr(_intf.c_str(), '-');
-        if(s == NULL)  return false;
-
-        std::string str = std::string(s+1);
-        if( str.compare("secure-json") != 0 && str.compare("insecure-json") != 0) return false;
-
-        return true;
-    }
 
     bool setJsonPayload(std::string &_sJsonPayload)
     {
