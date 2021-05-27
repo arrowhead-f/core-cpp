@@ -40,6 +40,161 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
     REQUIRE(resp.value()  == "Got it!");
 }
 
+///////////////////////////
+// Mgmt - DELETE systems/{id}
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/systems/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/systems/2", "" });
+
+    REQUIRE(resp == http::status_code(200));
+}
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/systems/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/systems/1", "" });
+
+    REQUIRE(resp == http::status_code(200));
+}
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/systems/{id} negative id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/systems/-1", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+///////////////////////////
+// Mgmt - DELETE services/{id}
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/services/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/services/11", "" });
+
+    REQUIRE(resp == http::status_code(200));
+}
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/services/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/services/1", "" });
+
+    REQUIRE(resp == http::status_code(200));
+}
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/services/{id} negative id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/services/-1", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+///////////////////////////
+// Mgmt - DELETE {id}
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, {
+        {1, 1, 1, "mockuri1", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 12, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/3", "" });
+
+    REQUIRE(resp == http::status_code(200));
+}
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, {
+        {1, 1, 1, "mockuri1", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 12, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/1", "" });
+
+    REQUIRE(resp == http::status_code(200));
+}
+
+TEST_CASE("ServiceRegistry: DELETE /mgmt/{id} negative id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, {
+        {1, 1, 1, "mockuri1", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 12, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "DELETE", "/mgmt/-1", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
 
 ///////////////////////////
 // Private - Query/System

@@ -5,6 +5,7 @@
 
 #include "endpoints/Register.h"
 #include "endpoints/SRQuery.h"
+#include "endpoints/MgmtDelete.h"
 
 #include "http/crate/Uri.h"
 
@@ -21,8 +22,12 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
 
         using Core<DBPool, RB>::Core;
 
-        Response handleGET(Request &&req) final {
-            if( req.uri.compare("/echo") ){ return Response{"Got it!"}; }
+        Response handleGET(Request &&req) final
+        {
+            if( req.uri.compare("/echo") )
+            {
+                return Response{ "Got it!" };
+            }
 
             if( req.uri.consume("/query/system") )
             {
@@ -124,8 +129,40 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
                 }
             }
 
+            if( req.uri.consume("/mgmt/systems") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtDelete<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtDeleteSystemsId( id );
+                }
+            }
+
+            if( req.uri.consume("/mgmt/services") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtDelete<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtDeleteServicesId( id );
+                }
+            }
+
+            if( req.uri.consume("/mgmt") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtDelete<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtDeleteId( id );
+                }
+            }
+
             return Response::from_stock(http::status_code::NotImplemented);
         }
+
+
 };
 
 #endif  /* _CORE_SERVICEREGISTRY_H_ */
