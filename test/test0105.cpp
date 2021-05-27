@@ -212,6 +212,49 @@ TEST_CASE("ServiceRegistry: GET /mgmt/systems/{id} negative id", "[core] [Servic
 }
 
 ///////////////////////////
+// Mgmt - GET services/{id}
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services/1", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"id\": 1,"
+        "\"serviceDefinition\": \"testservice\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services/41", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+///////////////////////////
 // Mgmt - DELETE systems/{id}
 //////////////////////////
 

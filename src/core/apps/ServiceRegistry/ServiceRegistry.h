@@ -54,6 +54,16 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
                 }
             }
 
+            if( req.uri.consume("/mgmt/services") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtGet<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtGetServicesId( id );
+                }
+            }
+
             if( req.uri.consume("/mgmt") )
             {
                 int id;
