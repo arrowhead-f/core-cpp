@@ -41,6 +41,77 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 ///////////////////////////
+// Mgmt - GET systems/{id}
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt/systems/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems/1", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"id\": 1,"
+        "\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\","
+        "\"port\": 1234,"
+        "\"authenticationInfo\": \"fdsa\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/systems/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems/23", "" });
+
+    REQUIRE(resp == http::status_code(400));
+
+    const char *expResp = "{\"errorMessage\": \"System with id 23 not found.\",\"errorCode\": 400,\"exceptionType\": \"INVALID_PARAMETER\",\"origin\": \"serviceregistry/mgmt/systems/{id}\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/systems/{id} negative id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems/-23", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+///////////////////////////
 // Mgmt - DELETE systems/{id}
 //////////////////////////
 
