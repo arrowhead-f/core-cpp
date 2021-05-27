@@ -10,6 +10,7 @@
 #include "../utils/Error.h"
 #include "../payloads/SRSystem.h"
 #include "../payloads/ServiceRegistryEntry.h"
+#include "../payloads/ServiceDefinition.h"
 
 template<typename DB>
 class MgmtGet {
@@ -175,10 +176,29 @@ class MgmtGet {
             if(_Id < 1)
                 return ErrorResp{"Id must be greater than 0.", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/services/{id}"}.getResp();
 
-            return Response{ "in progress" };
+            ServiceDefinition oServiceDefinition;
+            uint8_t status = processServiceDefinition(_Id, oServiceDefinition);
+            if(status)
+                return ErrorResp{"Service definition with id of '" + std::to_string(_Id) + "' does not exist", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/services/{id}"}.getResp();
+
+            return Response{ oServiceDefinition.createServiceDefinition() };
         }
 
+        uint8_t processServiceDefinition(int _Id, ServiceDefinition &_roServiceDefinition)
+        {
+            std::string sQuery = "SELECT * FROM service_definition WHERE id = '" + std::to_string(_Id) + "';";
 
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                std::string s;
+                row->get(0, _roServiceDefinition.sId);
+                row->get(1, _roServiceDefinition.sServiceDefinition);
+                row->get(2, _roServiceDefinition.sCreatedAt);
+                row->get(3, _roServiceDefinition.sUpdatedAt);
+                return 0;
+            }
+            return 1;
+        }
 };
 
 #endif   /* _ENDPOINTS_MGMTGET_H_ */
