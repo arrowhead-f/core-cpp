@@ -14,7 +14,6 @@ class MgmtDelete {
 
     private:
         DB &db;
-        ServiceRegistryEntry oServiceRegistryEntry;
 
     public:
 

@@ -6,6 +6,7 @@
 #include "endpoints/Register.h"
 #include "endpoints/SRQuery.h"
 #include "endpoints/MgmtDelete.h"
+#include "endpoints/MgmtGet.h"
 
 #include "http/crate/Uri.h"
 
@@ -40,6 +41,16 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
                 else
                 {
                     return Response::from_stock(http::status_code::NotFound);
+                }
+            }
+
+            if( req.uri.consume("/mgmt/systems") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtGet<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtGetSystemsId( id );
                 }
             }
 
