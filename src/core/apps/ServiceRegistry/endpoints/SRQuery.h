@@ -345,20 +345,20 @@ class SRQuery : SRPayloads
                 case 6: return ErrorResp{"Port must be between 0 and 65535.", 400, "INVALID_PARAMETER", "serviceregistry/query/system"}.getResp();
             }
 
-            std::string sQuery = "SELECT * FROM system_ where system_name = '" + oSRSystem.sSystemName +
-                                 "' AND address = '" + oSRSystem.sAddress +
-                                 "' AND port = '"    + oSRSystem.sPort    + "';";
+            std::string sQuery = "SELECT * FROM system_ where system_name = '" + oSRSystem.stSystemData.sSystemName +
+                                 "' AND address = '" + oSRSystem.stSystemData.sAddress +
+                                 "' AND port = '"    + oSRSystem.stSystemData.sPort    + "';";
 
             if ( auto row = db.fetch(sQuery.c_str()) )
             {
-                row->get(0, oSRSystem.sId);
-                row->get(4, oSRSystem.sAuthInfo);
-                row->get(5, oSRSystem.sCreatedAt);
-                row->get(6, oSRSystem.sUpdatedAt);
+                row->get(0, oSRSystem.stSystemData.sId);
+                row->get(4, oSRSystem.stSystemData.sAuthInfo);
+                row->get(5, oSRSystem.stSystemData.sCreatedAt);
+                row->get(6, oSRSystem.stSystemData.sUpdatedAt);
             }
             else
             {
-                return ErrorResp{"No system with name: " + oSRSystem.sSystemName + ", address: " + oSRSystem.sAddress + " and port: " + oSRSystem.sPort, 400, "INVALID_PARAMETER", "serviceregistry/query/system"}.getResp();
+                return ErrorResp{"No system with name: " + oSRSystem.stSystemData.sSystemName + ", address: " + oSRSystem.stSystemData.sAddress + " and port: " + oSRSystem.stSystemData.sPort, 400, "INVALID_PARAMETER", "serviceregistry/query/system"}.getResp();
             }
 
             return Response{ oSRSystem.createSRSystem() };
@@ -375,13 +375,13 @@ class SRQuery : SRPayloads
             {
                 SRSystem oSRSystem;
 
-                row->get(0, oSRSystem.sId);
-                row->get(1, oSRSystem.sSystemName);
-                row->get(2, oSRSystem.sAddress);
-                row->get(3, oSRSystem.sPort);
-                row->get(4, oSRSystem.sAuthInfo);
-                row->get(5, oSRSystem.sCreatedAt);
-                row->get(6, oSRSystem.sUpdatedAt);
+                row->get(0, oSRSystem.stSystemData.sId);
+                row->get(1, oSRSystem.stSystemData.sSystemName);
+                row->get(2, oSRSystem.stSystemData.sAddress);
+                row->get(3, oSRSystem.stSystemData.sPort);
+                row->get(4, oSRSystem.stSystemData.sAuthInfo);
+                row->get(5, oSRSystem.stSystemData.sCreatedAt);
+                row->get(6, oSRSystem.stSystemData.sUpdatedAt);
 
                 return Response{ oSRSystem.createSRSystem() };
             }

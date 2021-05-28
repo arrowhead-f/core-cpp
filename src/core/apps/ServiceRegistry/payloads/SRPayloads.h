@@ -10,6 +10,17 @@ class SRPayloads
 
 public:
 
+    struct stSystem
+    {
+        std::string sId;
+        std::string sSystemName;
+        std::string sAddress;
+        std::string sPort;
+        std::string sAuthInfo;
+        std::string sCreatedAt;
+        std::string sUpdatedAt;
+    };
+
     struct serviceQueryData
     {
         std::string sId;
