@@ -9,6 +9,7 @@
 #include "../utils/DbWrapper.h"
 #include "../utils/Error.h"
 #include "../payloads/SRSystem.h"
+#include "../payloads/SRSystemList.h"
 #include "../payloads/ServiceRegistryEntry.h"
 #include "../payloads/ServiceDefinition.h"
 
@@ -139,13 +140,40 @@ class MgmtGet {
             return 0;
         }
 
+        Response processMgmtGetSystems()
+        {
+            SRSystemList oSRSystemList;
+            oSRSystemList.uCount = 0;
+
+            std::string sQuery = "SELECT id FROM system_";
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    std::string sID;
+                    row->get(0, sID);
+
+                    SRSystem oSRSystem;
+                    processSystem(sID, oSRSystem);
+
+                    oSRSystemList.vSRSystem.push_back(oSRSystem.stSystemData);
+                    oSRSystemList.uCount++;
+                } while( row->next() );
+            }
+            else
+            {
+                return ErrorResp{"Empty response from system_ table", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems"}.getResp();
+            }
+
+            return Response{ oSRSystemList.createSystemList() };
+        }
+
         Response processMgmtGetSystemsId(int _Id)
         {
             if(_Id < 1)
                 return ErrorResp{"Id must be greater than 0.", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/systems/{id}"}.getResp();
 
             SRSystem oSRSystem;
-            uint8_t status = processSystem(_Id, oSRSystem);
+            uint8_t status = processSystem(std::to_string(_Id), oSRSystem);
 
             if(status)
                 return ErrorResp{"System with id " + std::to_string(_Id) + " not found.", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems/{id}"}.getResp();
@@ -153,19 +181,19 @@ class MgmtGet {
             return Response{ oSRSystem.createSRSystem() };
         }
 
-        uint8_t processSystem(int _Id, SRSystem &_roSystem)
+        uint8_t processSystem(std::string _sId, SRSystem &_roSystem)
         {
-            std::string sQuery = "SELECT * FROM system_ WHERE id = '" + std::to_string(_Id) + "';";
+            std::string sQuery = "SELECT * FROM system_ WHERE id = '" + _sId + "';";
             if (auto row = db.fetch(sQuery.c_str()) )
             {
                 std::string s;
-                row->get(0, _roSystem.sId);
-                row->get(1, _roSystem.sSystemName);
-                row->get(2, _roSystem.sAddress);
-                row->get(3, _roSystem.sPort);
-                row->get(4, _roSystem.sAuthInfo);
-                row->get(5, _roSystem.sCreatedAt);
-                row->get(6, _roSystem.sUpdatedAt);
+                row->get(0, _roSystem.stSystemData.sId);
+                row->get(1, _roSystem.stSystemData.sSystemName);
+                row->get(2, _roSystem.stSystemData.sAddress);
+                row->get(3, _roSystem.stSystemData.sPort);
+                row->get(4, _roSystem.stSystemData.sAuthInfo);
+                row->get(5, _roSystem.stSystemData.sCreatedAt);
+                row->get(6, _roSystem.stSystemData.sUpdatedAt);
                 return 0;
             }
             return 1;

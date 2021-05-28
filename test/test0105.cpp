@@ -141,6 +141,83 @@ TEST_CASE("ServiceRegistry: GET /mgmt/{id} valid id", "[core] [ServiceRegistry]"
 }
 
 ///////////////////////////
+// Mgmt - GET systems
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt/systems ok", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname1", "127.0.0.1", 1234, "fdsa1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, "testsystemname2", "127.0.0.2", 1235, "fdsa2", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, "testsystemname3", "127.0.0.3", 1236, "fdsa3", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+            "{"
+                "\"id\": 1,"
+                "\"systemName\": \"testsystemname1\","
+                "\"address\": \"127.0.0.1\","
+                "\"port\": 1234,"
+                "\"authenticationInfo\": \"fdsa1\","
+                "\"createdAt\": \"2020-09-11 10:39:08\","
+                "\"updatedAt\": \"2020-09-11 10:39:40\""
+            "},"
+            "{"
+                "\"id\": 2,"
+                "\"systemName\": \"testsystemname2\","
+                "\"address\": \"127.0.0.2\","
+                "\"port\": 1235,"
+                "\"authenticationInfo\": \"fdsa2\","
+                "\"createdAt\": \"2020-09-11 10:39:08\","
+                "\"updatedAt\": \"2020-09-11 10:39:40\""
+            "},"
+            "{"
+                "\"id\": 3,"
+                "\"systemName\": \"testsystemname3\","
+                "\"address\": \"127.0.0.3\","
+                "\"port\": 1236,"
+                "\"authenticationInfo\": \"fdsa3\","
+                "\"createdAt\": \"2020-09-11 10:39:08\","
+                "\"updatedAt\": \"2020-09-11 10:39:40\""
+            "}"
+        "],"
+        "\"count\": 3"
+    "}";
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/systems empty db", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+     
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+///////////////////////////
 // Mgmt - GET systems/{id}
 //////////////////////////
 

@@ -12,19 +12,13 @@ class SRSystem : SRPayloads
 {
     private:
 
-    gason::JsonAllocator jsonAllocator;
-    gason::JsonValue     jsonRootValue;
+        gason::JsonAllocator jsonAllocator;
+        gason::JsonValue     jsonRootValue;
 
-    SRJsonBuilder        jResponse;
+        SRJsonBuilder        jResponse;
 
     public:
-        std::string sId;
-        std::string sSystemName;
-        std::string sAddress;
-        std::string sPort;
-        std::string sAuthInfo;
-        std::string sCreatedAt;
-        std::string sUpdatedAt;
+        stSystem stSystemData;
 
         bool setJsonPayload(std::string &_sJsonPayload)
         {
@@ -41,17 +35,17 @@ class SRSystem : SRPayloads
             if ( !jsonRootValue.child("systemName")                                ) return 1;
             if (  jsonRootValue.child("systemName").getTag() != gason::JSON_STRING ) return 2;/*JSON_NULL or JSON_FALSE*/
             bool b = true;
-            sSystemName = std::string(jsonRootValue.child("systemName").toString(&b));
-            if(sSystemName.size() == 0) return 2;
+            stSystemData.sSystemName = std::string(jsonRootValue.child("systemName").toString(&b));
+            if(stSystemData.sSystemName.size() == 0) return 2;
 
-            toLowerAndTrim(sSystemName);
-            if(sSystemName.size() == 0) return 2;
+            toLowerAndTrim(stSystemData.sSystemName);
+            if(stSystemData.sSystemName.size() == 0) return 2;
 
             if ( !jsonRootValue.child("address")                                   ) return 3;
             if (  jsonRootValue.child("address").getTag() != gason::JSON_STRING    ) return 4;/*JSON_NULL or JSON_FALSE*/
             b = true;
-            sAddress = std::string(jsonRootValue.child("address").toString(&b));
-            if(sAddress.size() == 0) return 4;
+            stSystemData.sAddress = std::string(jsonRootValue.child("address").toString(&b));
+            if(stSystemData.sAddress.size() == 0) return 4;
 
             if ( !jsonRootValue.child("port")                                      ) return 5;
 
@@ -59,20 +53,20 @@ class SRSystem : SRPayloads
             if( ( port < 0 ) || ( port > 65535 ) )
                 return 6;
 
-            sPort = std::to_string(port);
+            stSystemData.sPort = std::to_string(port);
 
             return 0;
         }
 
         void fillJsonResponse()
         {
-            jResponse.addInt("id", sId);
-            jResponse.addStr("systemName", sSystemName);
-            jResponse.addStr("address", sAddress);
-            jResponse.addInt("port", sPort);
-            jResponse.addStr("authenticationInfo", sAuthInfo);
-            jResponse.addStr("createdAt", sCreatedAt);
-            jResponse.addStr("updatedAt", sUpdatedAt);
+            jResponse.addInt("id", stSystemData.sId);
+            jResponse.addStr("systemName", stSystemData.sSystemName);
+            jResponse.addStr("address", stSystemData.sAddress);
+            jResponse.addInt("port", stSystemData.sPort);
+            jResponse.addStr("authenticationInfo", stSystemData.sAuthInfo);
+            jResponse.addStr("createdAt", stSystemData.sCreatedAt);
+            jResponse.addStr("updatedAt", stSystemData.sUpdatedAt);
         }
 
         std::string createSRSystem()
@@ -80,6 +74,7 @@ class SRSystem : SRPayloads
             fillJsonResponse();
             return jResponse.str();
         }
+
 };
 
 #endif /* _PAYLOADS_SRSYSTEM_H_ */
