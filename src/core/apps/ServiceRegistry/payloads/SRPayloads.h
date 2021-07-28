@@ -10,6 +10,14 @@ class SRPayloads
 
 public:
 
+    struct stServDef
+    {
+        std::string sId;
+        std::string sServiceDefinition;
+        std::string sCreatedAt;
+        std::string sUpdatedAt;
+    };
+
     struct stSystem
     {
         std::string sId;

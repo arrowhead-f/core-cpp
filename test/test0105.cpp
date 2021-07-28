@@ -141,6 +141,236 @@ TEST_CASE("ServiceRegistry: GET /mgmt/{id} valid id", "[core] [ServiceRegistry]"
 }
 
 ///////////////////////////
+// Mgmt - GET services
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services ok", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+         {1,  "testservice1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+         {2,  "testservice2", "2020-09-11 10:39:09", "2020-09-11 10:39:40"},
+         {3,  "testservice3", "2020-09-11 10:39:10", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 1, \"systemName\": \"testservice1\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 2,\"systemName\": \"testservice2\",\"createdAt\": \"2020-09-11 10:39:09\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 3,\"systemName\": \"testservice3\",\"createdAt\": \"2020-09-11 10:39:10\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":3"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services page", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+         {1,  "testservice1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+         {2,  "testservice2", "2020-09-11 10:39:09", "2020-09-11 10:39:40"},
+         {3,  "testservice3", "2020-09-11 10:39:10", "2020-09-11 10:39:40"},
+         {4,  "testservice4", "2020-09-11 10:39:11", "2020-09-11 10:39:40"},
+         {5,  "testservice5", "2020-09-11 10:39:12", "2020-09-11 10:39:40"},
+         {6,  "testservice6", "2020-09-11 10:39:13", "2020-09-11 10:39:40"},
+         {7,  "testservice7", "2020-09-11 10:39:20", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services?page=5", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 6,\"systemName\": \"testservice6\",\"createdAt\": \"2020-09-11 10:39:13\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 7,\"systemName\": \"testservice7\",\"createdAt\": \"2020-09-11 10:39:20\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":2"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services item_per_page", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+         {1,  "testservice1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+         {2,  "testservice2", "2020-09-11 10:39:09", "2020-09-11 10:39:40"},
+         {3,  "testservice3", "2020-09-11 10:39:10", "2020-09-11 10:39:40"},
+         {4,  "testservice4", "2020-09-11 10:39:11", "2020-09-11 10:39:40"},
+         {5,  "testservice5", "2020-09-11 10:39:12", "2020-09-11 10:39:40"},
+         {6,  "testservice6", "2020-09-11 10:39:13", "2020-09-11 10:39:40"},
+         {7,  "testservice7", "2020-09-11 10:39:20", "2020-09-11 10:39:40"},
+         {8,  "testservice8", "2020-09-11 10:39:30", "2020-09-11 10:39:40"},
+         {9,  "testservice9", "2020-09-11 10:39:21", "2020-09-11 10:39:40"},
+         {10, "testservice10", "2020-09-11 10:39:22", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services?page=2&item_per_page=2", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 3,\"systemName\": \"testservice3\",\"createdAt\": \"2020-09-11 10:39:10\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 4,\"systemName\": \"testservice4\",\"createdAt\": \"2020-09-11 10:39:11\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":2"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services sort_field", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+         {2,  "testservice2", "2020-09-11 10:39:09", "2020-09-11 10:39:40"},
+         {3,  "testservice3", "2020-09-11 10:39:20", "2020-09-11 10:39:40"},
+         {4,  "testservice4", "2020-09-11 10:39:11", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services?sort_field=createdAt", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 2,\"systemName\": \"testservice2\",\"createdAt\": \"2020-09-11 10:39:09\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 4,\"systemName\": \"testservice4\",\"createdAt\": \"2020-09-11 10:39:11\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 3,\"systemName\": \"testservice3\",\"createdAt\": \"2020-09-11 10:39:20\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":3"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services sort_field invalid", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+         {1,  "testservice1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services?sort_field=createdAtInvalid", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services direction DESC", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+         {1,  "testservice1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+         {2,  "testservice2", "2020-09-11 10:39:09", "2020-09-11 10:39:40"},
+         {3,  "testservice3", "2020-09-11 10:39:10", "2020-09-11 10:39:40"},
+         {8,  "testservice8", "2020-09-11 10:39:30", "2020-09-11 10:39:40"},
+         {9,  "testservice9", "2020-09-11 10:39:21", "2020-09-11 10:39:40"},
+         {10, "testservice10", "2020-09-11 10:39:22", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services?sort_field=createdAt&direction=DESC", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 8,\"systemName\": \"testservice8\",\"createdAt\": \"2020-09-11 10:39:30\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 10,\"systemName\": \"testservice10\",\"createdAt\": \"2020-09-11 10:39:22\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 9,\"systemName\": \"testservice9\",\"createdAt\": \"2020-09-11 10:39:21\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 3,\"systemName\": \"testservice3\",\"createdAt\": \"2020-09-11 10:39:10\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 2,\"systemName\": \"testservice2\",\"createdAt\": \"2020-09-11 10:39:09\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "{\"id\": 1,\"systemName\": \"testservice1\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":6"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+///////////////////////////
+// Mgmt - GET services/{id}
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services/{id} valid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services/1", "" });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"id\": 1,"
+        "\"serviceDefinition\": \"testservice\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/services/{id} invalid id", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services/41", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+///////////////////////////
 // Mgmt - GET systems
 //////////////////////////
 
@@ -209,7 +439,7 @@ TEST_CASE("ServiceRegistry: GET /mgmt/systems empty db", "[core] [ServiceRegistr
     ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
 
     mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
-     
+
     });
 
     const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems", "" });
@@ -284,49 +514,6 @@ TEST_CASE("ServiceRegistry: GET /mgmt/systems/{id} negative id", "[core] [Servic
     });
 
     const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/systems/-23", "" });
-
-    REQUIRE(resp == http::status_code(400));
-}
-
-///////////////////////////
-// Mgmt - GET services/{id}
-//////////////////////////
-
-TEST_CASE("ServiceRegistry: GET /mgmt/services/{id} valid id", "[core] [ServiceRegistry]") {
-    MockDBase mdb;
-    MockPool pool{ mdb };
-    MockCurl reqBuilder;
-
-    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
-
-    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
-
-    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services/1", "" });
-
-    REQUIRE(resp == http::status_code(200));
-
-    const char *expResp =
-    "{"
-        "\"id\": 1,"
-        "\"serviceDefinition\": \"testservice\","
-        "\"createdAt\": \"2020-09-11 10:39:08\","
-        "\"updatedAt\": \"2020-09-11 10:39:40\""
-    "}";
-
-    const std::string sExpResp(expResp);
-    REQUIRE(JsonCompare(resp.value(), sExpResp));
-}
-
-TEST_CASE("ServiceRegistry: GET /mgmt/services/{id} invalid id", "[core] [ServiceRegistry]") {
-    MockDBase mdb;
-    MockPool pool{ mdb };
-    MockCurl reqBuilder;
-
-    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
-
-    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
-
-    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/services/41", "" });
 
     REQUIRE(resp == http::status_code(400));
 }

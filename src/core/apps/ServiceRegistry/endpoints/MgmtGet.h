@@ -12,6 +12,8 @@
 #include "../payloads/SRSystemList.h"
 #include "../payloads/ServiceRegistryEntry.h"
 #include "../payloads/ServiceDefinition.h"
+#include "../payloads/ServiceDefinitionList.h"
+
 
 template<typename DB>
 class MgmtGet {
@@ -212,17 +214,73 @@ class MgmtGet {
             return Response{ oServiceDefinition.createServiceDefinition() };
         }
 
+        Response processMgmtGetServices(int page, int item_per_page, std::string sort_field, std::string direction)
+        {
+            ServiceDefinitionList oServiceDefinitionList;
+            oServiceDefinitionList.uCount = 0;
+
+            std::string sQuery = "SELECT * FROM service_definition";
+
+            if(sort_field.size() != 0)
+            {
+                if( sort_field.compare("id") == 0 ||  sort_field.compare("createdAt") == 0 || sort_field.compare("updatedAt") == 0 )
+                {
+                    sQuery += ( sort_field.compare("id") == 0 ? std::string(" ORDER BY id") :
+                              ( sort_field.compare("createdAt") == 0 ? std::string(" ORDER BY created_at") :
+                              ( sort_field.compare("updatedAt") == 0 ? std::string(" ORDER BY updated_at") : "")));
+
+                    if(direction.size() != 0)
+                    {
+                        if( direction.compare("ASC") != 0 || direction.compare("DESC") != 0)
+                        {
+                            sQuery += " " + direction;
+                        }
+                        else
+                        {
+                            return ErrorResp{"Unknown parameter '" + direction + "'", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/services"}.getResp();
+                        }
+                    }
+                }
+                else
+                {
+                    return ErrorResp{"Sortable field with reference '" + sort_field + "' is not available", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/services"}.getResp();
+                }
+            }
+
+            if(item_per_page > 0)
+                sQuery += " LIMIT " + std::to_string(item_per_page);
+
+            if(page > 0)
+                sQuery += " OFFSET " + std::to_string(page);
+
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    ServiceDefinition oServiceDefinition;
+                    row->get(0, oServiceDefinition.stServDefData.sId);
+                    row->get(1, oServiceDefinition.stServDefData.sServiceDefinition);
+                    row->get(2, oServiceDefinition.stServDefData.sCreatedAt);
+                    row->get(3, oServiceDefinition.stServDefData.sUpdatedAt);
+
+                    oServiceDefinitionList.vServDef.push_back(oServiceDefinition.stServDefData);
+                    oServiceDefinitionList.uCount++;
+                } while( row->next() );
+            }
+
+            return Response{ oServiceDefinitionList.createServiceDefinitionList() };
+        }
+
+
         uint8_t processServiceDefinition(int _Id, ServiceDefinition &_roServiceDefinition)
         {
             std::string sQuery = "SELECT * FROM service_definition WHERE id = '" + std::to_string(_Id) + "';";
 
             if (auto row = db.fetch(sQuery.c_str()) )
             {
-                std::string s;
-                row->get(0, _roServiceDefinition.sId);
-                row->get(1, _roServiceDefinition.sServiceDefinition);
-                row->get(2, _roServiceDefinition.sCreatedAt);
-                row->get(3, _roServiceDefinition.sUpdatedAt);
+                row->get(0, _roServiceDefinition.stServDefData.sId);
+                row->get(1, _roServiceDefinition.stServDefData.sServiceDefinition);
+                row->get(2, _roServiceDefinition.stServDefData.sCreatedAt);
+                row->get(3, _roServiceDefinition.stServDefData.sUpdatedAt);
                 return 0;
             }
             return 1;
