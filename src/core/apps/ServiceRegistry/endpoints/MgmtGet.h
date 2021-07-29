@@ -27,6 +27,162 @@ class MgmtGet : SRPayloads {
 
         MgmtGet(DB &db) : db{ db } {}
 
+        //Returns all Service Registry Entries grouped
+        //todo: fill else cases
+        Response processMgmtGetGrouped()
+        {
+            std::string resp = "{ \"autoCompleteData\" : { \"interfaceList\" : [";
+            std::string sQuery = "SELECT id,interface_name FROM service_interface";
+
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    std::string sID;
+                    std::string sIntfName;
+                    row->get(0, sID);
+                    row->get(1, sIntfName);
+                    resp += "{\"id\" : " + sID + ", \"value\" : \"" + sIntfName + "\"},";
+                } while( row->next() );
+            }
+            resp.back() = ']';
+            resp += ",\"serviceList\" : [";
+
+            sQuery = "SELECT id,service_definition FROM service_definition";
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    std::string sID;
+                    std::string sServDef;
+                    row->get(0, sID);
+                    row->get(1, sServDef);
+                    resp += "{\"id\" : " + sID + ", \"value\" : \"" + sServDef + "\"},";
+                } while( row->next() );
+            }
+            resp.back() = ']';
+            resp += ",\"systemList\" : [";
+
+            sQuery = "SELECT id FROM system_";
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    std::string sID;
+                    row->get(0, sID);
+
+                    SRSystem oSRSystem;
+                    processSystem(sID, oSRSystem);
+                    resp += oSRSystem.createSRSystem();
+                    resp += ",";
+                } while( row->next() );
+            }
+
+            resp.back() = ']';
+            resp += "},";
+
+            resp += "\"servicesGroupedByServiceDefinition\" :[";
+            sQuery = "SELECT id,service_definition FROM service_definition";
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    resp += "{";
+                    std::string sID;
+                    std::string sServDef;
+                    row->get(0, sID);
+                    row->get(1, sServDef);
+                    resp += "\"serviceDefinitionId\" : " + sID + ", \"serviceDefinition\" : \"" + sServDef + "\"";
+                    resp += ",\"providerServices\" : [";
+
+                    sQuery = "SELECT id FROM service_registry WHERE service_id = '" + sID + "'";
+
+                    if (auto row = db.fetch(sQuery.c_str()) )
+                    {
+                        do{
+                            row->get(0, sID);
+
+                            ServiceRegistryEntry oServiceRegistryEntry;
+                            uint8_t status = processServiceRegistryEntry(std::stoi(sID), oServiceRegistryEntry);
+
+                            switch(status)
+                            {
+                                case 1: return ErrorResp{"Empty response from service_registry table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 2: return ErrorResp{"Empty response from service_definition table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 3: return ErrorResp{"Empty response from system_ table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 4: return ErrorResp{"Empty response from service_registry_interface_connection table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 5: return ErrorResp{"Empty response from service_interface table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                            }
+
+                            resp += oServiceRegistryEntry.createRegistryEntry() + std::string(",");
+                        } while( row->next() );
+                    }
+                    else
+                    {
+                        return ErrorResp{"Empty response from service_registry table", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/grouped"}.getResp();
+                    }
+
+                    resp.back() = ']'; //providerServices
+                    resp += "},";
+                } while( row->next() );
+            }
+
+            resp.back() = ']'; //servicesGroupedByServiceDefinition
+
+            resp += ",\"servicesGroupedBySystems\" :[";
+
+            sQuery = "SELECT id,system_name,address,port FROM system_";
+
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    resp += "{";
+                    std::string sID;
+                    std::string sSysName;
+                    std::string sAddr;
+                    std::string sPort;
+                    row->get(0, sID);
+                    row->get(1, sSysName);
+                    row->get(2, sAddr);
+                    row->get(3, sPort);
+
+                    resp += "\"systemId\" : " + sID + ", \"systemName\" : \"" + sSysName + "\"" + ", \"address\" : \"" + sAddr + "\", \"port\" : " + sPort;
+                    resp += ",\"services\" : [";
+
+                    sQuery = "SELECT id FROM service_registry WHERE system_id = '" + sID + "'";
+
+                    if (auto row = db.fetch(sQuery.c_str()) )
+                    {
+                        do{
+                            row->get(0, sID);
+
+                            ServiceRegistryEntry oServiceRegistryEntry;
+                            uint8_t status = processServiceRegistryEntry(std::stoi(sID), oServiceRegistryEntry);
+
+                            switch(status)
+                            {
+                                case 1: return ErrorResp{"Empty response from service_registry table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 2: return ErrorResp{"Empty response from service_definition table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 3: return ErrorResp{"Empty response from system_ table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 4: return ErrorResp{"Empty response from service_registry_interface_connection table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                                case 5: return ErrorResp{"Empty response from service_interface table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                            }
+
+                            resp += oServiceRegistryEntry.createRegistryEntry() + std::string(",");
+                        } while( row->next() );
+                    }
+                    else
+                    {
+                        return ErrorResp{"Empty response from service_registry table", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/grouped"}.getResp();
+                    }
+
+                    resp.back() = ']'; //services
+                    resp += "},";
+                } while( row->next() );
+            }
+
+            resp.back() = ']'; //servicesGroupedBySystems
+
+            resp += "}";
+            return Response{ resp };
+        }
+
         Response processMgmtGetId(int _Id)
         {
             if(_Id < 1)
@@ -49,17 +205,15 @@ class MgmtGet : SRPayloads {
 
         uint8_t processServiceRegistryEntry(int _Id, ServiceRegistryEntry &_roServiceRegistryEntry)
         {
-            std::string sServiceRegistryEntryID = std::to_string(_Id);
             std::string sServiceDefinitionID;
             std::string sProviderSystemID;
             std::vector<std::string> vsInterfaceIDs;
 
-            _roServiceRegistryEntry.sQData.sId = sServiceRegistryEntryID;
-
-            std::string sQuery = "SELECT * FROM service_registry where id = '" + sServiceRegistryEntryID + "';";
+            std::string sQuery = "SELECT * FROM service_registry where id = '" + std::to_string(_Id) + "';";
 
             if (auto row = db.fetch(sQuery.c_str()) )
             {
+                row->get(0, _roServiceRegistryEntry.sQData.sId);
                 row->get(1, sServiceDefinitionID);
                 row->get(2, sProviderSystemID);
                 row->get(3, _roServiceRegistryEntry.sQData.sServiceUri);
@@ -106,7 +260,7 @@ class MgmtGet : SRPayloads {
                 return 3;
             }
 
-            sQuery = "SELECT interface_id FROM service_registry_interface_connection WHERE service_registry_id = '" + sServiceRegistryEntryID + "';";
+            sQuery = "SELECT interface_id FROM service_registry_interface_connection WHERE service_registry_id = '" + _roServiceRegistryEntry.sQData.sId + "';";
 
             if (auto row = db.fetch(sQuery.c_str()) )
             {
