@@ -8,15 +8,17 @@
 #include "core/Core.h"
 #include "../utils/DbWrapper.h"
 #include "../utils/Error.h"
+#include "../payloads/SRPayloads.h"
 #include "../payloads/SRSystem.h"
 #include "../payloads/SRSystemList.h"
 #include "../payloads/ServiceRegistryEntry.h"
+//#include "../payloads/ServiceRegistryEntryList.h"
 #include "../payloads/ServiceDefinition.h"
 #include "../payloads/ServiceDefinitionList.h"
 
 
 template<typename DB>
-class MgmtGet {
+class MgmtGet : SRPayloads {
 
     private:
         DB &db;
@@ -270,7 +272,6 @@ class MgmtGet {
             return Response{ oServiceDefinitionList.createServiceDefinitionList() };
         }
 
-
         uint8_t processServiceDefinition(int _Id, ServiceDefinition &_roServiceDefinition)
         {
             std::string sQuery = "SELECT * FROM service_definition WHERE id = '" + std::to_string(_Id) + "';";
@@ -284,6 +285,100 @@ class MgmtGet {
                 return 0;
             }
             return 1;
+        }
+
+        Response processMgmtGetServiceDef(std::string serviceDef, int page, int item_per_page, std::string sort_field, std::string direction)
+        {
+            std::string trimmedServDef = serviceDef;
+            toLowerAndTrim(trimmedServDef);
+            const char *p = trimmedServDef.c_str();
+            int i = 0;
+            for(; ;++i)
+            {
+                if(p[i] == '\0') break;
+                if(p[i] == '?') break;
+            }
+
+            std::string sResp = "{\"data\": [";
+            int uCount = 0;
+
+            std::string sQuery = "SELECT id FROM service_definition WHERE service_definition = '" + (i == trimmedServDef.size() ? trimmedServDef : trimmedServDef.substr(0,i)) + "'";
+            std::string sID;
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    row->get(0, sID);
+                } while( row->next() );
+            }
+            else
+            {
+                return ErrorResp{"Empty response from service_definition table", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+            }
+
+            sQuery = "SELECT id FROM service_registry WHERE service_id = '" + sID + "'";
+
+            if(sort_field.size() != 0)
+            {
+                if( sort_field.compare("id") == 0 ||  sort_field.compare("createdAt") == 0 || sort_field.compare("updatedAt") == 0 )
+                {
+                    sQuery += ( sort_field.compare("id") == 0 ? std::string(" ORDER BY id") :
+                              ( sort_field.compare("createdAt") == 0 ? std::string(" ORDER BY created_at") :
+                              ( sort_field.compare("updatedAt") == 0 ? std::string(" ORDER BY updated_at") : "")));
+
+                    if(direction.size() != 0)
+                    {
+                        if( direction.compare("ASC") != 0 || direction.compare("DESC") != 0)
+                        {
+                            sQuery += " " + direction;
+                        }
+                        else
+                        {
+                            return ErrorResp{"Unknown parameter '" + direction + "'", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                        }
+                    }
+                }
+                else
+                {
+                    return ErrorResp{"Sortable field with reference '" + sort_field + "' is not available", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                }
+            }
+
+            if(item_per_page > 0)
+                sQuery += " LIMIT " + std::to_string(item_per_page);
+
+            if(page > 0)
+                sQuery += " OFFSET " + std::to_string(page);
+
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    row->get(0, sID);
+
+                    ServiceRegistryEntry oServiceRegistryEntry;
+                    uint8_t status = processServiceRegistryEntry(std::stoi(sID), oServiceRegistryEntry);
+
+                    switch(status)
+                    {
+                        case 1: return ErrorResp{"Empty response from service_registry table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                        case 2: return ErrorResp{"Empty response from service_definition table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                        case 3: return ErrorResp{"Empty response from system_ table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                        case 4: return ErrorResp{"Empty response from service_registry_interface_connection table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                        case 5: return ErrorResp{"Empty response from service_interface table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+                    }
+
+                    sResp += oServiceRegistryEntry.createRegistryEntry() + std::string(",");
+                    uCount++;
+                } while( row->next() );
+            }
+            else
+            {
+                return ErrorResp{"Empty response from service_registry table", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/servicedef/{serviceDefinition}"}.getResp();
+            }
+
+            sResp.back() = ']';
+            sResp += ",\"count\":" + std::to_string(uCount) + "}";
+
+            return Response {sResp};
         }
 };
 

@@ -140,6 +140,182 @@ TEST_CASE("ServiceRegistry: GET /mgmt/{id} valid id", "[core] [ServiceRegistry]"
     REQUIRE(JsonCompare(resp.value(), sExpResp));
 }
 
+
+///////////////////////////
+// Mgmt - GET serviceDef
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt/serviceDef ok", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, {
+        {1, 1, 1, "mockuri1", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 12, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 1, 1, "mockuri2", "2022-09-11 10:39:08", "certificate", "meta1=m,meta2=2", 13, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 14, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {4, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 16, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {5, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2,meta3=test,meta4=true", 17, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {6, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 18, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_interface", true, { "id", "interface_name", "created_at", "updated_at" }, {
+        {1, "testintf_1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, "http-secure-json", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry_interface_connection", true, { "id", "service_registry_id", "interface_id", "created_at", "updated_at" }, {
+        {1, 1, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 2, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, 2, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {4, 3, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {5, 4, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {6, 5, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {7, 6, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/servicedef/testService", "" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 1,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\": \"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\",\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\"},\"serviceUri\": \"mockuri1\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"not_secure\","
+        "\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},\"version\": 12,\"interfaces\": [{\"id\": 1,\"interfaceName\": \"testintf_1\","
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}],\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\"},{\"id\": 2,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\": \"testservice\","
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"serviceUri\": \"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"certificate\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},"
+        "\"version\": 13,\"interfaces\": [{\"id\": 1,\"interfaceName\": \"testintf_1\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\":"
+        "\"2020-09-11 10:39:40\"},{\"id\": 2,\"interfaceName\": \"http-secure-json\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\":"
+        "\"2020-09-11 10:39:40\"}],\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},{\"id\": 3,"
+        "\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\": \"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\",\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\":"
+        "\"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"serviceUri\": \"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\":"
+        "\"not_secure\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},\"version\": 14,\"interfaces\": [{\"id\": 2,\"interfaceName\": \"http-secure-json\","
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}],\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\":"
+        "\"2020-09-11 10:39:40\"},{\"id\": 4,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\": \"testservice\",\"createdAt\":"
+        "\"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\",\"address\": \"127.0.0.2\","
+        "\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"serviceUri\":"
+        "\"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"not_secure\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},\"version\": 16,"
+        "\"interfaces\": [{\"id\": 2,\"interfaceName\": \"http-secure-json\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}],"
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},{\"id\": 5,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\":"
+        "\"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"serviceUri\": \"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"not_secure\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\",\"meta3\":\"test\","
+        "\"meta4\":\"true\"},\"version\": 17,\"interfaces\": [{\"id\": 2,\"interfaceName\": \"http-secure-json\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\":"
+        "\"2020-09-11 10:39:40\"}],\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},{\"id\": 6,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\":"
+        "\"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"serviceUri\": \"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"not_secure\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},\"version\": 18,"
+        "\"interfaces\": [{\"id\": 2,\"interfaceName\": \"http-secure-json\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}],"
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":6"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/serviceDef invalid", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/servicedef/testService1234", "" });
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+TEST_CASE("ServiceRegistry: GET /mgmt/serviceDef page limit", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+        {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" }, {
+        {1, 1, 1, "mockuri1", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 12, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 1, 1, "mockuri2", "2022-09-11 10:39:08", "certificate", "meta1=m,meta2=2", 13, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 14, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {4, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 16, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {5, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2,meta3=test,meta4=true", 17, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {6, 1, 1, "mockuri2", "2022-09-11 10:39:08", "not_secure", "meta1=m,meta2=2", 18, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testsystemname", "127.0.0.2", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_interface", true, { "id", "interface_name", "created_at", "updated_at" }, {
+        {1, "testintf_1", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, "http-secure-json", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry_interface_connection", true, { "id", "service_registry_id", "interface_id", "created_at", "updated_at" }, {
+        {1, 1, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 2, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {3, 2, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {4, 3, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {5, 4, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {6, 5, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {7, 6, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt/servicedef/testService?item_per_page=2", "" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+        "\"data\": ["
+        "{\"id\": 1,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\": \"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\",\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\"},\"serviceUri\": \"mockuri1\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"not_secure\","
+        "\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},\"version\": 12,\"interfaces\": [{\"id\": 1,\"interfaceName\": \"testintf_1\","
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}],\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\"},{\"id\": 2,\"serviceDefinition\": {\"id\": 1,\"serviceDefinition\": \"testservice\","
+        "\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},\"provider\": {\"id\": 1,\"systemName\": \"testsystemname\","
+        "\"address\": \"127.0.0.2\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"},"
+        "\"serviceUri\": \"mockuri2\",\"endOfValidity\": \"2022-09-11 10:39:08\",\"secure\": \"certificate\",\"metadata\": {\"meta1\":\"m\",\"meta2\":\"2\"},"
+        "\"version\": 13,\"interfaces\": [{\"id\": 1,\"interfaceName\": \"testintf_1\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\":"
+        "\"2020-09-11 10:39:40\"},{\"id\": 2,\"interfaceName\": \"http-secure-json\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\":"
+        "\"2020-09-11 10:39:40\"}],\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}"
+        "],\"count\":2"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
 ///////////////////////////
 // Mgmt - GET services
 //////////////////////////
@@ -172,7 +348,6 @@ TEST_CASE("ServiceRegistry: GET /mgmt/services ok", "[core] [ServiceRegistry]") 
 
     const std::string sExpResp(expResp);
     REQUIRE(JsonCompare(resp.value(), sExpResp));
-
 }
 
 TEST_CASE("ServiceRegistry: GET /mgmt/services page", "[core] [ServiceRegistry]") {
