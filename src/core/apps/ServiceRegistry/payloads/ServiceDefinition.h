@@ -20,10 +20,7 @@ private:
     SRJsonBuilder        jResponse;
 
 public:
-    std::string sId;
-    std::string sServiceDefinition;
-    std::string sCreatedAt;
-    std::string sUpdatedAt;
+    stServDef stServDefData;
 
 /*
     bool setJsonPayload(std::string &_sJsonPayload)
@@ -46,10 +43,10 @@ public:
 
     void fillJsonResponse()
     {
-        jResponse.addInt( "id", sId);
-        jResponse.addStr( "serviceDefinition", sServiceDefinition);
-        jResponse.addStr( "createdAt"        , sCreatedAt);
-        jResponse.addStr( "updatedAt"        , sUpdatedAt);
+        jResponse.addInt( "id", stServDefData.sId);
+        jResponse.addStr( "serviceDefinition", stServDefData.sServiceDefinition);
+        jResponse.addStr( "createdAt"        , stServDefData.sCreatedAt);
+        jResponse.addStr( "updatedAt"        , stServDefData.sUpdatedAt);
     }
 
     std::string createServiceDefinition()
