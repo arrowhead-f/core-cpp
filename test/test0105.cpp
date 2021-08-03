@@ -41,6 +41,97 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 ///////////////////////////
+// Mgmt - GET mgmt
+//////////////////////////
+
+TEST_CASE("ServiceRegistry: GET /mgmt ok", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, { {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testprovidersystemname18", "10.1.2.3", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_interface", true, { "id", "interface_name", "created_at", "updated_at" }, {
+        {1, "http-secure-json", "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, "http-insecure-json", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry", true, { "id", "service_id", "system_id", "service_uri", "end_of_validity", "secure", "metadata", "version", "created_at", "updated_at" },
+    {
+        {1, 1, 1, "/url/url18", "2022-09-11 10:39:08", "not_secure", "key1=value1,key2=value2", 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    mdb.table("service_registry_interface_connection", true, { "id", "service_registry_id", "interface_id", "created_at", "updated_at" }, {
+        {1, 1, 1, "2020-09-11 10:39:08", "2020-09-11 10:39:40"},
+        {2, 1, 2, "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "GET", "/mgmt", "" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp =
+    "{"
+  "\"data\": ["
+    "{"
+      "\"id\": 1,"
+      "\"serviceDefinition\": {"
+        "\"id\": 1,"
+        "\"serviceDefinition\": \"testservice\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+      "},"
+      "\"provider\": {"
+        "\"id\": 1,"
+        "\"systemName\": \"testprovidersystemname18\","
+        "\"address\": \"10.1.2.3\","
+        "\"port\": 1234,"
+        "\"authenticationInfo\": \"fdsa\","
+        "\"createdAt\": \"2020-09-11 10:39:08\","
+        "\"updatedAt\": \"2020-09-11 10:39:40\""
+      "},"
+      "\"serviceUri\": \"/url/url18\","
+      "\"endOfValidity\": \"2022-09-11 10:39:08\","
+      "\"secure\": \"not_secure\","
+      "\"metadata\": {"
+        "\"key1\": \"value1\","
+        "\"key2\": \"value2\""
+      "},"
+      "\"version\": 2,"
+      "\"interfaces\": ["
+        "{"
+          "\"id\": 1,"
+          "\"interfaceName\": \"http-secure-json\","
+          "\"createdAt\": \"2020-09-11 10:39:08\","
+          "\"updatedAt\": \"2020-09-11 10:39:40\""
+        "},"
+        "{"
+          "\"id\": 2,"
+          "\"interfaceName\": \"http-insecure-json\","
+          "\"createdAt\": \"2020-09-11 10:39:08\","
+          "\"updatedAt\": \"2020-09-11 10:39:40\""
+        "}"
+      "],"
+      "\"createdAt\": \"2020-09-11 10:39:08\","
+      "\"updatedAt\": \"2020-09-11 10:39:40\""
+    "}"
+  "],"
+  "\"count\": 1"
+    "}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+///////////////////////////
 // Mgmt - GET mgmt/grouped
 //////////////////////////
 
