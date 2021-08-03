@@ -369,12 +369,45 @@ class MgmtGet : SRPayloads {
             return 0;
         }
 
-        Response processMgmtGetSystems()
+        Response processMgmtGetSystems(int page, int item_per_page, std::string sort_field, std::string direction)
         {
             SRSystemList oSRSystemList;
             oSRSystemList.uCount = 0;
 
             std::string sQuery = "SELECT id FROM system_";
+
+            if(sort_field.size() != 0)
+            {
+                if( sort_field.compare("id") == 0 ||  sort_field.compare("createdAt") == 0 || sort_field.compare("updatedAt") == 0 )
+                {
+                    sQuery += ( sort_field.compare("id") == 0 ? std::string(" ORDER BY id") :
+                              ( sort_field.compare("createdAt") == 0 ? std::string(" ORDER BY created_at") :
+                              ( sort_field.compare("updatedAt") == 0 ? std::string(" ORDER BY updated_at") : "")));
+
+                    if(direction.size() != 0)
+                    {
+                        if( direction.compare("ASC") != 0 || direction.compare("DESC") != 0)
+                        {
+                            sQuery += " " + direction;
+                        }
+                        else
+                        {
+                            return ErrorResp{"Unknown parameter '" + direction + "'", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems"}.getResp();
+                        }
+                    }
+                }
+                else
+                {
+                    return ErrorResp{"Sortable field with reference '" + sort_field + "' is not available", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems"}.getResp();
+                }
+            }
+
+            if(item_per_page > 0)
+                sQuery += " LIMIT " + std::to_string(item_per_page);
+
+            if(page > 0)
+                sQuery += " OFFSET " + std::to_string(page);
+
             if (auto row = db.fetch(sQuery.c_str()) )
             {
                 do{

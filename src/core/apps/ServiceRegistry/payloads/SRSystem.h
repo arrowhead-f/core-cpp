@@ -55,6 +55,11 @@ class SRSystem : SRPayloads
 
             stSystemData.sPort = std::to_string(port);
 
+            b = true;
+            if ( jsonRootValue.child("authenticationInfo") )
+                if ( jsonRootValue.child("authenticationInfo").getTag() == gason::JSON_STRING )
+                    stSystemData.sAuthInfo = std::string(jsonRootValue.child("authenticationInfo").toString(&b));
+
             return 0;
         }
 

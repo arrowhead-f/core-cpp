@@ -41,6 +41,36 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 /////////////////////////////////
+// Mgmt - POST /mgmt/systems
+////////////////////////////////
+
+TEST_CASE("ServiceRegistry: POST /mgmt/systems ok", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testprovidersystemname18", "10.1.2.3", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    std::string payload = "{ \"systemName\" : \"sys1\", \"address\" : \"192.168.1.2\", \"port\" : 5678}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/mgmt/systems", payload });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 2,\"systemName\": \"sys1\",\"address\": \"192.168.1.2\",\"port\": 5678,\"authenticationInfo\": \"\",\"createdAt\": \"\",\"updatedAt\": \"\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+
+}
+
+/////////////////////////////////
 // Mgmt - POST /mgmt/services
 ////////////////////////////////
 
