@@ -172,6 +172,47 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
                     auto db = Parent::database();
                     return MgmtGet<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtGetId( id );
                 }
+                else
+                {
+                    int page = 0;
+                    int itemPerPage = 0x7FffFFff;
+                    std::string sortField;
+                    std::string direction;
+
+                    auto parser = Uri::Parser{ req.uri };
+
+                    if ( parser.check() == true && static_cast<bool>(parser) == true )
+                    {
+                        while(1)
+                        {
+                            auto &&kv = *parser;
+                            if ( kv.first.compare("page") == 0 )
+                            {
+                                page = std::stoi(kv.second);
+                            }
+                            else if ( kv.first.compare("item_per_page") == 0 )
+                            {
+                                itemPerPage = std::stoi(kv.second);
+                            }
+                            else if ( kv.first.compare("sort_field") == 0 )
+                            {
+                                sortField = kv.second;
+                            }
+                            else if ( kv.first.compare("direction") == 0 )
+                            {
+                                direction = kv.second;
+                            }
+
+                            ++parser;
+
+                            if ( static_cast<bool>(parser) == false )
+                                break;
+                        }
+                    }
+
+                    auto db = Parent::database();
+                    return MgmtGet<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtGet(page, itemPerPage, sortField, direction);
+                }
             }
 
             return Response::from_stock(http::status_code::NotFound);

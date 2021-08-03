@@ -27,6 +27,77 @@ class MgmtGet : SRPayloads {
 
         MgmtGet(DB &db) : db{ db } {}
 
+        Response processMgmtGet(int page, int item_per_page, std::string sort_field, std::string direction)
+        {
+            std::string sQuery = "SELECT id FROM service_registry";
+
+            if(sort_field.size() != 0)
+            {
+                if( sort_field.compare("id") == 0 ||  sort_field.compare("createdAt") == 0 || sort_field.compare("updatedAt") == 0 )
+                {
+                    sQuery += ( sort_field.compare("id") == 0 ? std::string(" ORDER BY id") :
+                              ( sort_field.compare("createdAt") == 0 ? std::string(" ORDER BY created_at") :
+                              ( sort_field.compare("updatedAt") == 0 ? std::string(" ORDER BY updated_at") : "")));
+
+                    if(direction.size() != 0)
+                    {
+                        if( direction.compare("ASC") != 0 || direction.compare("DESC") != 0)
+                        {
+                            sQuery += " " + direction;
+                        }
+                        else
+                        {
+                            return ErrorResp{"Unknown parameter '" + direction + "'", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/services"}.getResp();
+                        }
+                    }
+                }
+                else
+                {
+                    return ErrorResp{"Sortable field with reference '" + sort_field + "' is not available", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/services"}.getResp();
+                }
+            }
+
+            if(item_per_page > 0)
+                sQuery += " LIMIT " + std::to_string(item_per_page);
+
+            if(page > 0)
+                sQuery += " OFFSET " + std::to_string(page);
+
+            int count = 0;
+            std::string resp = "{ \"data\" : [";
+            if (auto row = db.fetch(sQuery.c_str()) )
+            {
+                do{
+                    std::string sID;
+                    row->get(0, sID);
+
+                    ServiceRegistryEntry oServiceRegistryEntry;
+                    uint8_t status = processServiceRegistryEntry(std::stoi(sID), oServiceRegistryEntry);
+
+                    switch(status)
+                    {
+                        case 1: return ErrorResp{"Empty response from service_registry table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                        case 2: return ErrorResp{"Empty response from service_definition table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                        case 3: return ErrorResp{"Empty response from system_ table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                        case 4: return ErrorResp{"Empty response from service_registry_interface_connection table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                        case 5: return ErrorResp{"Empty response from service_interface table", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/grouped"}.getResp();
+                    }
+
+                    resp += oServiceRegistryEntry.createRegistryEntry() + std::string(",");
+                    ++count;
+                } while( row->next() );
+            }
+            else
+            {
+                return ErrorResp{"Empty response from service_registry table", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/grouped"}.getResp();
+            }
+
+            resp.back() = ']';
+            resp += ", \"count\" : " + std::to_string(count) + "}";
+
+            return Response{ resp };
+        }
+
         //Returns all Service Registry Entries grouped
         //todo: fill else cases
         Response processMgmtGetGrouped()
