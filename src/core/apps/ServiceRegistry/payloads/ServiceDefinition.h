@@ -22,7 +22,6 @@ private:
 public:
     stServDef stServDefData;
 
-/*
     bool setJsonPayload(std::string &_sJsonPayload)
     {
         auto status = gason::jsonParse(_sJsonPayload.data(), jsonRootValue, jsonAllocator);
@@ -33,13 +32,23 @@ public:
         return false;
     }
 
-    bool validJSONPayload()
+    uint8_t validJSONPayload()
     {
-        if( !getValue(mainObject, "serviceDefinition", sServiceDefinition) ) return false;
+        try{
+            if ( !jsonRootValue.child("serviceDefinition")                              ) return 1;
+            if (  jsonRootValue.child("serviceDefinition").getTag() != gason::JSON_STRING ) return 2;/*JSON_NULL or JSON_FALSE*/
+            bool b = true;
+            stServDefData.sServiceDefinition = std::string(jsonRootValue.child("serviceDefinition").toString(&b));
+            if(stServDefData.sServiceDefinition.size() == 0) return 2;
+            toLowerAndTrim(stServDefData.sServiceDefinition);
+        }
+        catch(...)
+        {
+            return 10;
+        }
 
-        return true;
+        return 0;
     }
-*/
 
     void fillJsonResponse()
     {
