@@ -40,6 +40,32 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
     REQUIRE(resp.value()  == "Got it!");
 }
 
+/////////////////////////////////
+// Mgmt - POST /mgmt/services
+////////////////////////////////
+
+TEST_CASE("ServiceRegistry: POST /mgmt/services ok", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+      {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "POST", "/mgmt/services", "{ \"serviceDefinition\" : \"thisIsTheServiceDefinition\"}" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 2,\"serviceDefinition\": \"thisistheservicedefinition\",\"createdAt\": \"\",\"updatedAt\": \"\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
 ///////////////////////////
 // Mgmt - GET mgmt
 //////////////////////////

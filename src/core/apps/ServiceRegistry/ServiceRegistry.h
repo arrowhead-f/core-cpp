@@ -7,6 +7,7 @@
 #include "endpoints/SRQuery.h"
 #include "endpoints/MgmtDelete.h"
 #include "endpoints/MgmtGet.h"
+#include "endpoints/MgmtPost.h"
 
 #include "http/crate/Uri.h"
 
@@ -230,6 +231,10 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
             if ( req.uri.compare("/query/system") ) {
                 auto db = Parent::database();
                 return SRQuery<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processQuerySystem(std::move(req));
+            }
+            if ( req.uri.compare("/mgmt/services") ) {
+                auto db = Parent::database();
+                return MgmtPost<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtPostServiceDefinition(std::move(req));
             }
 
             return Response::from_stock(http::status_code::NotFound);
