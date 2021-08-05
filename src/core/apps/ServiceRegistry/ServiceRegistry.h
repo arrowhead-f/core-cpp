@@ -296,6 +296,16 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
                 }
             }
 
+            if( req.uri.consume("/mgmt/systems") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtPut<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtPutSystems(std::move(req), std::to_string(id) );
+                }
+            }
+
             return Response::from_stock(http::status_code::NotImplemented);
         }
 
