@@ -9,6 +9,7 @@
 #include "endpoints/MgmtGet.h"
 #include "endpoints/MgmtPost.h"
 #include "endpoints/MgmtPut.h"
+#include "endpoints/MgmtPatch.h"
 
 #include "http/crate/Uri.h"
 
@@ -282,6 +283,26 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
         }
 
         Response handlePATCH(Request &&req) final {
+            if( req.uri.consume("/mgmt/services") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtPatch<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtPatchServiceDefinition(std::move(req), std::to_string(id) );
+                }
+            }
+
+            if( req.uri.consume("/mgmt/systems") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    return MgmtPatch<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processMgmtPatchSystems(std::move(req), std::to_string(id) );
+                }
+            }
+
             return Response::from_stock(http::status_code::NotImplemented);
         }
 
