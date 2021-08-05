@@ -41,6 +41,71 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 /////////////////////////////////
+// Mgmt - PATCH /mgmt/services/{id}
+////////////////////////////////
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/services/{id} ok1", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+      {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/services/1", "{ \"serviceDefinition\" : \"newServDef\"}" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 1,\"serviceDefinition\": \"newservdef\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/services/{id} ok2", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+      {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/services/1", "{ }" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 1,\"serviceDefinition\": \"testservice\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/services/{id} invalid", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("service_definition", true, { "id", "service_definition", "created_at", "updated_at" }, {
+      {1, "testservice", "2020-09-11 10:39:08", "2020-09-11 10:39:40"} });
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/services/3", "{ }" });
+
+    //printf("resp:\n%s\n",resp.value().c_str());
+
+    REQUIRE(resp == http::status_code(400));
+}
+
+/////////////////////////////////
 // Mgmt - PUT /mgmt/systems/{id}
 ////////////////////////////////
 
