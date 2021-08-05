@@ -27,38 +27,48 @@ class MgmtPatch : SRPayloads {
             if(!oSRSystem.setJsonPayload(req.content))
                 return ErrorResp{"Bad Json", 400, "BAD_PAYLOAD", "serviceregistry/mgmt/systems/{id}"}.getResp();
 
-            uint8_t status = oSRSystem.validSystem();
-
-            switch(status)
+            if(!oSRSystem.validSystem2())
             {
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 5: return ErrorResp{"parameter null or empty", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems/{id}"}.getResp();
-                case 6: return ErrorResp{"Port must be between 0 and 65535.", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems/{id}"}.getResp();
+                return ErrorResp{"Port must be between 0 and 65535.", 400, "INVALID_PARAMETER", "serviceregistry/mgmt/systems/{id}"}.getResp();
             }
 
-            std::string sQuery = "UPDATE system_ SET system_name = '" + oSRSystem.stSystemData.sSystemName + "', " +
-                                 "address = '" + oSRSystem.stSystemData.sAddress + "', " +
-                                 "port = " + oSRSystem.stSystemData.sPort;// + "";
+            std::string sQuery;
+            if(oSRSystem.stSystemData.sSystemName.size())
+            {
+                sQuery = "UPDATE system_ SET system_name = '" + oSRSystem.stSystemData.sSystemName + "'";
+                sQuery += " WHERE id = '" + _sId + "';";
+                db.query(sQuery.c_str());
+            }
+
+            if(oSRSystem.stSystemData.sAddress.size())
+            {
+                sQuery = "UPDATE system_ SET address = '" + oSRSystem.stSystemData.sAddress + "'";
+                sQuery += " WHERE id = '" + _sId + "';";
+                db.query(sQuery.c_str());
+            }
+
+            if(oSRSystem.stSystemData.sPort.size())
+            {
+                sQuery = "UPDATE system_ SET port = '" + oSRSystem.stSystemData.sPort + "'";
+                sQuery += " WHERE id = '" + _sId + "';";
+                db.query(sQuery.c_str());
+            }
 
             if(oSRSystem.stSystemData.sAuthInfo.size())
             {
-                sQuery += ", authentication_info = '" + oSRSystem.stSystemData.sAuthInfo + "'";
+                sQuery = "UPDATE system_ SET authentication_info = '" + oSRSystem.stSystemData.sAuthInfo + "'";
+                sQuery += " WHERE id = '" + _sId + "';";
+                db.query(sQuery.c_str());
             }
 
-            sQuery += " WHERE id = '" + _sId + "';";
-
-            db.query(sQuery.c_str());
-
-            sQuery = "SELECT * FROM system_ where system_name = '" + oSRSystem.stSystemData.sSystemName +
-                                 "' AND address = '" + oSRSystem.stSystemData.sAddress +
-                                 "' AND port = '"    + oSRSystem.stSystemData.sPort    + "';";
+            sQuery = "SELECT * FROM system_ WHERE id = '" + _sId + "'";
 
             if ( auto row = db.fetch(sQuery.c_str()) )
             {
                 row->get(0, oSRSystem.stSystemData.sId);
+                row->get(1, oSRSystem.stSystemData.sSystemName);
+                row->get(2, oSRSystem.stSystemData.sAddress);
+                row->get(3, oSRSystem.stSystemData.sPort);
                 row->get(4, oSRSystem.stSystemData.sAuthInfo);
                 row->get(5, oSRSystem.stSystemData.sCreatedAt);
                 row->get(6, oSRSystem.stSystemData.sUpdatedAt);
@@ -69,7 +79,6 @@ class MgmtPatch : SRPayloads {
             }
 
             return Response{ oSRSystem.createSRSystem() };
-
         }
 
         Response processMgmtPatchServiceDefinition(Request &&req, std::string _sId)

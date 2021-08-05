@@ -52,9 +52,7 @@ class MgmtPut : SRPayloads {
 
             db.query(sQuery.c_str());
 
-            sQuery = "SELECT * FROM system_ where system_name = '" + oSRSystem.stSystemData.sSystemName +
-                                 "' AND address = '" + oSRSystem.stSystemData.sAddress +
-                                 "' AND port = '"    + oSRSystem.stSystemData.sPort    + "';";
+            sQuery = "SELECT * FROM system_ where id = '" + _sId + "'";
 
             if ( auto row = db.fetch(sQuery.c_str()) )
             {

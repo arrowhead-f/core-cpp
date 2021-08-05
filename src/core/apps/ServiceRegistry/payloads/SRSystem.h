@@ -63,6 +63,39 @@ class SRSystem : SRPayloads
             return 0;
         }
 
+        uint8_t validSystem2()
+        {
+            if ( jsonRootValue.child("systemName").getTag() == gason::JSON_STRING )
+            {
+                bool b = true;
+                stSystemData.sSystemName = std::string(jsonRootValue.child("systemName").toString(&b));
+            }
+
+            toLowerAndTrim(stSystemData.sSystemName);
+
+            if ( jsonRootValue.child("address").getTag() == gason::JSON_STRING )
+            {
+                bool b = true;
+                stSystemData.sAddress = std::string(jsonRootValue.child("address").toString(&b));
+            }
+
+            if ( jsonRootValue.child("port"))
+            {
+                int port = jsonRootValue.child("port").toInt();
+                if( ( port < 0 ) || ( port > 65535 ) )
+                    return 0;
+                stSystemData.sPort = std::to_string(port);
+            }
+
+            if ( jsonRootValue.child("authenticationInfo").getTag() == gason::JSON_STRING )
+            {
+                bool b = true;
+                stSystemData.sAuthInfo = std::string(jsonRootValue.child("authenticationInfo").toString(&b));
+            }
+
+            return 1;
+        }
+
         void fillJsonResponse()
         {
             jResponse.addInt("id", stSystemData.sId);

@@ -41,6 +41,102 @@ TEST_CASE("ServiceRegistry: GET /echo", "[core] [ServiceRegistry]") {
 }
 
 /////////////////////////////////
+// Mgmt - PATCH /mgmt/systems/{id}
+////////////////////////////////
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/systems/{id} ok1", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testprovidersystemname18", "10.1.2.3", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    std::string payload = "{ \"systemName\" : \"sys1\"}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/systems/1", payload });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 1,\"systemName\": \"sys1\",\"address\": \"10.1.2.3\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/systems/{id} ok2", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testprovidersystemname18", "10.1.2.3", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    std::string payload = "{ \"address\": \"10.1.2.4\"}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/systems/1", payload });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 1,\"systemName\": \"testprovidersystemname18\",\"address\": \"10.1.2.4\",\"port\": 1234,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/systems/{id} ok3", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testprovidersystemname18", "10.1.2.3", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    std::string payload = "{ \"port\": 5678}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/systems/1", payload });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 1,\"systemName\": \"testprovidersystemname18\",\"address\": \"10.1.2.3\",\"port\": 5678,\"authenticationInfo\": \"fdsa\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+TEST_CASE("ServiceRegistry: PATCH /mgmt/systems/{id} ok4", "[core] [ServiceRegistry]") {
+    MockDBase mdb;
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    ServiceRegistry<MockPool, MockCurl> serviceRegistry{ pool, reqBuilder };
+
+    mdb.table("system_", true, { "id", "system_name", "address", "port", "authentication_info", "created_at", "updated_at" }, {
+        {1, "testprovidersystemname18", "10.1.2.3", 1234, "fdsa", "2020-09-11 10:39:08", "2020-09-11 10:39:40"}
+    });
+
+    std::string payload = "{ \"authenticationInfo\" : \"qqq\"}";
+
+    const auto resp = serviceRegistry.dispatch(Request{ "127.0.0.1", "PATCH", "/mgmt/systems/1", payload });
+
+    REQUIRE(resp == http::status_code(200));
+
+    const char *expResp = "{\"id\": 1,\"systemName\": \"testprovidersystemname18\",\"address\": \"10.1.2.3\",\"port\": 1234,\"authenticationInfo\": \"qqq\",\"createdAt\": \"2020-09-11 10:39:08\",\"updatedAt\": \"2020-09-11 10:39:40\"}";
+
+    const std::string sExpResp(expResp);
+    REQUIRE(JsonCompare(resp.value(), sExpResp));
+}
+
+/////////////////////////////////
 // Mgmt - PATCH /mgmt/services/{id}
 ////////////////////////////////
 
