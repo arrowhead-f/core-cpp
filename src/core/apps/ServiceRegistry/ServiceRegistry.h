@@ -258,9 +258,13 @@ template<typename DBPool, typename RB>class ServiceRegistry final : public Core<
         }
 
         Response handlePOST(Request &&req) final {
-            if ( req.uri.compare("/register") ) {
+            if ( req.uri.compare("/register")) {
                 auto db = Parent::database();
-                return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req));
+                return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req), "serviceregistry/register");
+            }
+            if ( req.uri.compare("/mgmt") ) {
+                auto db = Parent::database();
+                return Register<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.processRegister(std::move(req), "serviceregistry/mgmt");
             }
             if ( req.uri.compare("/query") ) {
                 auto db = Parent::database();

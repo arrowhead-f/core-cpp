@@ -22,25 +22,25 @@ class Register {
 
         Register(DB &db) : db{ db } {}
 
-        Response processRegister(Request &&req)
+        Response processRegister(Request &&req, std::string errURL)
         {
             if(!oServiceRegistryEntry.setJsonPayload(req.content))
-                return ErrorResp{"Bad Json"}.getResp();
+                return ErrorResp{"Bad Json", 400, "BAD_PAYLOAD", errURL}.getResp();
 
             uint8_t status = oServiceRegistryEntry.validRegistryEntry();
 
             switch( status )
             {
-                case 1: return ErrorResp{"Service definition is not specified."}.getResp();
-                case 2: return ErrorResp{"Service definition is null or blank."}.getResp();
-                case 3: return ErrorResp{"Provider system is not specified."}.getResp();
-                case 4: return ErrorResp{"Provider system name is not specified."}.getResp();
-                case 5: return ErrorResp{"Provider system address is not specified."}.getResp();
-                case 6: return ErrorResp{"Provider system port is not specified."}.getResp();
+                case 1: return ErrorResp{"Service definition is not specified.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 2: return ErrorResp{"Service definition is null or blank.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 3: return ErrorResp{"Provider system is not specified.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 4: return ErrorResp{"Provider system name is not specified.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 5: return ErrorResp{"Provider system address is not specified.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 6: return ErrorResp{"Provider system port is not specified.", 400, "BAD_PAYLOAD", errURL}.getResp();
                 //se 7: URI?
-                case 8: return ErrorResp{"Interfaces list is not specified."}.getResp();
-                case 9: return ErrorResp{"Interfaces list is null or empty."}.getResp();
-                case 10: return ErrorResp{"JSon parsing exception."}.getResp();
+                case 8: return ErrorResp{"Interfaces list is not specified.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 9: return ErrorResp{"Interfaces list is null or empty.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 10: return ErrorResp{"JSon parsing exception.", 400, "BAD_PAYLOAD", errURL}.getResp();
             }
 
             std::string errResp;
@@ -48,23 +48,23 @@ class Register {
 
             switch( status )
             {
-                case 1: return ErrorResp{"System name can't contain dot (.)", 400, "INVALID_PARAMETER"}.getResp();
-                case 2: return ErrorResp{"Port must be between 0 and 65535."}.getResp();
-                case 3: return ErrorResp{"End of validity is specified in the wrong format. Please provide UTC time using YYYY-MM-DD hh:mm:ss pattern."}.getResp();
-                case 4: return ErrorResp{"Security type is not valid."}.getResp();
-                case 5: return ErrorResp{"Security type is in conflict with the availability of the authentication info."}.getResp();
+                case 1: return ErrorResp{"System name can't contain dot (.)", 400, "INVALID_PARAMETER", errURL}.getResp();
+                case 2: return ErrorResp{"Port must be between 0 and 65535.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 3: return ErrorResp{"End of validity is specified in the wrong format. Please provide UTC time using YYYY-MM-DD hh:mm:ss pattern.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 4: return ErrorResp{"Security type is not valid.", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 5: return ErrorResp{"Security type is in conflict with the availability of the authentication info.", 400, "BAD_PAYLOAD", errURL}.getResp();
                 //?? 6: return ErrorResp{"ServiceRegistry insecure mode can not handle secure services", 400, "INVALID_PARAMETER"}.getResp();
-                case 7: return ErrorResp{"Specified interface name is not valid: " + errResp}.getResp();
+                case 7: return ErrorResp{"Specified interface name is not valid: " + errResp, 400, "BAD_PAYLOAD", errURL}.getResp();
             }
 
             status = processDB();
 
             switch(status)
             {
-                case 1: return ErrorResp{"Empty response from service_definition table"}.getResp();
-                case 2: return ErrorResp{"Empty response from system_ table"}.getResp();
-                case 3: return ErrorResp{"Empty response from service_interface table"}.getResp();
-                case 4: return ErrorResp{"Empty response from service_registry table"}.getResp();
+                case 1: return ErrorResp{"Empty response from service_definition table", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 2: return ErrorResp{"Empty response from system_ table", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 3: return ErrorResp{"Empty response from service_interface table", 400, "BAD_PAYLOAD", errURL}.getResp();
+                case 4: return ErrorResp{"Empty response from service_registry table", 400, "BAD_PAYLOAD", errURL}.getResp();
             }
 
             return Response{ oServiceRegistryEntry.createRegistryEntry() };
