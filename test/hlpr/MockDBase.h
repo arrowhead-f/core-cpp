@@ -415,6 +415,22 @@ class MockDBase : public db::Database {
             return out.str();
         }
 
+        void begin() final {
+            if (sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr))
+                throw db::Exception{ -1, "Starting transaction failed." };
+        }
+
+        void rollback() final {
+            if (sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, nullptr))
+                throw db::Exception{ -1, "Transaction rollback failed." };
+        }
+
+        void commit() final {
+            if (sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr))
+                throw db::Exception{ -1, "Transaction commit failed." };
+        }
+
+
 };  // class MockDBase
 
 

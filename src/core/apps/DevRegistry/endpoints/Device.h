@@ -49,7 +49,7 @@ namespace Endpoint {
                 unsigned long id = 0;
                 if (req.uri.pathId(id))
                     return getDeviceById(id);
-                return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/mgmt/device");
+                return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/mgmt/device");
             }
 
         private:
@@ -64,7 +64,7 @@ namespace Endpoint {
                     cr.template write_dictionary_items<decltype(row), R::ID, R::CreatedAt, R::UpdatedAt, R::DeviceName, R::Address, R::MacAddress, R::AuthenticationInfo>(row);
                     return Response{ cr.str() };
                 }
-                return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/mgmt/device");
+                return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/mgmt/device");
             }
 
     };  // class Device

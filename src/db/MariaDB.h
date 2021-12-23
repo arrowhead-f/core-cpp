@@ -336,6 +336,20 @@ namespace db {
                 return result;
             }
 
+            void begin() final {
+                if (mysql_query(mysql, "START TRANSACTION"))
+                    throw Exception{ -1, "Starting transaction failed.", mysql_errno(mysql), mysql_error(mysql) };
+            }
+
+            void rollback() final {
+                if (mysql_query(mysql, "ROLLBACK"))
+                    throw Exception{ -1, "Transaction rollback failed.", mysql_errno(mysql), mysql_error(mysql) };
+            }
+
+            void commit() final {
+                if (mysql_query(mysql, "COMMIT"))
+                    throw Exception{ -1, "Transaction commit failed.", mysql_errno(mysql), mysql_error(mysql) };
+            }
 
     };  // class MariaDB
 

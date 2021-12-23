@@ -145,6 +145,11 @@ namespace db {
             virtual std::string escape(const char*, char quote = '\'') const = 0;
             virtual std::string escape(const std::string&, char quote = '\'') const = 0;
 
+            /// Transaction handling.
+            virtual void begin()    = 0;
+            virtual void commit()   = 0;
+            virtual void rollback() = 0;
+
     };  // class Database
 
 
@@ -152,19 +157,33 @@ namespace db {
     /// class. It handles the RAII style aquisition and release of the
     /// underlying real database connection.
     template<typename DB>class DatabaseConnection {
+
         private:
+
             std::size_t      idx;            ///< The index of the database.
             DB               *db = nullptr;  ///< The real database used.
+            bool             txn = false;    ///< True, if we are in the middle of a transaction.
 
             std::function<void(std::size_t)> deleter;  ///< Function used to return the database to the pool.
 
         public:
+
+            struct Transaction {};
+            static constexpr Transaction transaction;
 
             /// Requests a new database connection from the pool.
             template<typename Pool>
             explicit DatabaseConnection(Pool &pool) : deleter{ [&pool](std::size_t idx){ pool.unlock(idx); } } {
                 static_assert(std::is_base_of<DB, typename Pool::DatabaseType>::value, "Wrong database type.");
                 std::tie(idx, db) = pool.lock();
+            }
+
+            /// Requests a new database connection from the pool.
+            template<typename Pool>
+            explicit DatabaseConnection(Pool &pool, Transaction) : deleter{ [&pool](std::size_t idx){ pool.unlock(idx); } } {
+                static_assert(std::is_base_of<DB, typename Pool::DatabaseType>::value, "Wrong database type.");
+                std::tie(idx, db) = pool.lock();
+                begin();
             }
 
             DatabaseConnection(const DatabaseConnection&) = delete;
@@ -182,6 +201,7 @@ namespace db {
 
             /// Dtor. Handles back the database (connection) to the pool.
             ~DatabaseConnection() {
+                rollback();
                 if(deleter)
                     deleter(idx);
             }
@@ -224,6 +244,27 @@ namespace db {
 
             [[nodiscard]] std::string escape(const std::string &txt, char quote = '\'') const {
                 return db->escape(txt, quote);
+            }
+
+            void begin() {
+                if (!txn) {
+                    txn = true;
+                    db->begin();
+                }
+            }
+
+            void commit() {
+                if (txn) {
+                    db->commit();
+                    txn = false;
+                }
+            }
+
+            void rollback() {
+                if (txn) {
+                    db->rollback();
+                    txn =false;
+                }
             }
 
     };  // class DatabaseConnection
