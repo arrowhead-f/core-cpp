@@ -265,3 +265,34 @@ TEST_CASE("[mockdbase]: Test subquery", "[selftest] [mockdbase] [sql]") {
     REQUIRE(count == 5);
     REQUIRE(s == "bcef");
 }
+
+
+TEST_CASE("[mockdbase]: Test transaction (rollback)", "[selftest] [mockdbase] [sql]") {
+
+    MockDBase mdb;
+
+    mdb.table("table1", true, { "c1", "c2", "c3" }, { {1, "bbb", "3"}, {2, "aaa", "4"}, {3, nullptr, "5"} });
+
+    mdb.begin();
+    mdb.query("UPDATE table1 SET c2 = 'ccc' WHERE c1 = 3");
+    mdb.rollback();
+
+    std::string s;
+    REQUIRE(mdb.fetch("SELECT c2 FROM table1 WHERE c1 = 3", s) == false);
+}
+
+
+TEST_CASE("[mockdbase]: Test transaction (commit)", "[selftest] [mockdbase] [sql]") {
+
+    MockDBase mdb;
+
+    mdb.table("table1", true, { "c1", "c2", "c3" }, { {1, "bbb", "3"}, {2, "aaa", "4"}, {3, nullptr, "5"} });
+
+    mdb.begin();
+    mdb.query("UPDATE table1 SET c2 = 'ccc' WHERE c1 = 3");
+    mdb.commit();
+
+    std::string s;
+    REQUIRE(mdb.fetch("SELECT c2 FROM table1 WHERE c1 = 3", s) == true);
+    REQUIRE(s == "ccc");
+}

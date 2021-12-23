@@ -60,6 +60,16 @@ class Response {
         /// \return                 a stock reply set base the status code
         static Response options(http::status_code sc, const char *method);
 
+        /// Get a stock reply for the given ErrorT.
+        /// \param sc               the status code of the reply
+        /// \param et               the type of the error
+        /// \param msg              the message sent
+        /// \param origin           the url of the or-igin
+        /// \return                 a stock reply set base on the error's type and the status code
+        template<typename ErrorType>
+        static Response from_stock(http::status_code sc, typename ErrorType::Type et, const std::string &msg, const std::string &origin) {
+            return ErrorType::from_stock(sc, et, msg, origin);
+        }
 };
 
 
