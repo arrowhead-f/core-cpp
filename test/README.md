@@ -20,7 +20,8 @@
 | 0053 | inifile                     | test the ini file reader/parser |
 | 0054 | jsonwriter                  | check json string creation      |
 | 0055 | crypto, sha256              | checking sha256 generation      |
-| 0056 | jsonwriter                  | check jsonwriter with db::Row   |
+| 0056 | jsonwriter                  | checks jsonwriter with db::Row  |
+| 0057 | jsonview                    | checks JsonView and JsonCView   |
 | 0058 | urlparser                   | checks the url parser class     |
 | 0059 | x509cert                    | checks the x509cert class       |
 | 0093 | rbcurl, client              | test Curl-based request builder |
@@ -57,6 +58,9 @@
 | 0132 | core, sys_registry          | test SysRegistry (happy path)   |
 | 0133 | core, sys_registry          | test SysRegistry (sad path)     |
 | 0134 | core, sys_registry, query   | test queries for SysRegistry    |
+| 0135 | core, authorization         | test Authorization (happy path) |
+| 0136 | core, authorization         | test Authorization (sad path)   |
+| 0137 | core, authorization, query  | test queries for Authorization  |
 | 0501 | server, request_parser      | test request parser             |
 | 0502 | server, https               | test the https server           |
 | 0502 | server, https               | test the https server           |

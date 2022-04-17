@@ -66,8 +66,15 @@ class ModelBuilder {
         /// Returns the model. Should be only called after the builder
         /// is checked whether the moel was created.
         /// \return                 regerence to the stored model
-        const M& model() const noexcept {
+        const M& model() const & noexcept {
             return theModel.value;
+        }
+
+        /// Returns the model. Should be only called after the builder
+        /// is checked whether the moel was created.
+        /// \return                 regerence to the stored model
+        M&& model() const && noexcept {
+            return std::move(theModel.value);
         }
 };
 

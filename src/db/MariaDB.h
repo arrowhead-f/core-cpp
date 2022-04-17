@@ -135,7 +135,7 @@ namespace db {
                             mysql_stmt_free_result(stmt);
                         mysql_stmt_close(stmt);
                         stmt = nullptr;
-                        throw Exception{ -1, "Statement fetch error", mysql_stmt_errno(stmt) };
+                        throw Exception{ -1, "Statement fetch error >>>.", mysql_stmt_errno(stmt) };
                     }
                 }
 
@@ -159,7 +159,7 @@ namespace db {
                         case MYSQL_NO_DATA:
                             return false;
                     }
-                    throw Exception{ -1, "Statement fetch error.", mysql_stmt_errno(stmt) };
+                    throw Exception{ -1, "Statement fetch error 222.", mysql_stmt_errno(stmt) };
                 }
 
                 bool get(unsigned column, int &result) const final {

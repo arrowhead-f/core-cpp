@@ -1,4 +1,4 @@
-bin_PROGRAMS = authorizer       \
+bin_PROGRAMS = authorization    \
                cert_authority   \
                choreographer    \
                dev_registry     \
@@ -41,9 +41,9 @@ libraries = libgason.a libjson11.a libutils.a libcrate.a
 ################################################################################################
 ################################################################################################
 
-authorizer_CPPFLAGS = -include boot/traits/Authorizer.h $(AM_CPPFLAGS)
-authorizer_SOURCES = $(sources)
-authorizer_LDADD = $(libraries)
+authorization_CPPFLAGS = -include boot/traits/Authorization.h $(AM_CPPFLAGS)
+authorization_SOURCES = $(sources)
+authorization_LDADD = $(libraries)
 
 cert_authority_CPPFLAGS = -include boot/traits/CertAuthority.h $(AM_CPPFLAGS)
 cert_authority_SOURCES = $(sources) 

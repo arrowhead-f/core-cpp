@@ -23,7 +23,7 @@
 
 #include "core/helpers/ErrorResponse.h"
 #include "core/helpers/ModelBuilder.h"
-#include "core/helpers/CommonPParser.h"
+#include "core/helpers/QueryString.h"
 
 #include "../models/Device.h"
 #include "../parsers/Device.h"
@@ -67,7 +67,7 @@ namespace Endpoint {
                 const auto count = Queries::Device(db).getDeviceCount();
 
                 // parse parameters
-                const auto pp = CommonPParser{ req.uri, { "id", "createdAt", "updatedAt" } };
+                const auto pp = QueryString{ req.uri, { "id", "createdAt", "updatedAt" } };
                 if (!pp)
                     return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, PARAM_ERROR, ENDPOINT);
 
