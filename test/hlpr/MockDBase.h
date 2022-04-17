@@ -274,7 +274,7 @@ class MockDBase : public db::Database {
             auto rc = sqlite3_exec(db, statement, _first, nullptr, nullptr);
             if (rc != 0 && rc != SQLITE_ABORT) {
                 std::cerr << "|" << rc << "|\n";
-                throw db::Exception{ 4, "Statement fetch error.444" };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH01]" };
             }
 
             if (rc != SQLITE_ABORT)
@@ -287,7 +287,7 @@ class MockDBase : public db::Database {
                 result = std::stoi(Global::result.second);
 
             } catch (...) {
-                throw db::Exception{ 4, "Statement fetch error." };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH02]" };
             }
 
             return true;
@@ -296,7 +296,7 @@ class MockDBase : public db::Database {
         bool fetch(const char* statement, long &result) override {
             auto rc = sqlite3_exec(db, statement, _first, nullptr, nullptr);
             if (rc != 0 && rc != SQLITE_ABORT) {
-                throw db::Exception{ 4, "Statement fetch error.3333" };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH03]" };
             }
 
             if (rc != SQLITE_ABORT)
@@ -309,7 +309,7 @@ class MockDBase : public db::Database {
                 result = std::stol(Global::result.second);
 
             } catch (...) {
-                throw db::Exception{ 4, "Statement fetch error." };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH04]" };
             }
 
             return true;
@@ -318,7 +318,7 @@ class MockDBase : public db::Database {
         bool fetch(const char *statement, double &result) override {
             auto rc = sqlite3_exec(db, statement, _first, nullptr, nullptr);
             if (rc != 0 && rc != SQLITE_ABORT) {
-                throw db::Exception{ 4, "Statement fetch error.3333" };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH05]" };
             }
 
             if (rc != SQLITE_ABORT)
@@ -331,7 +331,7 @@ class MockDBase : public db::Database {
                 result = std::stod(Global::result.second);
 
             } catch (...) {
-                throw db::Exception{ 4, "Statement fetch error." };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH06]" };
             }
 
             return true;
@@ -340,7 +340,7 @@ class MockDBase : public db::Database {
         bool fetch(const char *statement, std::string &result) override {
             auto rc = sqlite3_exec(db, statement, _first, nullptr, nullptr /*&errmsg*/);
             if (rc != 0 && rc != SQLITE_ABORT) {
-                throw db::Exception{ 4, "Statement fetch error.555" };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH07]" };
             }
 
             if (rc != SQLITE_ABORT)
@@ -353,7 +353,7 @@ class MockDBase : public db::Database {
                 result = Global::result.second;
 
             } catch (...) {
-                throw db::Exception{ 4, "Statement fetch error." };
+                throw db::Exception{ 4, "Statement fetch error. [AFETCH08]" };
             }
 
             return true;
@@ -364,7 +364,7 @@ class MockDBase : public db::Database {
 
             auto rc = sqlite3_exec(db, statement, _allof, nullptr, nullptr);
             if (rc != 0) {
-                throw db::Exception{ 4, "Statement fetch error.444" };
+                throw db::Exception{ 4, "Statement fetch error. [RFETCH01]" };
             }
 
             if (Global::response.empty())
@@ -376,20 +376,20 @@ class MockDBase : public db::Database {
         void query(const char *statement) override {
             auto rc = sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
             if (rc)
-                throw db::Exception{ 4, "Statement fetch error.888" };
+                throw db::Exception{ 4, "Statement fetch error. [AQUERY01]" };
         }
 
         std::size_t query_and_check(const char *statement) override {
             auto rc = sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
             if (rc)
-                throw db::Exception{ 4, "Statement fetch error.888" };
+                throw db::Exception{ 4, "Statement fetch error. [AQUERY02]" };
             return sqlite3_changes(db);
         }
 
         bool insert(const char *statement, int &id) override {
             auto rc = sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
             if (rc)
-                throw db::Exception{ 4, "Statement fetch error.888" };
+                throw db::Exception{ 4, "Statement fetch error. [AISN0001]" };
             id = static_cast<int>(sqlite3_last_insert_rowid(db));
             return (id != 0);
         }
@@ -397,7 +397,7 @@ class MockDBase : public db::Database {
         bool insert(const char *statement, long &id) override {
             auto rc = sqlite3_exec(db, statement, nullptr, nullptr, nullptr);
             if (rc)
-                throw db::Exception{ 4, "Statement fetch error.888" };
+                throw db::Exception{ 4, "Statement fetch error. [AISN0002]" };
             id = static_cast<long>(sqlite3_last_insert_rowid(db));
             return (id != 0);
         }

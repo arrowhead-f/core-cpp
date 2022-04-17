@@ -11,8 +11,8 @@
  *   * Budapest University of Technology and Economics - implementation
  *     * ng201
  ********************************************************************************/
-#ifndef _CORE_CORE_H_
-#define _CORE_CORE_H_
+#ifndef CORE_CORE_H_
+#define CORE_CORE_H_
 
 
 #include <cstring>
@@ -136,6 +136,13 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }
 
+        /// Calls the EP's handle function.
+        /// \param req              The request to handle.
+        /// \return                 The response.
+        template<template<typename> typename EP>auto invoke(Request &&req) {
+            auto db = database();
+            return EP<db::DatabaseConnection<typename DBPool::DatabaseType>>{ db }.handle(std::move(req));
+        }
 
         /// Calls the EP's given member function with the given req, if the request's method is the given one.
         /// Otherwise returns method not allowed.
@@ -154,6 +161,8 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
             #endif
             return Response::from_stock(http::status_code::MethodNotAllowed);
         }
+
+
 
         /// Handles all calls to a CRUD capable endpoint.
         /// \param req              The request to handle.

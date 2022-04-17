@@ -162,7 +162,6 @@ namespace db {
 
             std::size_t      idx;            ///< The index of the database.
             DB               *db = nullptr;  ///< The real database used.
-            bool             txn = false;    ///< True, if we are in the middle of a transaction.
 
             std::function<void(std::size_t)> deleter;  ///< Function used to return the database to the pool.
 
@@ -201,7 +200,6 @@ namespace db {
 
             /// Dtor. Handles back the database (connection) to the pool.
             ~DatabaseConnection() {
-                rollback();
                 if(deleter)
                     deleter(idx);
             }
@@ -247,28 +245,36 @@ namespace db {
             }
 
             void begin() {
-                if (!txn) {
-                    txn = true;
-                    db->begin();
-                }
+                db->begin();
             }
 
             void commit() {
-                if (txn) {
-                    db->commit();
-                    txn = false;
-                }
+                db->commit();
             }
 
             void rollback() {
-                if (txn) {
-                    db->rollback();
-                    txn =false;
-                }
+                db->rollback();
             }
 
     };  // class DatabaseConnection
 
+
+    template<typename DB>
+    class TransactionLock {
+
+        private:
+
+            DB   &db;
+            bool com = false;
+
+        public:
+
+            TransactionLock(DB &db) : db { db } { db.begin(); }
+
+            void commit() { db.commit(); com = true; }
+
+            ~TransactionLock() { if (!com) db.rollback(); }
+    };
 
 }  // namespace db
 

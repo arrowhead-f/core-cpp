@@ -11,12 +11,40 @@
  *   * Budapest University of Technology and Economics - implementation
  *     * ng201
  ********************************************************************************/
-#ifndef _CORE_COREUTILS_H_
-#define _CORE_COREUTILS_H_
+#ifndef CORE_COREUTILS_H_
+#define CORE_COREUTILS_H_
+
+
+#ifdef __cpp_lib_invoke
+  #include <functional>
+#endif
 
 
 #include "helpers/ErrorResponse.h"
 #include "helpers/CoreException.h"
 
+#include "http/crate/Request.h"
 
-#endif  /* _CORE_COREUTILS_H_ */
+/// This function calls f if the method of the request matches the one given as 
+/// the first parameter.
+/// \param method                   method
+/// \param req                      the request
+/// \param f                        callable to call
+/// \return                         the response
+template<typename F>inline auto invokeIf(const char *method, Request &&req, F f) {
+
+    if (req.method == method) {
+        #ifdef __cpp_lib_invoke
+          return std::invoke(std::move(f), std::move(req));
+        #else
+          return f(std::move(req));
+        #endif
+    }
+    #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
+      if (req.method == "OPTIONS")
+          return Response::options(http::status_code::OK, method);
+    #endif
+    return Response::from_stock(http::status_code::MethodNotAllowed);
+}
+
+#endif  /* CORE_COREUTILS_H_ */

@@ -22,7 +22,7 @@
 #include "http/crate/Uri.h"
 
 #include "core/CoreUtils.h"
-#include "core/helpers/CommonPParser.h"
+#include "core/helpers/QueryString.h"
 #include "core/helpers/ModelBuilder.h"
 
 #include "../models/DeviceRegistry.h"
@@ -66,7 +66,7 @@ namespace Endpoint {
                 const auto count = Queries::DeviceRegistry(db).getCount();
 
                 // parse parameters
-                const auto pp = CommonPParser{ req.uri, { "id", "createdAt", "updatedAt" } };
+                const auto pp = QueryString{ req.uri, { "id", "createdAt", "updatedAt" } };
                 if (!pp)
                     return ErrorResponse::from_stock(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, PARAM_ERROR, ENDPOINT);
 
