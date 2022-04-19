@@ -363,6 +363,24 @@ class JsonBuilder {
             out << "},";
         }
 
+
+        template<typename InputIt, typename Fun>
+        auto write_dictionary_items(const char *key, InputIt first, InputIt last, Fun fun) {
+            out << "\"" << key << "\": {";
+
+            if (first != last) {
+                for (; first != last; ++first) {
+                    fun(out, *first);
+                    out << ",";
+                }
+                out.seekp(-1, std::ios::end);
+            }
+
+            out.seekp(-1, std::ios::end);
+            out << "},";
+        }
+
+
 };  // class JsonBuilder
 
 #endif  /* UTILS_JSONBUILDER_H_ */

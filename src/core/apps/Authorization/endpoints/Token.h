@@ -22,13 +22,15 @@
 #include "core/helpers/ErrorResponse.h"
 
 //#include "../queries/Device.h"
-//#include "../responses/Device.h"
+#include "../requests/models/TokenRule.h"
+#include "../requests/parsers/TokenRule.h"
+#include "../responses/TokenData.h"
 
 
 namespace Endpoint {
 
-    /// This endpont handles all intracloud requests.
-    /// Corresponds to URI: ANY /mgmt/intracloud
+    /// This endpoint handles the token requests.
+    /// Corresponds to URI: ANY /token
     template<typename DB>
     class Token {
 
@@ -45,10 +47,45 @@ namespace Endpoint {
             /// Get the device by the given id.
             /// \param req          the request
             Response handle(Request &&req) {
+                try {
+                    const auto model = Parsers::TokenRule::parse(req.content.c_str());
+                    if (!model.validate()) {
+                        return generateTokens(model);
+                    }
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/token");
+                }
+                catch(const std::exception &e) {
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/token");
+                }
                 return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::UNAVAILABLE, "Parameter error.", "/token");
             }
 
         private:
+
+            /// Generates tokens.
+            /// \param id           The id of the requested record.
+            /// \return             TokenData json.
+            Response generateTokens(const Models::TokenRule &model) {
+                int i = 0;
+
+                try {
+                    using R = Responses::TokenData;
+                    auto cr = R{ };
+
+                    cr.for_each("tokenData", std::cbegin(model.providers), std::cend(model.providers), [&i](JsonBuilder &builder, const auto &data) {
+                        builder << R::ProviderAddress{ data.first.address } << R::ProviderName{ data.first.systemName } << R::ProviderPort{ data.first.port };
+                        builder.write_dictionary_items("tokens", std::cbegin(data.second), std::cend(data.second), [&i](auto &out, const auto &data) {
+                            out << "\"" << data << "\": " << "\"token" << std::to_string(i++) << "\"";
+                        });
+                    });
+
+                    return Response{ cr.str() };
+                }
+                catch(const std::exception &e) {
+
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/mgmt/intracloud");
+                }
+            }
 
 
     };  // class Token

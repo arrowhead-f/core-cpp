@@ -1111,3 +1111,42 @@ TEST_CASE("authorization: POST /intercloud/check (multiple providers match)", "[
     }
 
 }
+
+
+TEST_CASE("authorization: POST /token", "[core] [authorization]") {
+
+    MockDBase mdb{ };
+    MockPool pool{ mdb };
+    MockCurl reqBuilder;
+
+    // create core system element
+    Authorization<MockPool, MockCurl> authorizer{ pool, reqBuilder };
+
+    const char *req = R"json(
+        {
+            "consumer": {
+                "systemName": "ClientSystemName",
+                "address": "127.0.0.1",
+                "port": 8000
+            },
+            "consumerCloud": null,
+            "duration": -1,
+            "providers": [
+                {
+                    "provider": {
+                        "address":"127.0.0.1",
+                        "port": 5002,
+                        "systemName":"testsystemname2",
+                        "authenticationInfo":"fdsa"
+                    },
+                    "serviceInterfaces": [ "http-secure-json", "http-insecure-json" ]
+                }
+            ],
+            "service":"testservice_1"
+        })json";
+
+    const auto resp = authorizer.dispatch(Request{ "127.0.0.1", "POST", "/token", req });
+    REQUIRE(resp == http::status_code::OK);
+
+    //{"tokenData": [{"providerAddress": "127.0.0.1","providerName": "testsystemname2","providerPort": 5002,"tokens": {"http-secure-json": "token0,"http-insecure-json": "token1}}]}
+}
