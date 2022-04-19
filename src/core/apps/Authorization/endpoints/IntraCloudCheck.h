@@ -48,23 +48,16 @@ namespace Endpoint {
             /// Get the device by the given id.
             /// \param req          the request
             Response handle(Request &&req) {
-                if (req.method == "POST") {
-                    try {
-                        const auto model = Parsers::IntraCloudCheck::parse(req.content.c_str());
-                        if (!model.validate()) {
-                            return checkRule(model);
-                        }
-                        return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intracloud/check");
+                try {
+                    const auto model = Parsers::IntraCloudCheck::parse(req.content.c_str());
+                    if (!model.validate()) {
+                        return checkRule(model);
                     }
-                    catch(const std::exception &e) {
-                        return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intracloud/check");
-                    }
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intracloud/check");
                 }
-                #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
-                else if (req.method == "OPTION") {
-                    return Response::options(http::status_code::OK, "POST");
+                catch(const std::exception &e) {
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intracloud/check");
                 }
-                #endif
                 return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::UNAVAILABLE, "Parameter error.", "/intracloud/check");
             }
 

@@ -48,23 +48,16 @@ namespace Endpoint {
             /// Handle the request.
             /// \param req          the request
             Response handle(Request &&req) {
-                if (req.method == "POST") {
-                    try {
-                        const auto model = Parsers::InterCloudCheck::parse(req.content.c_str());
-                        if (!model.validate()) {
-                            return checkRule(model);
-                        }
-                        return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intercloud/check");
+                try {
+                    const auto model = Parsers::InterCloudCheck::parse(req.content.c_str());
+                    if (!model.validate()) {
+                        return checkRule(model);
                     }
-                    catch(const std::exception &e) {
-                        return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intercloud/check");
-                    }
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intercloud/check");
                 }
-                #ifndef ARROWHEAD_FEAT_NO_HTTP_OPTIONS
-                else if (req.method == "OPTION") {
-                    return Response::options(http::status_code::OK, "POST");
+                catch(const std::exception &e) {
+                    return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::BAD_PAYLOAD, "Parameter error.", "/intercloud/check");
                 }
-                #endif
                 return Response::from_stock<ErrorResponse>(http::status_code::BadRequest, ErrorResponse::UNAVAILABLE, "Parameter error.", "/intercloud/check");
             }
 
