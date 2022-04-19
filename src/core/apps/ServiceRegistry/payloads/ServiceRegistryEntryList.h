@@ -3,7 +3,7 @@
 
 #include "ServiceRegistryEntry.h"
 
-class ServiceRegistryEntryList : SRPayloads
+class ServiceRegistryEntryList : CommonPayloads
 {
 public:
 
@@ -26,12 +26,12 @@ public:
         return sResp;
     }
 
-    void fillJsonResponse(SRJsonBuilder &_jResponse, serviceQueryData &sQData)
+    void fillJsonResponse(CommonJsonBuilder &_jResponse, serviceQueryData &sQData)
     {
         jResponse.addInt("id", sQData.sId);
 
 //serviceDefinition
-        SRJsonBuilder jServiceDefinition;
+        CommonJsonBuilder jServiceDefinition;
         jServiceDefinition.addInt("id", sQData.sServiceDefinition_id);
         jServiceDefinition.addStr("serviceDefinition", sQData.sServiceDefinition_serviceDefinition);
         jServiceDefinition.addStr("createdAt", sQData.sServiceDefinition_createdAt);
@@ -39,7 +39,7 @@ public:
         jResponse.addObj("serviceDefinition", (const std::string)jServiceDefinition.str());
 
 //provider
-        SRJsonBuilder jProvider;
+        CommonJsonBuilder jProvider;
         jProvider.addInt("id", sQData.sProvider_id);
         jProvider.addStr("systemName", sQData.sProvider_systemName);
         jProvider.addStr("address", sQData.sProvider_address);
@@ -71,7 +71,7 @@ public:
         std::vector<std::string> v;
         for( int i = 0; i < sQData.vInterfaces_id.size(); ++i)
         {
-            SRJsonBuilder jArrayElement;
+            CommonJsonBuilder jArrayElement;
             jArrayElement.addInt("id", sQData.vInterfaces_id[i]);
             jArrayElement.addStr("interfaceName", sQData.vInterfaces_interfaceName[i]);
             jArrayElement.addStr("createdAt", sQData.vInterfaces_createdAt[i]);
@@ -90,7 +90,7 @@ public:
 
     std::string createServiceDefinition(serviceQueryData &_stServQueryData)
     {
-        SRJsonBuilder jResponse;
+        CommonJsonBuilder jResponse;
 
         fillJsonResponse(jResponse, _stServQueryData);
 

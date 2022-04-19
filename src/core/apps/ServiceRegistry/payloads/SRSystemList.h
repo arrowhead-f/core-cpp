@@ -1,10 +1,10 @@
 #ifndef _PAYLOADS_SRSYSTEMLIST_H_
 #define _PAYLOADS_SRSYSTEMLIST_H_
 
-#include "SRPayloads.h"
-#include "../utils/SRJsonBuilder.h"
+#include "utils/common/CommonPayloads.h"
+#include "utils/common/CommonJsonBuilder.h"
 
-class SRSystemList : SRPayloads
+class SRSystemList : CommonPayloads
 {
     public:
 
@@ -27,7 +27,7 @@ class SRSystemList : SRPayloads
         return sResp;
     }
 
-    void fillJsonResponse(SRJsonBuilder &_jResponse, stSystem &_stSystemData)
+    void fillJsonResponse(CommonJsonBuilder &_jResponse, stSystem &_stSystemData)
     {
         _jResponse.addInt("id", _stSystemData.sId);
         _jResponse.addStr("systemName", _stSystemData.sSystemName);
@@ -40,7 +40,7 @@ class SRSystemList : SRPayloads
 
     std::string createSRSystem(stSystem &_stSystemData)
     {
-        SRJsonBuilder jResponse;
+        CommonJsonBuilder jResponse;
         fillJsonResponse(jResponse, _stSystemData);
         return jResponse.str();
     }

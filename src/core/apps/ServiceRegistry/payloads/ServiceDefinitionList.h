@@ -1,10 +1,10 @@
 #ifndef _PAYLOADS_SERVICEDEFINITIONLIST_H_
 #define _PAYLOADS_SERVICEDEFINITIONLIST_H_
 
-#include "SRPayloads.h"
-#include "../utils/SRJsonBuilder.h"
+#include "utils/common/CommonPayloads.h"
+#include "utils/common/CommonJsonBuilder.h"
 
-class ServiceDefinitionList : SRPayloads
+class ServiceDefinitionList : CommonPayloads
 {
     public:
 
@@ -27,7 +27,7 @@ class ServiceDefinitionList : SRPayloads
         return sResp;
     }
 
-    void fillJsonResponse(SRJsonBuilder &_jResponse, stServDef &_stServDefData)
+    void fillJsonResponse(CommonJsonBuilder &_jResponse, stServDef &_stServDefData)
     {
         _jResponse.addInt("id", _stServDefData.sId);
         _jResponse.addStr("systemName", _stServDefData.sServiceDefinition);
@@ -37,7 +37,7 @@ class ServiceDefinitionList : SRPayloads
 
     std::string createServiceDefinition(stServDef &_stServDefData)
     {
-        SRJsonBuilder jResponse;
+        CommonJsonBuilder jResponse;
         fillJsonResponse(jResponse, _stServDefData);
         return jResponse.str();
     }

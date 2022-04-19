@@ -3,19 +3,19 @@
 
 #include <string>
 #include <vector>
-#include "SRPayloads.h"
+#include "utils/common/CommonPayloads.h"
 #include "gason/gason.h"
-#include "../utils/SRJsonBuilder.h"
+#include "utils/common/CommonJsonBuilder.h"
 #include <ctype.h>
 
-class SRSystem : SRPayloads
+class SRSystem : CommonPayloads
 {
     private:
 
         gason::JsonAllocator jsonAllocator;
         gason::JsonValue     jsonRootValue;
 
-        SRJsonBuilder        jResponse;
+        CommonJsonBuilder    jResponse;
 
     public:
         stSystem stSystemData;

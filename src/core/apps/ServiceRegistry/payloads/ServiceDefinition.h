@@ -4,12 +4,12 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "SRPayloads.h"
+#include "utils/common/CommonPayloads.h"
 #include "gason/gason.h"
-#include "../utils/SRJsonBuilder.h"
+#include "utils/common/CommonJsonBuilder.h"
 #include <ctype.h>
 
-class ServiceDefinition : SRPayloads
+class ServiceDefinition : CommonPayloads
 {
 
 private:
@@ -17,7 +17,7 @@ private:
     gason::JsonAllocator jsonAllocator;
     gason::JsonValue     jsonRootValue;
 
-    SRJsonBuilder        jResponse;
+    CommonJsonBuilder    jResponse;
 
 public:
     stServDef stServDefData;

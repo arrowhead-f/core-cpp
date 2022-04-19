@@ -6,9 +6,9 @@
 #include "http/crate/Response.h"
 
 #include "core/Core.h"
-#include "../utils/DbWrapper.h"
-#include "../utils/Error.h"
-#include "../payloads/SRPayloads.h"
+#include "utils/common/DbWrapper.h"
+#include "utils/common/Error.h"
+#include "utils/common/CommonPayloads.h"
 #include "../payloads/SRSystem.h"
 #include "../payloads/SRSystemList.h"
 #include "../payloads/ServiceRegistryEntry.h"
@@ -18,7 +18,7 @@
 
 
 template<typename DB>
-class MgmtGet : SRPayloads {
+class MgmtGet : CommonPayloads {
 
     private:
         DB &db;

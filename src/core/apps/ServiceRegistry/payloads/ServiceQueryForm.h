@@ -4,12 +4,12 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "SRPayloads.h"
+#include "utils/common/CommonPayloads.h"
 #include "gason/gason.h"
-#include "../utils/SRJsonBuilder.h"
+#include "utils/common/CommonJsonBuilder.h"
 #include <ctype.h>
 
-class ServiceQueryForm : SRPayloads
+class ServiceQueryForm : CommonPayloads
 {
 
 private:
@@ -155,6 +155,34 @@ public:
         return 0;
     }
 
+    std::string createServiceQueryForm(std::string servDef, std::vector<std::string> intfNames)
+    {
+        CommonJsonBuilder jResponse;
+        jResponse.addStr("serviceDefinitionRequirement", servDef);
+        jResponse.to_arrayObj<std::vector<std::string>::iterator>("interfaceRequirements", intfNames.begin(), intfNames.end());
+        return jResponse.str();
+
+/*
+        {
+         "serviceDefinitionRequirement": "string",
+         "interfaceRequirements": [
+           "string"
+         ],
+         "securityRequirements": [
+           "NOT_SECURE"
+         ],
+         "metadataRequirements": {
+           "additionalProp1": "string",
+           "additionalProp2": "string",
+           "additionalProp3": "string"
+         },
+         "versionRequirement": 0,
+         "maxVersionRequirement": 0,
+         "minVersionRequirement": 0,
+         "pingProviders": true
+        }
+*/
+    }
 
 };
 

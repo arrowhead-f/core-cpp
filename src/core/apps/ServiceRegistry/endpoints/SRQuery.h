@@ -9,8 +9,8 @@
 #include "../payloads/SRSystem.h"
 
 #include "core/Core.h"
-#include "../utils/DbWrapper.h"
-#include "../utils/Error.h"
+#include "utils/common/DbWrapper.h"
+#include "utils/common/Error.h"
 
 #include <string>
 #include <iostream>
@@ -22,7 +22,7 @@
 #include <unistd.h>
 
 template<typename DB>
-class SRQuery : SRPayloads
+class SRQuery : CommonPayloads
 {
 
     private:

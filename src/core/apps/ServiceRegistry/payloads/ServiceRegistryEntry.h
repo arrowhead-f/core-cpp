@@ -3,12 +3,12 @@
 
 #include <string>
 #include <vector>
-#include "SRPayloads.h"
+#include "utils/common/CommonPayloads.h"
 #include "gason/gason.h"
-#include "../utils/SRJsonBuilder.h"
+#include "utils/common/CommonJsonBuilder.h"
 #include <ctype.h>
 
-class ServiceRegistryEntry : SRPayloads
+class ServiceRegistryEntry : CommonPayloads
 {
 
 private:
@@ -16,7 +16,7 @@ private:
     gason::JsonAllocator jsonAllocator;
     gason::JsonValue     jsonRootValue;
 
-    SRJsonBuilder        jResponse;
+    CommonJsonBuilder    jResponse;
 
 public:
 
@@ -164,7 +164,7 @@ public:
         jResponse.addInt("id", sQData.sId);
 
 //serviceDefinition
-        SRJsonBuilder jServiceDefinition;
+        CommonJsonBuilder jServiceDefinition;
         jServiceDefinition.addInt("id", sQData.sServiceDefinition_id);
         jServiceDefinition.addStr("serviceDefinition", sQData.sServiceDefinition_serviceDefinition);
         jServiceDefinition.addStr("createdAt", sQData.sServiceDefinition_createdAt);
@@ -172,7 +172,7 @@ public:
         jResponse.addObj("serviceDefinition", (const std::string)jServiceDefinition.str());
 
 //provider
-        SRJsonBuilder jProvider;
+        CommonJsonBuilder jProvider;
         jProvider.addInt("id", sQData.sProvider_id);
         jProvider.addStr("systemName", sQData.sProvider_systemName);
         jProvider.addStr("address", sQData.sProvider_address);
@@ -204,7 +204,7 @@ public:
         std::vector<std::string> v;
         for( int i = 0; i < sQData.vInterfaces_id.size(); ++i)
         {
-            SRJsonBuilder jArrayElement;
+            CommonJsonBuilder jArrayElement;
             jArrayElement.addInt("id", sQData.vInterfaces_id[i]);
             jArrayElement.addStr("interfaceName", sQData.vInterfaces_interfaceName[i]);
             jArrayElement.addStr("createdAt", sQData.vInterfaces_createdAt[i]);

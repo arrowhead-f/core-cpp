@@ -2,7 +2,7 @@
 #define _UTILS_ERROR_H_
 
 #include <string>
-#include "SRJsonBuilder.h"
+#include "CommonJsonBuilder.h"
 
 #include "http/crate/Response.h"
 
@@ -36,7 +36,7 @@ public:
 
     Response getResp()
     {
-        SRJsonBuilder jResp;
+        CommonJsonBuilder jResp;
         jResp.addStr("errorMessage", errorMsg);
         jResp.addInt("errorCode", statusCode);
         jResp.addStr("exceptionType", type);
