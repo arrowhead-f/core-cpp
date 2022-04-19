@@ -5,6 +5,7 @@
 #include "core/Core.h"
 #include "core/helpers/InvokeIf.h"
 
+#include "endpoints/Orchestration.h"
 
 template<typename DBPool, typename RB>class Orchestrator final : public Core<DBPool, RB> {
 
@@ -22,9 +23,33 @@ template<typename DBPool, typename RB>class Orchestrator final : public Core<DBP
 
         using Core<DBPool, RB>::Core;
 
-        Response handle(Request &&req) final {
-            if (req.uri.compare("/echo"))
-                return invokeIf("GET", std::move(req), [this](Request &&r){ return this->urlEcho(std::move(r)); });
+        Response handleGET(Request &&req) final {
+            if( req.uri.compare("/echo") )
+            {
+                return Response{ "Got it!" };
+            }
+
+            if( req.uri.consume("/orchestration") )
+            {
+                int id;
+                if( req.uri.pathId(id) )
+                {
+                    auto db = Parent::database();
+                    auto requestBuilder = Parent::reqBuilder;
+
+                    return Orchestration<db::DatabaseConnection<typename DBPool::DatabaseType>, RB>{ db, requestBuilder }.processOrchestrationId( id, "/orchestrator/orchestration/{id}" );
+                }
+            }
+
+            return Response::from_stock(http::status_code::NotFound);
+        }
+
+        Response handlePOST(Request &&req) final {
+            if ( req.uri.compare("/orchestration")) {
+                auto db = Parent::database();
+                auto requestBuilder = Parent::reqBuilder;
+                return Orchestration<db::DatabaseConnection<typename DBPool::DatabaseType>, RB>{ db, requestBuilder }.processOrchestration(std::move(req), "/orchestrator/orchestration");
+            }
 
             return Response::from_stock(http::status_code::NotFound);
         }

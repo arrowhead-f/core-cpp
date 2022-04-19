@@ -1,10 +1,10 @@
-#ifndef _UTILS_SRJSONBUILDER_H_
-#define _UTILS_SRJSONBUILDER_H_
+#ifndef _UTILS_COMMONJSONBUILDER_H_
+#define _UTILS_COMMONJSONBUILDER_H_
 
 #include <string>
-#include "utils/json.h"
+#include "../json.h"
 
-class SRJsonBuilder : public JsonBuilder {
+class CommonJsonBuilder : public JsonBuilder {
 
 public:
     void addStr(std::string key, std::string value){
@@ -44,6 +44,11 @@ public:
         addObj(key, dbMetadataToJsonMetadata(value));
     }
 
+    void addNULL(std::string key)
+    {
+        write_null(key.c_str());
+    }
+
     std::string dbMetadataToJsonMetadata(std::string _dbMeta)
     {
         std::string sJsonMeta = "{";
@@ -73,4 +78,4 @@ public:
 
 };
 
-#endif /* _UTILS_SRJSONBUILDER_H_ */
+#endif /* _UTILS_COMMONJSONBUILDER_H_ */

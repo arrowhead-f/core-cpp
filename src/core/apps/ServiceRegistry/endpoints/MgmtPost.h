@@ -6,13 +6,13 @@
 #include "http/crate/Response.h"
 
 #include "core/Core.h"
-#include "../utils/DbWrapper.h"
-#include "../utils/Error.h"
+#include "utils/common/DbWrapper.h"
+#include "utils/common/Error.h"
 
-#include "../payloads/SRPayloads.h"
+#include "utils/common/CommonPayloads.h"
 
 template<typename DB>
-class MgmtPost : SRPayloads {
+class MgmtPost : CommonPayloads {
 
     private:
         DB &db;

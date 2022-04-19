@@ -5,7 +5,7 @@
 #include "config.h"
 
 #include "core/apps/Orchestrator/Orchestrator.h"
-#include "http/wget/WG_Null.h"
+#include "http/wget/WG_Curl.h"
 
 
 struct CoreElement {
@@ -14,9 +14,9 @@ struct CoreElement {
     static constexpr const char * const ini  = "orchestrator.ini";  ///< The name fo the default ini file.
 
     template<typename DBPool, typename RB>using Type           = ::Orchestrator<DBPool, RB>;  ///< The type of the Core element.
-    template<typename DBPool, typename RB>using DispatcherType = ::Orchestrator<DBPool, RB>;  ///< 
+    template<typename DBPool, typename RB>using DispatcherType = ::Orchestrator<DBPool, RB>;  ///<
 
-    using WebGet = WG_Null;  ///< Class used to create https requests.
+    using WebGet = WG_Curl;  ///< Class used to create https requests.
 };
 
 #endif  /* _BOOT_TRAITS_ORCHESTRATOR_H_ */

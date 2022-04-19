@@ -31,9 +31,10 @@ template<typename DBPool, typename RB>class Core : public Dispatcher {
     private:
 
         DBPool &dbPool;      ///< The database pool to be used.
-        RB     &reqBuilder;  ///< Used to build and send requests.
 
     protected:
+
+        RB     &reqBuilder;  ///< Used to build and send requests.
 
         /// Returns a locked database connection from the pool.
         auto database() {
