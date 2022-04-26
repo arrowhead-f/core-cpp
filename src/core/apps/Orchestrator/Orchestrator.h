@@ -35,7 +35,7 @@ template<typename DBPool, typename RB>class Orchestrator final : public Core<DBP
                 if( req.uri.pathId(id) )
                 {
                     auto db = Parent::database();
-                    auto requestBuilder = Parent::reqBuilder;
+                    auto &requestBuilder = Parent::reqBuilder;
 
                     return Orchestration<db::DatabaseConnection<typename DBPool::DatabaseType>, RB>{ db, requestBuilder }.processOrchestrationId( id, "/orchestrator/orchestration/{id}" );
                 }
@@ -47,7 +47,7 @@ template<typename DBPool, typename RB>class Orchestrator final : public Core<DBP
         Response handlePOST(Request &&req) final {
             if ( req.uri.compare("/orchestration")) {
                 auto db = Parent::database();
-                auto requestBuilder = Parent::reqBuilder;
+                auto &requestBuilder = Parent::reqBuilder;
                 return Orchestration<db::DatabaseConnection<typename DBPool::DatabaseType>, RB>{ db, requestBuilder }.processOrchestration(std::move(req), "/orchestrator/orchestration");
             }
 

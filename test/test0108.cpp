@@ -189,9 +189,9 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_matchmaking", "[
     MockCurl reqBuilder;
 
     auto mc = MockCurl{
-                        { "POST:https://127.0.0.1/serviceregistry/query", { 200, serviceRegistryResp} },
-                        { "POST:https://127.0.0.1/authorization/intracloud/check", { 200, authorizerResp} },
-                        { "POST:https://127.0.0.1/authorization/token", { 200, authorizerTokenResp} }
+                        { "POST:https://127.0.0.1/query", { 200, serviceRegistryResp} },
+                        { "POST:https://127.0.0.1/intracloud/check", { 200, authorizerResp} },
+                        { "POST:https://127.0.0.1/token", { 200, authorizerTokenResp} }
                       };
 
     // create core system element
@@ -359,9 +359,9 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_onlyPreferred", 
     MockCurl reqBuilder;
 
     auto mc = MockCurl{
-                        { "POST:https://127.0.0.1/serviceregistry/query", { 200, serviceRegistryResp2} },
-                        { "POST:https://127.0.0.1/authorization/intracloud/check", { 200, authorizerResp2} },
-                        { "POST:https://127.0.0.1/authorization/token", { 200, authorizerTokenResp2} }
+                        { "POST:https://127.0.0.1/query", { 200, serviceRegistryResp2} },
+                        { "POST:https://127.0.0.1/intracloud/check", { 200, authorizerResp2} },
+                        { "POST:https://127.0.0.1/token", { 200, authorizerTokenResp2} }
                       };
 
     // create core system element
@@ -525,9 +525,9 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_onlyPreferred_ma
     MockCurl reqBuilder;
 
     auto mc = MockCurl{
-                        { "POST:https://127.0.0.1/serviceregistry/query", { 200, serviceRegistryResp3} },
-                        { "POST:https://127.0.0.1/authorization/intracloud/check", { 200, authorizerResp3} },
-                        { "POST:https://127.0.0.1/authorization/token", { 200, authorizerTokenResp3} }
+                        { "POST:https://127.0.0.1/query", { 200, serviceRegistryResp3} },
+                        { "POST:https://127.0.0.1/intracloud/check", { 200, authorizerResp3} },
+                        { "POST:https://127.0.0.1/token", { 200, authorizerTokenResp3} }
                       };
 
     // create core system element
@@ -690,9 +690,9 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic", "[core] [Orche
     MockCurl reqBuilder;
 
     auto mc = MockCurl{
-                        { "POST:https://127.0.0.1/serviceregistry/query", { 200, serviceRegistryResp4} },
-                        { "POST:https://127.0.0.1/authorization/intracloud/check", { 200, authorizerResp4} },
-                        { "POST:https://127.0.0.1/authorization/token", { 200, authorizerTokenResp4} }
+                        { "POST:https://127.0.0.1/query", { 200, serviceRegistryResp4} },
+                        { "POST:https://127.0.0.1/intracloud/check", { 200, authorizerResp4} },
+                        { "POST:https://127.0.0.1/token", { 200, authorizerTokenResp4} }
                       };
 
     // create core system element
@@ -718,7 +718,7 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_missing_requeste
     MockPool pool{ mdb };
     MockCurl reqBuilder;
 
-    auto mc = MockCurl{ { "POST:https://127.0.0.1/serviceregistry/query", { 200, ""} }};
+    auto mc = MockCurl{ { "POST:https://127.0.0.1/query", { 200, ""} }};
 
     // create core system element
     Orchestrator<MockPool, MockCurl> orch{ pool, mc };
@@ -747,7 +747,7 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_missing_servDefR
     MockPool pool{ mdb };
     MockCurl reqBuilder;
 
-    auto mc = MockCurl{ { "POST:https://127.0.0.1/serviceregistry/query", { 200, ""} }};
+    auto mc = MockCurl{ { "POST:https://127.0.0.1/query", { 200, ""} }};
 
     // create core system element
     Orchestrator<MockPool, MockCurl> orch{ pool, mc };
@@ -778,7 +778,7 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_empty_SR_respons
     MockPool pool{ mdb };
     MockCurl reqBuilder;
 
-    auto mc = MockCurl{ { "POST:https://127.0.0.1/serviceregistry/query", { 200, ""} }};
+    auto mc = MockCurl{ { "POST:https://127.0.0.1/query", { 200, ""} }};
 
     // create core system element
     Orchestrator<MockPool, MockCurl> orch{ pool, mc };
@@ -893,9 +893,9 @@ TEST_CASE("Orchestrator: POST /orchestration_intracloud_dynamic_minimal", "[core
     MockCurl reqBuilder;
 
         auto mc = MockCurl{
-                            { "POST:https://127.0.0.1/serviceregistry/query", { 200, serviceRegistryResp_min} },
-                            { "POST:https://127.0.0.1/authorization/intracloud/check", { 200, authorizerResp_min} },
-                            { "POST:https://127.0.0.1/authorization/token", { 200, authorizerTokenResp_min} }
+                            { "POST:https://127.0.0.1/query", { 200, serviceRegistryResp_min} },
+                            { "POST:https://127.0.0.1/intracloud/check", { 200, authorizerResp_min} },
+                            { "POST:https://127.0.0.1/token", { 200, authorizerTokenResp_min} }
                           };
 
     // create core system element

@@ -108,6 +108,7 @@ class Orchestration : CommonPayloads{
             std::map<int, std::vector<gason::JsonValue>> mAuthorizedProvIntfs;
 
             uint8_t authRes = queryAuthorization(oInputServiceRequestForm, queryData, mAuthorizedProvIntfs);
+
             if(!authRes || mAuthorizedProvIntfs.size() == 0)
                 return Response{ "{\"response\":[]}" };
 
@@ -249,7 +250,7 @@ class Orchestration : CommonPayloads{
                     int provID = vProviders[i].child("provider")("id").toInt();
                     std::string sTokenRule = createTokenRule(sConsumer, vProviders[i], mAuthorizedProvIntfs[provID]);
 
-                    auto queryAuthTokensRes = rb.send("POST", "https://127.0.0.1/authorization/token", 12345, sTokenRule);
+                    auto queryAuthTokensRes = rb.send("POST", "https://127.0.0.1/token", 16221, sTokenRule);
 
                     if( queryAuthTokensRes != http::status_code::OK ) continue;
 
@@ -284,8 +285,8 @@ class Orchestration : CommonPayloads{
             }
 
             jOrchResp.to_arrayObj<std::vector<std::string>::iterator>("response", vOrchResp.begin(), vOrchResp.end());
-
-            return Response{ jOrchResp.str() };
+            std::string sResp = jOrchResp.str();
+            return Response{ sResp };
         }
 
 
@@ -358,7 +359,8 @@ class Orchestration : CommonPayloads{
         bool queryServiceRegistry(ServiceRequestForm &oInputServiceRequestForm, std::string &sSRQueryResult)
         {
             CommonJsonBuilder jRequestedService = convertGasonToCJB(oInputServiceRequestForm.stServReqForm.jRequestedService);
-            auto querySRResult = rb.send("POST", "https://127.0.0.1/serviceregistry/query", 12345, jRequestedService.str());
+            std::string payload = jRequestedService.str();
+            auto querySRResult = rb.send("POST", "https://127.0.0.1/query", 16220, payload);
 
             if( querySRResult != http::status_code::OK ) return false;
 
@@ -368,7 +370,8 @@ class Orchestration : CommonPayloads{
 
         uint8_t queryAuthorization(ServiceRequestForm &oInputServiceRequestForm, std::vector<gason::JsonValue> &queryData, std::map<int, std::vector<gason::JsonValue>> &mAuthorizedProvIntfs)
         {
-            auto authorizationQueryResult = rb.send("POST", "https://127.0.0.1/authorization/intracloud/check", 12345, createIntraCloudRule(oInputServiceRequestForm, queryData));
+            std::string sIntraCloudRule = createIntraCloudRule(oInputServiceRequestForm, queryData);
+            auto authorizationQueryResult = rb.send("POST", "https://127.0.0.1/intracloud/check", 16221, sIntraCloudRule);
 
             if( authorizationQueryResult != http::status_code::OK ) return 0;
 
