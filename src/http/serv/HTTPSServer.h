@@ -304,6 +304,10 @@ class HTTPSServer final : public ::HTTPServerBase<T> {
                 return nullptr;
 
             SSL_CTX_set_cipher_list(ctx, "ALL:eNULL");
+
+            int s_server_session_id_context = 1;
+            SSL_CTX_set_session_id_context(ctx, (const unsigned char*) &s_server_session_id_context, sizeof(s_server_session_id_context));
+
             return ctx;
         }
 
