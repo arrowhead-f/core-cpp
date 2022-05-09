@@ -20,7 +20,7 @@ The programs can be run from the src directory. If the NDEBUG macro is not defin
 ini file and certificates in the etc directory of the repo. With the NDEBUG macro turned on this
 search path is turned off, only in the etc and /etc directories are looked up.
 
-The names of the ini files are as follows*
+The names of the ini files are as follows:
 
 |Core Element     | Name of the ini file |
 ------------------------------------------
@@ -57,3 +57,40 @@ By default the console is used for logging. To set a different target use the ./
 
 ## Add password to keys
 * openssl rsa -aes256 -in your.key -out your.encrypted.key
+
+# Structure of the program
+
+## Directories
+
+The main directories are called *etc*, *inc*, *src* and *test*.
+
+The etc directory contains the sample configuration files and
+key. The inc directory contains the thirdparty libraries like
+*catch2*, *spdlog* and *sqlite3*.
+
+The main code resides inside the src diectory, while the test
+directory contains the tests.
+
+## The tests
+
+For testing purposes the Catch2 suite is used.
+
+All tests are placed in a file called testNNNN.cpp, where NNNN is
+a four digit number. To decode the content of the file please 
+consult the README.md in the test directory.
+
+## The structure of the source code
+
+## Brief overview of the program
+
+[Componen diagram](doc/componened-diagram.png)
+
+The main part of the program are:
+i) the *HTTPS server* that is responsible for handling all the
+   incomming connections, and
+ii) the *core* that is responsible for the bussiness logic.
+
+### Configuration
+
+The src/boot/traits directory contains all the information necessary
+for configuring all the core elements.
